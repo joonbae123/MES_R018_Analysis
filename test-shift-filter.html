@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Shift Filter Debug</title></head>
+<body>
+<h1>Shift Filter Test</h1>
+<div id="output"></div>
+<script>
+// Sample data structure
+const sampleData = [
+  { workerName: 'Worker1', actualShift: 'A', workingDay: '2026-02-09', workingShift: 'Day' },
+  { workerName: 'Worker2', actualShift: 'B', workingDay: '2026-02-09', workingShift: 'Day' },
+  { workerName: 'Worker3', actualShift: 'C', workingDay: '2026-02-09', workingShift: 'Night' },
+  { workerName: 'Worker4', actualShift: 'A', workingDay: '2026-02-10', workingShift: 'Day' }
+];
+
+// Test filters
+const shiftFilter = 'A';
+const dayNightFilter = 'Day';
+
+console.log('Total records:', sampleData.length);
+console.log('\nTesting actualShift filter (A/B/C):');
+const filteredByShift = sampleData.filter(d => d.actualShift === shiftFilter);
+console.log(`  Filter: actualShift === '${shiftFilter}'`);
+console.log(`  Result: ${filteredByShift.length} records`);
+console.log('  Records:', filteredByShift);
+
+console.log('\nTesting workingShift filter (Day/Night):');
+const filteredByDayNight = sampleData.filter(d => d.workingShift === dayNightFilter);
+console.log(`  Filter: workingShift === '${dayNightFilter}'`);
+console.log(`  Result: ${filteredByDayNight.length} records`);
+console.log('  Records:', filteredByDayNight);
+
+document.getElementById('output').innerHTML = `
+  <h2>Results:</h2>
+  <p>actualShift === 'A': ${filteredByShift.length} records</p>
+  <p>workingShift === 'Day': ${filteredByDayNight.length} records</p>
+`;
+</script>
+</body>
+</html>

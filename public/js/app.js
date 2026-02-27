@@ -1761,8 +1761,27 @@ function getFilteredData() {
     
     // Filter by shift (A/B/C)
     if (AppState.filters.shift) {
+        // DEBUG: Log actualShift distribution
+        const shiftDistribution = {};
+        AppState.processedData.forEach(d => {
+            const shift = d.actualShift || 'undefined';
+            shiftDistribution[shift] = (shiftDistribution[shift] || 0) + 1;
+        });
+        console.log(`🔍 actualShift distribution:`, shiftDistribution);
+        console.log(`🔍 Looking for actualShift === '${AppState.filters.shift}'`);
+        
         filtered = filtered.filter(d => d.actualShift === AppState.filters.shift);
         console.log(`After shift filter (${AppState.filters.shift}): ${filtered.length} records`);
+        
+        // DEBUG: Show sample records
+        if (filtered.length === 0) {
+            console.log(`⚠️ No records found! Sample actualShift values:`);
+            console.log(AppState.processedData.slice(0, 5).map(d => ({ 
+                worker: d.workerName, 
+                actualShift: d.actualShift, 
+                type: typeof d.actualShift 
+            })));
+        }
     }
     
     // Filter by working days (multiple selection)
