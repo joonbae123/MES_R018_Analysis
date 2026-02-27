@@ -43,7 +43,12 @@ app.post('/api/upload', async (c) => {
     
     // Raw 데이터 저장 (processedData 사용)
     if (processedData && processedData.length > 0) {
-      const batchSize = 100
+      // 🔧 FIX: Reduce batch size to prevent D1 hash index errors
+      // Large batches (100+) can cause "HashIndex inconsistency" errors
+      const batchSize = 50  // Reduced from 100 to 50
+      
+      console.log(`💾 Starting batch insert: ${processedData.length} records, ${Math.ceil(processedData.length / batchSize)} batches`)
+      
       for (let i = 0; i < processedData.length; i += batchSize) {
         const batch = processedData.slice(i, i + batchSize)
         const values = batch.map((d: any) => {
@@ -60,7 +65,14 @@ app.post('/api/upload', async (c) => {
           INSERT INTO raw_data (upload_id, worker_name, fo_desc, fd_desc, start_datetime, end_datetime, worker_act, result_cnt, working_day, working_shift, actual_shift, work_rate, worker_st, worker_rate_pct)
           VALUES ${values}
         `).run()
+        
+        // Log progress every 10 batches
+        if ((i / batchSize) % 10 === 0) {
+          console.log(`  📊 Progress: ${i + batch.length} / ${processedData.length} records`)
+        }
       }
+      
+      console.log(`✅ Batch insert completed: ${processedData.length} records`)
     }
     
     // 공정 매핑 저장

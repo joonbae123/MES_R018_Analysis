@@ -11,6 +11,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:migrate:local": "wrangler d1 migrations apply mes-r018-analysis-production --local",
     "db:migrate:prod": "wrangler d1 migrations apply mes-r018-analysis-production",
+    "db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local",
     "db:console:local": "wrangler d1 execute mes-r018-analysis-production --local",
     "db:console:prod": "wrangler d1 execute mes-r018-analysis-production",
     "git:init": "git init && git add . && git commit -m 'Initial commit'",
