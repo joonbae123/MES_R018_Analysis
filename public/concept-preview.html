@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPR Concept Preview - Work Completion Score & Performance Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .grade-s { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #b8860b; }
+        .grade-a { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; }
+        .grade-b { background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); color: white; }
+        .grade-c { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white; }
+        .grade-d { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); color: white; }
+        .grade-f { background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); color: white; }
+        
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-bar-custom {
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .completion-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 2px;
+        }
+        
+        .badge-complete { background: #10b981; color: white; }
+        .badge-near { background: #fbbf24; color: white; }
+        .badge-progress { background: #f97316; color: white; }
+        .badge-started { background: #ef4444; color: white; }
+        
+        .process-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .strength-item {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .improvement-item {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="gradient-bg text-white py-8 mb-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">
+                        <i class="fas fa-chart-line mr-3"></i>
+                        Individual Performance Report (IPR)
+                    </h1>
+                    <p class="text-purple-200">Concept Preview - Work Completion Score & 3-Metric Performance System</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-purple-200">Period</div>
+                    <div class="text-xl font-bold">2026-02-17 ~ 2026-02-23</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 pb-12">
+        
+        <!-- Tab Navigation -->
+        <div class="mb-8 flex gap-4 border-b border-gray-200">
+            <button class="tab-btn px-6 py-3 font-semibold text-purple-600 border-b-2 border-purple-600">
+                <i class="fas fa-tasks mr-2"></i>Work Completion Score
+            </button>
+            <button class="tab-btn px-6 py-3 font-semibold text-gray-500 hover:text-purple-600">
+                <i class="fas fa-user-chart mr-2"></i>Individual Report (IPR)
+            </button>
+            <button class="tab-btn px-6 py-3 font-semibold text-gray-500 hover:text-purple-600">
+                <i class="fas fa-tachometer-alt mr-2"></i>Team Dashboard
+            </button>
+        </div>
+
+        <!-- Section 1: Work Completion Score Overview -->
+        <div id="section1" class="section-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-clipboard-check mr-2 text-purple-600"></i>
+                Work Completion Score
+            </h2>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Total Jobs Touched</div>
+                    <div class="text-3xl font-bold text-gray-800 mb-1">9</div>
+                    <div class="text-xs text-gray-500">Work Orders handled</div>
+                </div>
+                
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Completion Score</div>
+                    <div class="text-3xl font-bold text-purple-600 mb-1">7.3</div>
+                    <div class="text-xs text-gray-500">Equivalent jobs completed</div>
+                </div>
+                
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Avg Progress per Job</div>
+                    <div class="text-3xl font-bold text-blue-600 mb-1">81%</div>
+                    <div class="text-xs text-gray-500">Average completion rate</div>
+                </div>
+                
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Completion Rate</div>
+                    <div class="text-3xl font-bold text-green-600 mb-1">7.3/9</div>
+                    <div class="text-xs text-gray-500">81% of jobs done</div>
+                </div>
+            </div>
+
+            <!-- Completion Distribution -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-pie mr-2 text-purple-600"></i>
+                    Work Completion Distribution
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Left: Bar Chart -->
+                    <div>
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-gray-700">🟢 Completed (100%)</span>
+                                <span class="text-sm font-bold text-gray-800">5 jobs</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill bg-green-500" style="width: 55%;">55%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-gray-700">🟡 Near Complete (80-99%)</span>
+                                <span class="text-sm font-bold text-gray-800">2 jobs</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill bg-yellow-500" style="width: 22%;">22%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-gray-700">🟠 In Progress (50-79%)</span>
+                                <span class="text-sm font-bold text-gray-800">1 job</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill bg-orange-500" style="width: 11%;">11%</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-semibold text-gray-700">🔴 Just Started (< 50%)</span>
+                                <span class="text-sm font-bold text-gray-800">1 job</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill bg-red-500" style="width: 11%;">11%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Donut Chart -->
+                    <div class="flex items-center justify-center">
+                        <canvas id="completionDonutChart" width="300" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Breakdown -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-industry mr-2 text-purple-600"></i>
+                    Completion Score by Process
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Process</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">Jobs Touched</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">Completed</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">In Progress</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">Total Score</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">Avg %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-3 px-4">
+                                    <span class="font-semibold text-gray-800">Mechanical</span>
+                                </td>
+                                <td class="text-center py-3 px-4 text-gray-700">4</td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-green-600 font-bold">2.4</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-orange-600 font-bold">0.6</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-purple-600 font-bold text-lg">3.0</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-gray-700 font-semibold">75%</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-3 px-4">
+                                    <span class="font-semibold text-gray-800">Electrical</span>
+                                </td>
+                                <td class="text-center py-3 px-4 text-gray-700">3</td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-green-600 font-bold">1.8</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-orange-600 font-bold">0.3</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-purple-600 font-bold text-lg">2.1</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-gray-700 font-semibold">70%</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="py-3 px-4">
+                                    <span class="font-semibold text-gray-800">Assembly</span>
+                                </td>
+                                <td class="text-center py-3 px-4 text-gray-700">2</td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-green-600 font-bold">2.0</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-orange-600 font-bold">0.2</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-purple-600 font-bold text-lg">2.2</span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span class="text-gray-700 font-semibold">110%</span>
+                                </td>
+                            </tr>
+                            <tr class="bg-gray-100 font-bold">
+                                <td class="py-3 px-4">Total</td>
+                                <td class="text-center py-3 px-4">9</td>
+                                <td class="text-center py-3 px-4 text-green-600">6.2</td>
+                                <td class="text-center py-3 px-4 text-orange-600">1.1</td>
+                                <td class="text-center py-3 px-4 text-purple-600 text-xl">7.3</td>
+                                <td class="text-center py-3 px-4">81%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Daily Trend -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line mr-2 text-purple-600"></i>
+                    Daily Completion Trend
+                </h3>
+                <canvas id="dailyTrendChart" height="80"></canvas>
+                <div class="mt-4 text-center">
+                    <span class="text-sm text-gray-600">Completion Velocity: </span>
+                    <span class="text-lg font-bold text-green-600">+1.2 jobs/day</span>
+                    <span class="text-sm text-gray-500 ml-2">(7-day average)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Individual Performance Report -->
+        <div id="section2" class="section-content hidden">
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                            <i class="fas fa-user-circle mr-3 text-purple-600"></i>
+                            John Doe
+                        </h2>
+                        <p class="text-gray-600">Employee ID: EMP-12345 | Department: Production</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="grade-a inline-block px-8 py-4 rounded-lg text-center">
+                            <div class="text-sm font-semibold mb-1">Overall Grade</div>
+                            <div class="text-5xl font-bold">A-</div>
+                            <div class="text-sm mt-1">87.2 / 100</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Metrics Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="process-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-blue-600 font-semibold">
+                                <i class="fas fa-clock mr-2"></i>Time Utilization
+                            </div>
+                            <span class="completion-badge badge-complete">Excellent</span>
+                        </div>
+                        <div class="text-4xl font-bold text-blue-600 mb-2">85.3%</div>
+                        <div class="progress-bar-custom mb-2">
+                            <div class="progress-fill bg-blue-500" style="width: 85.3%;"></div>
+                        </div>
+                        <div class="text-sm text-gray-600">Score: 85.3 / 100</div>
+                    </div>
+
+                    <div class="process-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-purple-600 font-semibold">
+                                <i class="fas fa-bolt mr-2"></i>Work Efficiency
+                            </div>
+                            <span class="completion-badge badge-complete">Excellent</span>
+                        </div>
+                        <div class="text-4xl font-bold text-purple-600 mb-2">127.5%</div>
+                        <div class="progress-bar-custom mb-2">
+                            <div class="progress-fill bg-purple-500" style="width: 100%;"></div>
+                        </div>
+                        <div class="text-sm text-gray-600">Score: 93.8 / 100</div>
+                    </div>
+
+                    <div class="process-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-green-600 font-semibold">
+                                <i class="fas fa-tasks mr-2"></i>Work Completion
+                            </div>
+                            <span class="completion-badge badge-near">Good</span>
+                        </div>
+                        <div class="text-4xl font-bold text-green-600 mb-2">7.3</div>
+                        <div class="progress-bar-custom mb-2">
+                            <div class="progress-fill bg-green-500" style="width: 81%;"></div>
+                        </div>
+                        <div class="text-sm text-gray-600">Score: 81.0 / 100</div>
+                    </div>
+                </div>
+
+                <!-- Score Calculation -->
+                <div class="bg-purple-50 border-l-4 border-purple-600 p-4 mb-6">
+                    <div class="font-semibold text-purple-900 mb-2">
+                        <i class="fas fa-calculator mr-2"></i>Score Calculation
+                    </div>
+                    <div class="text-sm text-purple-800">
+                        Overall Score = (Utilization × 0.3) + (Efficiency × 0.4) + (Completion × 0.3)<br>
+                        = (85.3 × 0.3) + (93.8 × 0.4) + (81.0 × 0.3) = <strong>87.2 points → Grade A-</strong>
+                    </div>
+                </div>
+
+                <!-- Strengths & Improvements -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <h3 class="text-lg font-bold text-green-700 mb-3">
+                            <i class="fas fa-star mr-2"></i>Strengths
+                        </h3>
+                        <div class="strength-item">
+                            <div class="font-semibold text-green-800 mb-1">High Efficiency</div>
+                            <div class="text-sm text-green-700">127.5% - Exceeding standard workload significantly</div>
+                        </div>
+                        <div class="strength-item">
+                            <div class="font-semibold text-green-800 mb-1">Completed 5 Jobs 100%</div>
+                            <div class="text-sm text-green-700">Strong finish rate on assigned work</div>
+                        </div>
+                        <div class="strength-item">
+                            <div class="font-semibold text-green-800 mb-1">Consistent Time Usage</div>
+                            <div class="text-sm text-green-700">85.3% utilization - well above team average</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-bold text-orange-700 mb-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Areas for Improvement
+                        </h3>
+                        <div class="improvement-item">
+                            <div class="font-semibold text-orange-800 mb-1">2 Jobs Stalled at 40%</div>
+                            <div class="text-sm text-orange-700">W/O-245, W/O-312 - Review blockers</div>
+                        </div>
+                        <div class="improvement-item">
+                            <div class="font-semibold text-orange-800 mb-1">Mechanical Process Slower</div>
+                            <div class="text-sm text-orange-700">75% avg vs 110% in Assembly - consider training</div>
+                        </div>
+                        <div class="improvement-item">
+                            <div class="font-semibold text-orange-800 mb-1">Job Diversity</div>
+                            <div class="text-sm text-orange-700">Focus on completing started jobs before taking new ones</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Process Breakdown Table -->
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-list-check mr-2 text-purple-600"></i>
+                    Process-wise Performance Breakdown
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Process</th>
+                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Utilization (%)</th>
+                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Efficiency (%)</th>
+                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Completion</th>
+                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Score</th>
+                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-3 px-4 font-semibold">Mechanical</td>
+                                <td class="py-3 px-4 text-center">82%</td>
+                                <td class="py-3 px-4 text-center">115%</td>
+                                <td class="py-3 px-4 text-center">3.0</td>
+                                <td class="py-3 px-4 text-center font-bold text-blue-600">83.4</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="grade-b inline-block px-3 py-1 rounded font-bold">B+</span>
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                <td class="py-3 px-4 font-semibold">Electrical</td>
+                                <td class="py-3 px-4 text-center">90%</td>
+                                <td class="py-3 px-4 text-center">145%</td>
+                                <td class="py-3 px-4 text-center">2.1</td>
+                                <td class="py-3 px-4 text-center font-bold text-green-600">92.3</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="grade-a inline-block px-3 py-1 rounded font-bold">A</span>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="py-3 px-4 font-semibold">Assembly</td>
+                                <td class="py-3 px-4 text-center">88%</td>
+                                <td class="py-3 px-4 text-center">130%</td>
+                                <td class="py-3 px-4 text-center">2.2</td>
+                                <td class="py-3 px-4 text-center font-bold text-green-600">87.8</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="grade-a inline-block px-3 py-1 rounded font-bold">A-</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Team Dashboard -->
+        <div id="section3" class="section-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-users mr-2 text-purple-600"></i>
+                Team Performance Dashboard
+            </h2>
+
+            <!-- Team Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Total Workers</div>
+                    <div class="text-3xl font-bold text-gray-800 mb-1">538</div>
+                    <div class="text-xs text-green-600">+12 from last week</div>
+                </div>
+                
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Avg Utilization</div>
+                    <div class="text-3xl font-bold text-blue-600 mb-1">76.3%</div>
+                    <div class="text-xs text-green-600">+2.1% improvement</div>
+                </div>
+                
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Avg Efficiency</div>
+                    <div class="text-3xl font-bold text-purple-600 mb-1">103.2%</div>
+                    <div class="text-xs text-green-600">+5.4% improvement</div>
+                </div>
+                
+                <div class="metric-card card-hover">
+                    <div class="text-gray-600 text-sm font-semibold mb-2">Avg Score</div>
+                    <div class="text-3xl font-bold text-green-600 mb-1">B+ (81)</div>
+                    <div class="text-xs text-green-600">+3.2 points up</div>
+                </div>
+            </div>
+
+            <!-- Performance Distribution -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-purple-600"></i>
+                    Team Performance Distribution
+                </h3>
+                <canvas id="teamDistributionChart" height="80"></canvas>
+            </div>
+
+            <!-- Top & Bottom Performers -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-green-700 mb-4">
+                        <i class="fas fa-trophy mr-2"></i>Top Performers
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-green-600">1</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Alice Johnson</div>
+                                    <div class="text-sm text-gray-600">Production Team A</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="grade-s inline-block px-4 py-2 rounded-lg font-bold text-lg">S</span>
+                                <div class="text-sm text-gray-600 mt-1">97.3</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-green-600">2</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Charlie Brown</div>
+                                    <div class="text-sm text-gray-600">Production Team B</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="grade-s inline-block px-4 py-2 rounded-lg font-bold text-lg">S</span>
+                                <div class="text-sm text-gray-600 mt-1">96.8</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-green-600">3</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Eve Williams</div>
+                                    <div class="text-sm text-gray-600">Production Team A</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="grade-a inline-block px-4 py-2 rounded-lg font-bold text-lg">A</span>
+                                <div class="text-sm text-gray-600 mt-1">94.2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-red-700 mb-4">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Needs Attention
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-red-600">1</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Bob Martinez</div>
+                                    <div class="text-sm text-gray-600">Production Team C</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="grade-f inline-block px-4 py-2 rounded-lg font-bold text-lg">F</span>
+                                <div class="text-sm text-gray-600 mt-1">42.1</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-red-600">2</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">David Lee</div>
+                                    <div class="text-sm text-gray-600">Production Team C</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="grade-f inline-block px-4 py-2 rounded-lg font-bold text-lg">F</span>
+                                <div class="text-sm text-gray-600 mt-1">45.3</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-orange-600">3</span>
+                                <div>
+                                    <div class="font-semibold text-gray-800">Frank Wilson</div>
+                                    <div class="text-sm text-gray-600">Production Team B</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="grade-d inline-block px-4 py-2 rounded-lg font-bold text-lg">D</span>
+                                <div class="text-sm text-gray-600 mt-1">52.8</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Performance -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-industry mr-2 text-purple-600"></i>
+                    Process-wise Team Performance
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-gray-700">Mechanical</span>
+                            <span class="text-sm font-bold text-gray-800">78% avg</span>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill bg-blue-500" style="width: 78%;">78%</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-gray-700">Electrical</span>
+                            <span class="text-sm font-bold text-gray-800">89% avg</span>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill bg-green-500" style="width: 89%;">89%</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-gray-700">Assembly</span>
+                            <span class="text-sm font-bold text-gray-800">82% avg</span>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill bg-purple-500" style="width: 82%;">82%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab-btn');
+        const sections = document.querySelectorAll('.section-content');
+        
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+                    t.classList.add('text-gray-500');
+                });
+                tab.classList.remove('text-gray-500');
+                tab.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+                
+                sections.forEach(s => s.classList.add('hidden'));
+                sections[index].classList.remove('hidden');
+            });
+        });
+
+        // Completion Donut Chart
+        const donutCtx = document.getElementById('completionDonutChart').getContext('2d');
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed (100%)', 'Near Complete (80-99%)', 'In Progress (50-79%)', 'Just Started (<50%)'],
+                datasets: [{
+                    data: [5, 2, 1, 1],
+                    backgroundColor: ['#10b981', '#fbbf24', '#f97316', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Daily Trend Chart
+        const trendCtx = document.getElementById('dailyTrendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Cumulative Completion Score',
+                    data: [1.2, 2.4, 3.8, 5.1, 5.9, 6.5, 7.3],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Completion Score'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Team Distribution Chart
+        const teamCtx = document.getElementById('teamDistributionChart').getContext('2d');
+        new Chart(teamCtx, {
+            type: 'bar',
+            data: {
+                labels: ['S (95-100)', 'A (85-94)', 'B (70-84)', 'C (60-69)', 'D (50-59)', 'F (<50)'],
+                datasets: [{
+                    label: 'Number of Workers',
+                    data: [12, 85, 203, 145, 68, 25],
+                    backgroundColor: ['#ffd700', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#991b1b']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Workers'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

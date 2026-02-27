@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPR Roadmap Presentation - Interactive HTML</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===== 샘플 PPT 테마 색상 (추출) ===== */
+        :root {
+            /* Primary Colors from Sample PPT */
+            --navy-blue: #232669;      /* accent2 - Main Navy */
+            --bright-blue: #0583F2;    /* accent3 - Bright Blue */
+            --light-gray: #EBECF0;     /* accent1 - Light Background */
+            --black: #000000;          /* dk1 - Text */
+            --white: #FFFFFF;          /* lt1 - Background */
+            
+            /* Additional Colors */
+            --dark-gray: #6B7280;
+            --mid-gray: #9CA3AF;
+            --border-gray: #E5E7EB;
+            --bg-gray: #F9FAFB;
+            
+            /* Status Colors */
+            --red: #EF4444;
+            --green: #10B981;
+            --yellow: #FBBF24;
+            --orange: #F97316;
+            
+            /* Light Backgrounds */
+            --light-red: #FEF2F2;
+            --light-green: #F0FDF4;
+            --light-blue: #EFF6FF;
+            --light-yellow: #FEF3C7;
+            --light-purple: #F3F4F6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--light-gray) 0%, var(--white) 100%);
+            color: var(--black);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== Presentation Container ===== */
+        .presentation {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ===== Slide Layout (16:9 Ratio) ===== */
+        .slide {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(35, 38, 105, 0.15);
+            margin-bottom: 60px;
+            padding: 60px 80px;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .slide:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(35, 38, 105, 0.2);
+        }
+
+        /* ===== Navigation ===== */
+        .nav-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--white);
+            border-radius: 50px;
+            padding: 15px 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn.active {
+            background: var(--bright-blue);
+            transform: scale(1.5);
+        }
+
+        .nav-btn:hover {
+            background: var(--navy-blue);
+        }
+
+        /* ===== Typography ===== */
+        .slide-title {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--navy-blue);
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .slide-subtitle {
+            font-size: 24px;
+            font-weight: 400;
+            color: var(--dark-gray);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            margin-bottom: 12px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--bright-blue);
+            margin-bottom: 30px;
+        }
+
+        /* ===== Slide 1: Title Slide ===== */
+        #slide1 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(35, 38, 105, 0.05) 0%, var(--white) 100%);
+            position: relative;
+        }
+
+        #slide1::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 15%;
+            width: 3px;
+            height: 70%;
+            background: var(--bright-blue);
+            border-radius: 3px;
+        }
+
+        #slide1 .main-title {
+            font-size: 64px;
+            font-weight: 900;
+            color: var(--navy-blue);
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+
+        #slide1 .main-subtitle {
+            font-size: 28px;
+            font-weight: 500;
+            color: var(--navy-blue);
+            margin-bottom: 40px;
+        }
+
+        #slide1 .sub-info {
+            font-size: 20px;
+            color: var(--dark-gray);
+            margin-bottom: 12px;
+        }
+
+        #slide1 .period {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--bright-blue);
+        }
+
+        #slide1 .date {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: var(--mid-gray);
+        }
+
+        /* ===== Slide 2: Journey (AS-IS vs TO-BE) ===== */
+        .journey-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .journey-card {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 40px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .journey-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .journey-card.as-is {
+            background: var(--light-red);
+            border: 2px solid var(--red);
+        }
+
+        .journey-card.as-is::before {
+            background: var(--red);
+        }
+
+        .journey-card.to-be {
+            background: var(--light-green);
+            border: 2px solid var(--green);
+        }
+
+        .journey-card.to-be::before {
+            background: var(--green);
+        }
+
+        .journey-card .icon {
+            font-size: 60px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .journey-card h3 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .journey-card.as-is h3 {
+            color: var(--red);
+        }
+
+        .journey-card.to-be h3 {
+            color: var(--green);
+        }
+
+        .journey-card .card-subtitle {
+            font-size: 16px;
+            color: var(--dark-gray);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .journey-card .divider {
+            width: 80%;
+            height: 1px;
+            background: var(--border-gray);
+            margin: 20px auto;
+        }
+
+        .journey-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .journey-card li {
+            padding: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .journey-card li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .journey-card.as-is li::before {
+            color: var(--red);
+        }
+
+        .journey-card.to-be li::before {
+            color: var(--green);
+        }
+
+        .journey-card.to-be li:last-child {
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        /* ===== Slide 3: 3-Metric System ===== */
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+            border: 1px solid var(--border-gray);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card.purple {
+            background: linear-gradient(135deg, var(--white) 0%, var(--light-purple) 100%);
+        }
+
+        .metric-card.blue {
+            background: linear-gradient(135deg, var(--white) 0%, var(--light-blue) 100%);
+        }
+
+        .metric-card.green {
+            background: linear-gradient(135deg, var(--white) 0%, var(--light-green) 100%);
+            border-color: var(--green);
+        }
+
+        .metric-card .icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            margin-bottom: 8px;
+        }
+
+        .metric-card .metric-subtitle {
+            font-size: 14px;
+            color: var(--dark-gray);
+            margin-bottom: 20px;
+        }
+
+        .metric-card .divider {
+            width: 80%;
+            height: 1px;
+            background: var(--border-gray);
+            margin: 20px auto;
+        }
+
+        .metric-card .value {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--bright-blue);
+            margin: 20px 0;
+        }
+
+        .metric-card.green .value {
+            color: var(--green);
+        }
+
+        .metric-card .value-unit {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            display: block;
+            margin-top: -10px;
+        }
+
+        .metric-card .description {
+            font-size: 12px;
+            color: var(--mid-gray);
+            line-height: 1.5;
+        }
+
+        .overall-score {
+            background: linear-gradient(135deg, var(--light-yellow) 0%, #FFFBEB 100%);
+            border: 2px solid var(--navy-blue);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .overall-score .score-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--navy-blue);
+        }
+
+        .overall-score .score-grade {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--navy-blue);
+        }
+
+        /* ===== Slide 4: Work Completion Score ===== */
+        .completion-container {
+            display: grid;
+            grid-template-columns: 45fr 55fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .definition-box {
+            background: var(--white);
+            border: 2px solid var(--bright-blue);
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 4px 16px rgba(5, 131, 242, 0.12);
+        }
+
+        .definition-box .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .definition-box h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            margin-bottom: 20px;
+        }
+
+        .definition-box .divider {
+            width: 100%;
+            height: 2px;
+            background: var(--border-gray);
+            margin: 20px 0;
+        }
+
+        .formula-box {
+            background: var(--light-blue);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .formula-box .formula {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--bright-blue);
+            line-height: 1.8;
+        }
+
+        .example-box {
+            margin-top: 20px;
+        }
+
+        .example-box h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--navy-blue);
+            margin-bottom: 15px;
+        }
+
+        .example-box .example-line {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 6px 0;
+            color: var(--black);
+        }
+
+        .example-box .example-line .arrow {
+            color: var(--bright-blue);
+            font-weight: bold;
+        }
+
+        .example-box .total {
+            font-weight: 700;
+            color: var(--bright-blue);
+            border-top: 2px solid var(--border-gray);
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .breakdown-box {
+            background: var(--bg-gray);
+            border: 1px solid var(--border-gray);
+            border-radius: 15px;
+            padding: 40px;
+        }
+
+        .breakdown-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .breakdown-box .divider {
+            width: 100%;
+            height: 1px;
+            background: var(--border-gray);
+            margin: 20px 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            font-size: 14px;
+        }
+
+        .status-item .icon {
+            font-size: 28px;
+            margin-right: 12px;
+        }
+
+        .status-item .label {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .status-item .count {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .summary-box {
+            background: var(--light-blue);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .summary-box .summary-line {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--navy-blue);
+            margin: 8px 0;
+        }
+
+        .summary-box .highlight {
+            color: var(--bright-blue);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .summary-box .rate {
+            color: var(--orange);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* ===== Slide 5: Roadmap Timeline ===== */
+        .timeline-container {
+            position: relative;
+            margin-top: 60px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            top: 60px;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: var(--bright-blue);
+            z-index: 0;
+        }
+
+        .phases {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .phase-card {
+            background: var(--white);
+            border: 2px solid var(--navy-blue);
+            border-radius: 15px;
+            padding: 30px 25px;
+            box-shadow: 0 6px 24px rgba(35, 38, 105, 0.12);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .phase-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 36px rgba(35, 38, 105, 0.18);
+        }
+
+        .phase-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--light-blue);
+            color: var(--bright-blue);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 2px solid var(--bright-blue);
+        }
+
+        .phase-dot {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--bright-blue);
+            border-radius: 50%;
+            border: 4px solid var(--white);
+            box-shadow: 0 0 0 2px var(--bright-blue);
+        }
+
+        .phase-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        .phase-card .phase-subtitle {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--bright-blue);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .phase-card .phase-period {
+            font-size: 12px;
+            color: var(--dark-gray);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .phase-card .divider {
+            width: 100%;
+            height: 1px;
+            background: var(--border-gray);
+            margin: 15px 0;
+        }
+
+        .phase-card ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 20px 0;
+        }
+
+        .phase-card li {
+            font-size: 13px;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .phase-card li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--bright-blue);
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .phase-card .investment {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--navy-blue);
+            margin-top: 15px;
+        }
+
+        .phase-card .investment .amount {
+            color: var(--bright-blue);
+            font-weight: 700;
+        }
+
+        .phase-card .roi {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 8px;
+        }
+
+        .cumulative-roi {
+            background: linear-gradient(135deg, var(--light-yellow) 0%, #FFFBEB 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 50px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+        }
+
+        .cumulative-roi .roi-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy-blue);
+        }
+
+        .cumulative-roi .roi-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--green);
+        }
+
+        /* ===== Slide 9: ROI Summary ===== */
+        .roi-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .roi-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+        }
+
+        .roi-box {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px 40px;
+            text-align: center;
+            min-width: 280px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .roi-box.investment {
+            border: 3px solid var(--red);
+        }
+
+        .roi-box.returns {
+            border: 3px solid var(--green);
+        }
+
+        .roi-box .label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 15px;
+        }
+
+        .roi-box .amount {
+            font-size: 56px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .roi-box.investment .amount {
+            color: var(--red);
+        }
+
+        .roi-box.returns .amount {
+            color: var(--green);
+        }
+
+        .roi-box .note {
+            font-size: 12px;
+            color: var(--mid-gray);
+        }
+
+        .roi-arrow {
+            font-size: 100px;
+            color: var(--bright-blue);
+            font-weight: bold;
+        }
+
+        .net-gain {
+            background: var(--white);
+            border: 2px solid var(--bright-blue);
+            border-radius: 10px;
+            padding: 20px 60px;
+            text-align: center;
+        }
+
+        .net-gain .label {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--navy-blue);
+        }
+
+        .net-gain .amount {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--bright-blue);
+            margin-left: 10px;
+        }
+
+        .roi-highlight {
+            background: linear-gradient(135deg, var(--light-yellow) 0%, #FFFBEB 100%);
+            border: 4px solid var(--navy-blue);
+            border-radius: 15px;
+            padding: 40px 80px;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+        }
+
+        .roi-highlight .roi-label {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--navy-blue);
+        }
+
+        .roi-highlight .roi-value {
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--navy-blue);
+            line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .payback {
+            background: var(--light-blue);
+            border: 1px solid #DBEAFE;
+            border-radius: 8px;
+            padding: 15px 40px;
+            text-align: center;
+        }
+
+        .payback .text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--navy-blue);
+        }
+
+        .payback .period {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--bright-blue);
+            margin-left: 10px;
+        }
+
+        /* ===== Slide 11: Vision 2028 ===== */
+        .vision-container {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .vision-main {
+            margin-bottom: 60px;
+        }
+
+        .vision-main h2 {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--navy-blue);
+            margin-bottom: 16px;
+        }
+
+        .vision-main .tagline {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .vision-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto 50px;
+        }
+
+        .vision-feature {
+            background: var(--white);
+            border: 2px solid var(--bright-blue);
+            border-radius: 12px;
+            padding: 30px 25px;
+            box-shadow: 0 4px 12px rgba(5, 131, 242, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .vision-feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(5, 131, 242, 0.2);
+        }
+
+        .vision-feature .icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .vision-feature h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            margin-bottom: 12px;
+        }
+
+        .vision-feature .description {
+            font-size: 13px;
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+
+        .vision-final {
+            background: linear-gradient(90deg, var(--bright-blue) 0%, var(--navy-blue) 100%);
+            border-radius: 10px;
+            padding: 25px;
+            color: var(--white);
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        /* ===== Slide 12: Call to Action ===== */
+        .cta-container {
+            margin-top: 40px;
+        }
+
+        .checklist {
+            background: var(--white);
+            border: 1px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 30px 40px;
+            margin-bottom: 30px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item .check {
+            font-size: 32px;
+            color: var(--green);
+            margin-right: 20px;
+        }
+
+        .checklist-item .content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 6px;
+        }
+
+        .checklist-item .content .detail {
+            font-size: 14px;
+            color: var(--dark-gray);
+        }
+
+        .timeline-bar {
+            background: var(--light-blue);
+            border: 1px solid #DBEAFE;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .timeline-bar .milestone {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--bright-blue);
+        }
+
+        .timeline-bar .stages {
+            font-size: 13px;
+            color: var(--dark-gray);
+            margin-top: 8px;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, var(--light-yellow) 0%, #FFFBEB 100%);
+            border: 3px solid var(--navy-blue);
+            border-radius: 12px;
+            padding: 35px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.25);
+            margin-bottom: 30px;
+        }
+
+        .cta-box .cta-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--navy-blue);
+            margin-bottom: 20px;
+        }
+
+        .cta-box .cta-title .icon {
+            font-size: 36px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        .cta-box .requirements {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--black);
+            line-height: 2;
+        }
+
+        .contact {
+            background: var(--bg-gray);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .contact .text {
+            font-size: 13px;
+            color: var(--dark-gray);
+        }
+
+        .contact .email {
+            font-weight: 600;
+            color: var(--bright-blue);
+        }
+
+        /* ===== Responsive Design ===== */
+        @media (max-width: 1024px) {
+            .slide {
+                padding: 40px 50px;
+            }
+
+            .journey-container,
+            .metrics-container,
+            .completion-container {
+                grid-template-columns: 1fr;
+            }
+
+            .phases {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-line {
+                display: none;
+            }
+
+            .roi-flow {
+                flex-direction: column;
+            }
+
+            .roi-arrow {
+                transform: rotate(90deg);
+            }
+
+            .vision-features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px 25px;
+                min-height: auto;
+            }
+
+            .slide-title {
+                font-size: 32px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            #slide1 .main-title {
+                font-size: 40px;
+            }
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* ===== Scroll Animations ===== */
+        .slide {
+            opacity: 0;
+            animation: none;
+        }
+
+        .slide.visible {
+            opacity: 1;
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Menu -->
+    <div class="nav-menu">
+        <button class="nav-btn active" data-slide="1"></button>
+        <button class="nav-btn" data-slide="2"></button>
+        <button class="nav-btn" data-slide="3"></button>
+        <button class="nav-btn" data-slide="4"></button>
+        <button class="nav-btn" data-slide="5"></button>
+        <button class="nav-btn" data-slide="9"></button>
+        <button class="nav-btn" data-slide="11"></button>
+        <button class="nav-btn" data-slide="12"></button>
+    </div>
+
+    <div class="presentation">
+        <!-- Slide 1: Title -->
+        <div class="slide visible" id="slide1">
+            <div class="main-title">Individual Performance Report</div>
+            <div class="main-subtitle">작업자 성과 관리 시스템</div>
+            <div class="sub-info">MES R018 Analysis - Long-term Roadmap</div>
+            <div class="period">2026 ~ 2028</div>
+            <div class="date">Feb 2026</div>
+        </div>
+
+        <!-- Slide 2: The Journey -->
+        <div class="slide" id="slide2">
+            <h2 class="section-title">The Journey</h2>
+            <div class="journey-container">
+                <div class="journey-card as-is">
+                    <div class="icon">📊</div>
+                    <h3>AS-IS</h3>
+                    <div class="card-subtitle">현재의 한계</div>
+                    <div class="divider"></div>
+                    <ul>
+                        <li>데이터는 있지만 활용 없음</li>
+                        <li>작업자 성과 측정 불가</li>
+                        <li>인력 계획 경험 의존</li>
+                        <li>비효율 지속</li>
+                    </ul>
+                </div>
+                <div class="journey-card to-be">
+                    <div class="icon">🚀</div>
+                    <h3>TO-BE</h3>
+                    <div class="card-subtitle">데이터 기반 의사결정</div>
+                    <div class="divider"></div>
+                    <ul>
+                        <li>3가지 핵심 지표 실시간 집계</li>
+                        <li>개인별 성과 리포트</li>
+                        <li>AI 기반 인력 예측</li>
+                        <li>생산성 20% ↑</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 3-Metric System -->
+        <div class="slide" id="slide3">
+            <h2 class="section-title">3-Metric System</h2>
+            <p class="section-subtitle">작업자 성과의 3가지 차원</p>
+            <div class="metrics-container">
+                <div class="metric-card purple">
+                    <div class="icon">📊</div>
+                    <h3>Time Utilization</h3>
+                    <div class="metric-subtitle">작업 시간 활용률</div>
+                    <div class="divider"></div>
+                    <div class="value">76.3%</div>
+                    <div class="description">근무 시간 대비<br>실제 작업 시간</div>
+                </div>
+                <div class="metric-card blue">
+                    <div class="icon">⚡</div>
+                    <h3>Work Efficiency</h3>
+                    <div class="metric-subtitle">작업 효율성</div>
+                    <div class="divider"></div>
+                    <div class="value">103.2%</div>
+                    <div class="description">표준 시간 대비<br>실제 생산성</div>
+                </div>
+                <div class="metric-card green">
+                    <div class="icon">✅</div>
+                    <h3>Work Completion</h3>
+                    <div class="metric-subtitle">작업 완결성</div>
+                    <div class="divider"></div>
+                    <div class="value">7.3<span class="value-unit">jobs/week</span></div>
+                    <div class="description">완료된 작업 수량</div>
+                </div>
+            </div>
+            <div class="overall-score">
+                <span class="score-text">→ Overall Score: </span>
+                <span class="score-grade">A- (87.2/100)</span>
+            </div>
+        </div>
+
+        <!-- Slide 4: Work Completion Score -->
+        <div class="slide" id="slide4">
+            <h2 class="section-title">Work Completion Score</h2>
+            <p class="section-subtitle">작업 완결성 측정</p>
+            <div class="completion-container">
+                <div class="definition-box">
+                    <div class="icon">📋</div>
+                    <h3>Definition</h3>
+                    <div class="divider"></div>
+                    <div class="formula-box">
+                        <div class="formula">
+                            Work Completion Score<br>
+                            = Σ (Job Rate / 100)
+                        </div>
+                    </div>
+                    <div class="example-box">
+                        <h4>Example:</h4>
+                        <div class="example-line">W/O-123: 100% <span class="arrow">→</span> 1.0</div>
+                        <div class="example-line">W/O-124:  40% <span class="arrow">→</span> 0.4</div>
+                        <div class="example-line">W/O-125:  80% <span class="arrow">→</span> 0.8</div>
+                        <div class="example-line total">Total:  2.2 jobs</div>
+                    </div>
+                </div>
+                <div class="breakdown-box">
+                    <h3>Job Status Breakdown</h3>
+                    <div class="divider"></div>
+                    <div class="status-item">
+                        <span class="icon">✅</span>
+                        <span class="label">Completed (100%):</span>
+                        <span class="count">3 jobs</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="icon">🟡</span>
+                        <span class="label">Near Complete (80-99%):</span>
+                        <span class="count">2 jobs</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="icon">🟠</span>
+                        <span class="label">In Progress (50-79%):</span>
+                        <span class="count">1 job</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="icon">🔴</span>
+                        <span class="label">Started (&lt;50%):</span>
+                        <span class="count">3 jobs</span>
+                    </div>
+                    <div class="summary-box">
+                        <div class="summary-line">Total Score: <span class="highlight">5.4 / 9 jobs</span></div>
+                        <div class="summary-line">Completion Rate: <span class="rate">60%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Roadmap Timeline -->
+        <div class="slide" id="slide5">
+            <h2 class="section-title">Roadmap Timeline</h2>
+            <p class="section-subtitle">2026 Q2 ~ 2028 Q2</p>
+            <div class="timeline-container">
+                <div class="timeline-line"></div>
+                <div class="phases">
+                    <div class="phase-card">
+                        <div class="phase-badge">0-3 mo</div>
+                        <div class="phase-dot"></div>
+                        <h3>Phase 1</h3>
+                        <div class="phase-subtitle">Foundation</div>
+                        <div class="phase-period">2026 Q2 ~ Q3</div>
+                        <div class="divider"></div>
+                        <ul>
+                            <li>3-Metric System</li>
+                            <li>Individual Report</li>
+                            <li>Team Dashboard</li>
+                        </ul>
+                        <div class="divider"></div>
+                        <div class="investment">Investment: <span class="amount">$60K</span></div>
+                        <div class="roi">ROI: 2.5x</div>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-badge">3-6 mo</div>
+                        <div class="phase-dot"></div>
+                        <h3>Phase 2</h3>
+                        <div class="phase-subtitle">Intelligence</div>
+                        <div class="phase-period">2026 Q4 ~ 2027 Q2</div>
+                        <div class="divider"></div>
+                        <ul>
+                            <li>S/T Learning</li>
+                            <li>MH Forecasting</li>
+                            <li>Workforce Planning</li>
+                        </ul>
+                        <div class="divider"></div>
+                        <div class="investment">Investment: <span class="amount">$120K</span></div>
+                        <div class="roi">ROI: 4.2x</div>
+                    </div>
+                    <div class="phase-card">
+                        <div class="phase-badge">6-12 mo</div>
+                        <div class="phase-dot"></div>
+                        <h3>Phase 3</h3>
+                        <div class="phase-subtitle">Optimization</div>
+                        <div class="phase-period">2027 Q3 ~ 2028 Q2</div>
+                        <div class="divider"></div>
+                        <ul>
+                            <li>AI Task Allocation</li>
+                            <li>Cost Analysis</li>
+                            <li>ERP Integration</li>
+                        </ul>
+                        <div class="divider"></div>
+                        <div class="investment">Investment: <span class="amount">$240K</span></div>
+                        <div class="roi">ROI: 5.0x</div>
+                    </div>
+                </div>
+                <div class="cumulative-roi">
+                    <span class="roi-text">3-Year Cumulative ROI: </span>
+                    <span class="roi-value">11.1x</span>
+                    <span class="roi-text"> ($4.68M net gain)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: ROI Summary -->
+        <div class="slide" id="slide9">
+            <h2 class="section-title">ROI Summary</h2>
+            <p class="section-subtitle">투자 대비 수익</p>
+            <div class="roi-container">
+                <div class="roi-flow">
+                    <div class="roi-box investment">
+                        <div class="label">Investment</div>
+                        <div class="amount">$420K</div>
+                        <div class="note">(3-year total)</div>
+                    </div>
+                    <div class="roi-arrow">→</div>
+                    <div class="roi-box returns">
+                        <div class="label">Returns</div>
+                        <div class="amount">$1.85M</div>
+                        <div class="note">(3-year cumulative)</div>
+                    </div>
+                </div>
+                <div class="net-gain">
+                    <span class="label">Net Gain:</span>
+                    <span class="amount">$1.43M</span>
+                </div>
+                <div class="roi-highlight">
+                    <div class="roi-label">ROI:</div>
+                    <div class="roi-value">11.1x</div>
+                </div>
+                <div class="payback">
+                    <span class="text">Payback Period:</span>
+                    <span class="period">9 months</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Vision 2028 -->
+        <div class="slide" id="slide11">
+            <h2 class="section-title">Vision 2028</h2>
+            <p class="section-subtitle">AI-Powered Manufacturing Intelligence</p>
+            <div class="vision-container">
+                <div class="vision-main">
+                    <h2>AI Copilot</h2>
+                    <div class="tagline">작업 현장의 AI 비서</div>
+                </div>
+                <div class="vision-features">
+                    <div class="vision-feature">
+                        <div class="icon">🔮</div>
+                        <h3>Predict</h3>
+                        <div class="description">주간 생산 계획<br>자동 생성</div>
+                    </div>
+                    <div class="vision-feature">
+                        <div class="icon">⚙️</div>
+                        <h3>Optimize</h3>
+                        <div class="description">실시간 자원<br>최적 배분</div>
+                    </div>
+                    <div class="vision-feature">
+                        <div class="icon">🚨</div>
+                        <h3>Alert</h3>
+                        <div class="description">이상 징후<br>사전 경보</div>
+                    </div>
+                    <div class="vision-feature">
+                        <div class="icon">📈</div>
+                        <h3>Learn</h3>
+                        <div class="description">지속적 성능<br>개선</div>
+                    </div>
+                </div>
+                <div class="vision-final">
+                    → Autonomous Manufacturing Operations
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Call to Action -->
+        <div class="slide" id="slide12">
+            <h2 class="section-title">Next Steps</h2>
+            <p class="section-subtitle">지금 시작하세요</p>
+            <div class="cta-container">
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <div class="check">✅</div>
+                        <div class="content">
+                            <h4>Phase 1 Budget Approval</h4>
+                            <div class="detail">$60K (2026 Q2)</div>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="check">✅</div>
+                        <div class="content">
+                            <h4>Work Completion Score Launch</h4>
+                            <div class="detail">4 weeks</div>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="check">✅</div>
+                        <div class="content">
+                            <h4>IPR Pilot Program</h4>
+                            <div class="detail">50 workers, 8 weeks</div>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <div class="check">✅</div>
+                        <div class="content">
+                            <h4>Team Dashboard Rollout</h4>
+                            <div class="detail">12 weeks</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-bar">
+                    <div class="milestone">M1 → M2 → M3 → M4</div>
+                    <div class="stages">Design | Develop | Test | Deploy</div>
+                </div>
+                <div class="cta-box">
+                    <div class="cta-title">
+                        <span class="icon">🚀</span> Start Today
+                    </div>
+                    <div class="requirements">
+                        Executive Sponsorship Required | Change Management Plan | IT Team Alignment
+                    </div>
+                </div>
+                <div class="contact">
+                    <span class="text">MES Team | </span>
+                    <span class="email">mes@company.com</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all slides
+        document.querySelectorAll('.slide').forEach(slide => {
+            observer.observe(slide);
+        });
+
+        // Navigation buttons
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const slides = document.querySelectorAll('.slide');
+
+        navButtons.forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                const targetSlide = slides[index];
+                targetSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Update active button
+                navButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Update active nav button on scroll
+        window.addEventListener('scroll', () => {
+            let current = '';
+            slides.forEach((slide, index) => {
+                const slideTop = slide.offsetTop;
+                const slideHeight = slide.clientHeight;
+                if (pageYOffset >= slideTop - slideHeight / 3) {
+                    current = index;
+                }
+            });
+
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('active');
+                if (index === current) {
+                    btn.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

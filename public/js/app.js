@@ -1074,11 +1074,11 @@ function getActualShift(workingDay, workingShift) {
     return '';
 }
 
-// Check if result is valid (IS "X" - meaning completed/should be counted)
+// Check if result should be counted (CHANGED: count ALL records)
+// ✅ Result CNT와 무관하게 모든 레코드를 valid로 처리
+// Result CNT는 표시용으로만 사용됨
 function isValidResult(resultCnt) {
-    if (!resultCnt) return false;
-    const normalized = normalizeHeader(resultCnt.toString());
-    return normalized === 'X'; // Changed: X means valid/completed work
+    return true; // Count all records regardless of Result CNT
 }
 
 // Find process mapping
@@ -2224,22 +2224,25 @@ function aggregateByWorker(data) {
             };
         }
         
-        // Accumulate VALID work time only (validFlag === 1)
-        if (record.validFlag === 1) {
-            aggregated[key].totalMinutes += record.workerActMins || 0;
+        // ✅ CHANGED: Result CNT와 무관하게 모든 작업시간을 누적
+        // 작업시간이 있는 모든 레코드를 계산에 포함
+        if (record.workerActMins > 0) {
+            aggregated[key].totalMinutes += record.workerActMins;
             aggregated[key].validCount += 1;
             validRecords++;
             
-            // ✅ FIX: Accumulate efficiency fields (S/T, Rate, Assigned, Actual)
+            // ✅ Accumulate efficiency fields (S/T, Rate, Assigned, Actual)
             const st = record['Worker S/T'] || 0;
             const rate = record['Worker Rate(%)'] || 0;
             const assigned = (st * rate / 100);
             
-            // ⚠️ DEBUG: Log first few records to check S/T values
+            // 🔍 DEBUG: Log first few records to check S/T values
             if (totalRecords <= 3) {
                 console.log(`📊 Record ${totalRecords}: Worker="${record.workerName}", S/T=${st}, Rate=${rate}%, Assigned=${assigned.toFixed(1)}`, {
                     process: record.foDesc3,
                     date: record.workingDay,
+                    resultCnt: record.resultCnt,
+                    workerActMins: record.workerActMins,
                     availableFields: Object.keys(record).filter(k => k.includes('S/T') || k.includes('Rate'))
                 });
             }
@@ -2248,7 +2251,7 @@ function aggregateByWorker(data) {
             aggregated[key].assignedStandardTime += assigned;  // Accumulate Adjusted S/T
             aggregated[key].totalMinutesOriginal += record['Worker Act'] || 0;  // Accumulate Actual
         } else {
-            invalidRecords++;
+            invalidRecords++;  // No work time recorded
         }
     });
     
