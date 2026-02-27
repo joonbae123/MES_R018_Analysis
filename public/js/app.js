@@ -3987,15 +3987,15 @@ function showWorkerDetail(workerName) {
         `;
     }
     
-    // ✅ FIX: Use cachedWorkerAgg for calculations, but different data for table display
-    const cachedWorkerAgg = AppState.cachedWorkerAgg || [];
-    const aggregatedRecords = cachedWorkerAgg.filter(r => r.workerName === workerName);
-    
-    let dataForSummary, dataForTable;
-    
     // Get raw individual records for table display
     const rawDataSource = AppState.filteredData || AppState.processedData;
     const rawRecords = rawDataSource.filter(r => r.workerName === workerName && !r.rework);
+    
+    // ✅ FIX: Aggregate rawRecords directly to match current filter state
+    // Don't use cachedWorkerAgg because it may be out of sync with filters
+    const aggregatedRecords = aggregateByWorker(rawRecords);
+    
+    let dataForSummary, dataForTable;
     
     if (isEfficiency) {
         // Efficiency: Use ALL aggregated data for KPI (including outliers)
