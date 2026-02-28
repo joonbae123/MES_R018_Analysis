@@ -4973,7 +4973,7 @@ function showUploadProgressBar(uploadId, totalRecords) {
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-cloud-upload-alt fa-spin"></i>
                     <span class="font-semibold">Saving to database...</span>
-                    <span id="progress-text" class="text-blue-100">${totalRecords.toLocaleString()} records</span>
+                    <span id="progress-text" class="text-blue-100">Uploading... 0%</span>
                 </div>
                 <div class="text-sm text-blue-100">
                     <i class="far fa-clock mr-1"></i>
@@ -5001,11 +5001,10 @@ function updateProgressBar(progress) {
     
     const percentage = progress.percentage || 0;
     const elapsed = progress.elapsed || 0;
-    const current = progress.current || 0;
-    const total = progress.total || 0;
     
-    progressText.textContent = `${current.toLocaleString()} / ${total.toLocaleString()} records (${percentage}%)`;
-    elapsedTime.textContent = `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+    // Always show "Uploading... X%" format
+    progressText.textContent = `Uploading... ${Math.round(percentage)}%`;
+    elapsedTime.textContent = `${Math.floor(elapsed / 60)}m ${elapsed % 60}s elapsed`;
     progressBarFill.style.width = `${percentage}%`;
     
     if (progress.status === 'processing') {
