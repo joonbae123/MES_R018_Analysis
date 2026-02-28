@@ -3521,11 +3521,13 @@ async function saveToDatabase() {
             // Hide loading overlay
             hideLoadingOverlay();
             
-            // Show progress bar
-            showUploadProgressBar(result.uploadId, result.totalRecords);
+            // Show simple success message
+            showSuccessMessage('✅ Data uploaded successfully! Processing in background...');
             
-            // Start polling for progress
-            startProgressPolling(result.uploadId);
+            // Refresh uploads list after 3 seconds
+            setTimeout(() => {
+                loadUploadsList();
+            }, 3000);
             
             // Re-enable button
             saveBtn.disabled = false;
@@ -4760,6 +4762,34 @@ function hideLoadingOverlay() {
             overlay.classList.remove('fade-out');
         }, 300);
     }
+}
+
+// Show success message (auto-hide after 3 seconds)
+function showSuccessMessage(message) {
+    // Remove existing success message if any
+    const existing = document.getElementById('successMessage');
+    if (existing) {
+        existing.remove();
+    }
+    
+    // Create success message
+    const successDiv = document.createElement('div');
+    successDiv.id = 'successMessage';
+    successDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2';
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(successDiv);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        successDiv.style.opacity = '0';
+        successDiv.style.transition = 'opacity 0.5s';
+        setTimeout(() => {
+            successDiv.remove();
+        }, 500);
+    }, 3000);
 }
 
 // Toggle between Time Utilization and Work Efficiency metrics
