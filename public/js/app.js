@@ -3522,7 +3522,7 @@ async function saveToDatabase() {
             hideLoadingOverlay();
             
             // Show simple success message
-            showSuccessMessage('✅ Data uploaded successfully! Processing in background...');
+            showSuccessMessage('Data uploaded successfully! Processing in background...');
             
             // Refresh uploads list after 3 seconds
             setTimeout(() => {
