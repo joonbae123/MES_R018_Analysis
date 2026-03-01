@@ -782,103 +782,161 @@
 
         <!-- Dashboard Tab -->
         <div id="dashboardTab" class="tab-content hidden">
-            <!-- Dashboard Header -->
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">
-                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
-                    Shopfloor Performance Dashboard
-                </h2>
-                <p class="text-sm text-gray-600">Real-time insights and trend analysis for production efficiency</p>
-            </div>
-
-            <!-- AI Insights & Warnings Section -->
-            <div class="card mb-6" style="border-left: 4px solid #f59e0b;">
-                <h3 class="text-lg font-bold text-gray-800 mb-3">
-                    <i class="fas fa-robot mr-2 text-yellow-600"></i>
-                    AI Insights & Warnings
+            <!-- Filters -->
+            <div class="card mb-6">
+                <h3 class="text-lg font-bold mb-4">
+                    <i class="fas fa-filter text-blue-600 mr-2"></i>
+                    Dashboard Filters
                 </h3>
-                <div id="aiInsightsContainer">
-                    <p class="text-sm text-gray-500 italic">No active warnings. All metrics within normal ranges.</p>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Period</label>
+                        <select id="dashPeriodFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md">
+                            <option value="all">All Dates</option>
+                            <option value="last7">Last 7 Days</option>
+                            <option value="last14">Last 14 Days</option>
+                            <option value="last30">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Working Shift</label>
+                        <select id="dashWorkingShiftFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md">
+                            <option value="">All</option>
+                            <option value="Day">Day</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category (FO Desc 2)</label>
+                        <select id="dashCategoryFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process (FO Desc 3)</label>
+                        <select id="dashProcessFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="applyDashboardFilters()" class="btn btn-primary">
+                        <i class="fas fa-check mr-2"></i>
+                        Apply Filters
+                    </button>
+                    <button onclick="resetDashboardFilters()" class="btn btn-secondary">
+                        <i class="fas fa-undo mr-2"></i>
+                        Reset
+                    </button>
                 </div>
             </div>
 
-            <!-- KPI Trend Overview Section -->
+            <!-- KPI Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Workers</p>
+                            <p class="text-3xl font-bold text-gray-800" id="dashKpiWorkers">-</p>
+                        </div>
+                        <i class="fas fa-users text-4xl text-blue-500"></i>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Avg Utilization</p>
+                            <p class="text-3xl font-bold text-blue-600" id="dashKpiUtil">-</p>
+                        </div>
+                        <i class="fas fa-clock text-4xl text-blue-500"></i>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Avg Efficiency</p>
+                            <p class="text-3xl font-bold text-purple-600" id="dashKpiEff">-</p>
+                        </div>
+                        <i class="fas fa-chart-line text-4xl text-purple-500"></i>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Records</p>
+                            <p class="text-3xl font-bold text-gray-800" id="dashKpiRecords">-</p>
+                        </div>
+                        <i class="fas fa-database text-4xl text-gray-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trend Analysis -->
             <div class="card mb-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">
-                        <i class="fas fa-chart-area mr-2 text-blue-600"></i>
-                        KPI Trend Overview
+                    <h3 class="text-lg font-bold">
+                        <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                        Trend Analysis
                     </h3>
                     <div class="flex gap-2">
-                        <button id="trendToggleDaily" class="px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white" onclick="switchTrendView('daily')">
-                            <i class="fas fa-calendar-day mr-1"></i>Daily
+                        <button id="trendUtilBtn" class="px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white" onclick="switchDashTrend('util')">
+                            Utilization
                         </button>
-                        <button id="trendToggleWeekly" class="px-4 py-2 rounded-lg font-medium transition-all bg-gray-200 text-gray-700 hover:bg-gray-300" onclick="switchTrendView('weekly')">
-                            <i class="fas fa-calendar-week mr-1"></i>Weekly
+                        <button id="trendEffBtn" class="px-4 py-2 rounded-lg font-medium transition-all bg-gray-200 text-gray-700 hover:bg-gray-300" onclick="switchDashTrend('eff')">
+                            Efficiency
                         </button>
                     </div>
                 </div>
-                <div id="kpiTrendChart" class="chart-container cursor-pointer" style="height: 300px;" title="Click to drill down by process hierarchy">
-                    <p class="text-sm text-gray-500 text-center py-12">Select filters and apply to view trends</p>
-                </div>
+                <canvas id="dashTrendChart" style="height: 300px;"></canvas>
             </div>
 
-            <!-- Process Performance Ranking Section -->
+            <!-- Top/Bottom Workers & Process Analysis -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Top 10 Workers -->
                 <div class="card">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">
-                        <i class="fas fa-medal mr-2 text-green-600"></i>
-                        Top 5 Processes
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                        Top 10 Workers
                     </h3>
-                    <div id="topProcessesTable" class="overflow-auto" style="max-height: 400px;">
+                    <div id="dashTopWorkers" class="space-y-2" style="max-height: 400px; overflow-y: auto;">
                         <p class="text-sm text-gray-500 italic">No data available</p>
                     </div>
                 </div>
+
+                <!-- Bottom 10 Workers -->
                 <div class="card">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">
-                        <i class="fas fa-exclamation-circle mr-2 text-red-600"></i>
-                        Bottom 5 Processes
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                        Bottom 10 Workers
                     </h3>
-                    <div id="bottomProcessesTable" class="overflow-auto" style="max-height: 400px;">
+                    <div id="dashBottomWorkers" class="space-y-2" style="max-height: 400px; overflow-y: auto;">
                         <p class="text-sm text-gray-500 italic">No data available</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Shift Comparison Section -->
-            <div class="card mb-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-3">
-                    <i class="fas fa-sun mr-2 text-orange-500"></i>
-                    <i class="fas fa-moon mr-2 text-indigo-500"></i>
-                    Shift Comparison (Day vs Night)
-                </h3>
-                <div id="shiftComparisonChart" class="chart-container cursor-pointer" style="height: 300px;" title="Click to view detailed shift analysis">
-                    <p class="text-sm text-gray-500 text-center py-12">Select filters and apply to view shift comparison</p>
+            <!-- Process & Shift Analysis -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Process Analysis -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-industry text-blue-600 mr-2"></i>
+                        Process Analysis
+                    </h3>
+                    <canvas id="dashProcessChart"></canvas>
                 </div>
-            </div>
 
-            <!-- Distribution & Outliers Section -->
-            <div class="card mb-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">
-                    <i class="fas fa-chart-histogram mr-2 text-purple-600"></i>
-                    Distribution & Outliers
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Utilization Rate Distribution</h4>
-                        <div id="utilizationDistChart" class="chart-container cursor-pointer" style="height: 250px;" title="Click to view workers in this range">
-                            <p class="text-xs text-gray-500 text-center py-8">No data</p>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Efficiency Rate Distribution</h4>
-                        <div id="efficiencyDistChart" class="chart-container cursor-pointer" style="height: 250px;" title="Click to view workers in this range">
-                            <p class="text-xs text-gray-500 text-center py-8">No data</p>
-                        </div>
-                    </div>
+                <!-- Shift Analysis -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-clock text-orange-600 mr-2"></i>
+                        Shift Analysis
+                    </h3>
+                    <canvas id="dashShiftChart"></canvas>
                 </div>
             </div>
         </div>
+
 
         <div id="reportTab" class="tab-content hidden">
             <!-- Filters -->
