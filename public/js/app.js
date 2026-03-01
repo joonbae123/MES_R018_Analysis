@@ -15,6 +15,104 @@ const CATEGORY_ORDER = {
     'Other': 999
 };
 
+// 하드코딩된 Process Mapping 규칙 (FO Desc → FO Desc 2, FO Desc 3)
+// Excel 파일에 Mapping 시트가 없을 때 이 규칙을 사용
+const DEFAULT_PROCESS_MAPPING = {
+  "Fitup Bracket": { foDesc2: "BT Complete", foDesc3: "Fitup Bracket", seq: 1 },
+  "Flange Paint": { foDesc2: "BT Complete", foDesc3: "Flange Paint", seq: 3 },
+  "Weld Bracket": { foDesc2: "BT Complete", foDesc3: "Weld Bracket", seq: 3 },
+  "Bracket VT/MT Repair": { foDesc2: "BT Complete", foDesc3: "Bracket VT/MT Repair", seq: 3 },
+  "VT/MT Repair": { foDesc2: "BT Complete", foDesc3: "VT/MT Repair", seq: 4 },
+  "UT Repair": { foDesc2: "BT Complete", foDesc3: "UT Repair", seq: 5 },
+  "Tilt Repair": { foDesc2: "BT Complete", foDesc3: "Tilt Repair", seq: 6 },
+  "Quality Repair": { foDesc2: "BT Complete", foDesc3: "Quality Repair", seq: 6 },
+  "Flatness Repair": { foDesc2: "BT Complete", foDesc3: "Flatness Repair", seq: 7 },
+  "Harness Repair": { foDesc2: "BT Complete", foDesc3: "Harness Repair", seq: 8 },
+  "Final Polish": { foDesc2: "BT Complete", foDesc3: "Final Polish", seq: 8 },
+  "Final Repair": { foDesc2: "BT Complete", foDesc3: "Final Repair", seq: 9 },
+  "Pre-Blasting": { foDesc2: "BT Process", foDesc3: "Pre-Blasting", seq: null },
+  "Cut": { foDesc2: "BT Process", foDesc3: "Cut", seq: 1 },
+  "LS DS+Shell 2": { foDesc2: "BT Process", foDesc3: "LS DS+Shell 2", seq: 2 },
+  "Bevel": { foDesc2: "BT Process", foDesc3: "Bevel", seq: 3 },
+  "Bend": { foDesc2: "BT Process", foDesc3: "Bend", seq: 4 },
+  "LSeam": { foDesc2: "BT Process", foDesc3: "LSeam", seq: 6 },
+  "FU-UF": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-LF": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C02": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C03": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C04": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C05": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C06": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C07": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C08": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C09": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C10": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU-C11": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "FU DS+Shell 2": { foDesc2: "BT Process", foDesc3: "FU", seq: 8 },
+  "CSO-UF": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-LF": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C02": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C03": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C04": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C05": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C06": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C07": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C08": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C09": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C10": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSO-C11": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-UF": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-LF": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C02": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C03": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C04": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C05": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C06": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C07": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C08": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C09": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C10": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "CSI-C11": { foDesc2: "BT Process", foDesc3: "CS", seq: 9 },
+  "Final BT Inspection": { foDesc2: "BT QC", foDesc3: "Final BT Inspection", seq: null },
+  "Blasting Inspection": { foDesc2: "BT QC", foDesc3: "Blasting Inspection", seq: null },
+  "DS-CUT": { foDesc2: "DS", foDesc3: "DS-CUT", seq: null },
+  "DS-BEV": { foDesc2: "DS", foDesc3: "DS-BEV", seq: null },
+  "DS-BEN": { foDesc2: "DS", foDesc3: "DS-BEN", seq: null },
+  "DS-LS": { foDesc2: "DS", foDesc3: "DS-LS", seq: null },
+  "DS-FU": { foDesc2: "DS", foDesc3: "DS-FU", seq: null },
+  "IM Pre-assembly Mounting": { foDesc2: "IM", foDesc3: "IM Pre-assembly Mounting", seq: null },
+  "Ring on": { foDesc2: "IM", foDesc3: "Ring on", seq: null },
+  "Ring off": { foDesc2: "IM", foDesc3: "Ring off", seq: null },
+  "Ovality Repair": { foDesc2: "IM", foDesc3: "Ovality Repair", seq: null },
+  "Final IM Inspection": { foDesc2: "IM QC", foDesc3: "Final IM Inspection", seq: null },
+  "Flatness Inspection": { foDesc2: "IM QC", foDesc3: "Flatness Inspection", seq: null },
+  "QC VT1": { foDesc2: "IM QC", foDesc3: "QC VT1", seq: null },
+  "QC UT": { foDesc2: "IM QC", foDesc3: "QC UT", seq: null },
+  "QC Pre-assembly Inspection": { foDesc2: "IM QC", foDesc3: "QC Pre-assembly Inspection", seq: null },
+  "Assembly Inspection": { foDesc2: "IM QC", foDesc3: "Assembly Inspection", seq: null },
+  "Electrical": { foDesc2: "IM QC", foDesc3: "Electrical", seq: null },
+  "Mechanical": { foDesc2: "IM QC", foDesc3: "Mechanical", seq: null },
+  "CSI-Mechanical": { foDesc2: "IM QC", foDesc3: "CSI-Mechanical", seq: null },
+  "CSO-Mechanical": { foDesc2: "IM QC", foDesc3: "CSO-Mechanical", seq: null },
+  "CSI-Electrical": { foDesc2: "IM QC", foDesc3: "CSI-Electrical", seq: null },
+  "Blasting": { foDesc2: "WT", foDesc3: "Blasting", seq: null },
+  "Blasting(TAP)": { foDesc2: "WT", foDesc3: "Blasting(TAP)", seq: null },
+  "Metallizing": { foDesc2: "WT", foDesc3: "Metallizing", seq: null },
+  "Wash": { foDesc2: "WT", foDesc3: "Wash", seq: null },
+  "Paint1IO": { foDesc2: "WT", foDesc3: "Paint1IO", seq: null },
+  "Paint2I": { foDesc2: "WT", foDesc3: "Paint2I", seq: null },
+  "Paint2O": { foDesc2: "WT", foDesc3: "Paint2O", seq: null },
+  "Final Cleaning": { foDesc2: "WT", foDesc3: "Final Cleaning", seq: null },
+  "Final Touch Up": { foDesc2: "WT", foDesc3: "Final Touch Up", seq: null },
+  "Final Paint Repair": { foDesc2: "WT", foDesc3: "Final Paint Repair", seq: null },
+  "Prime Coat": { foDesc2: "WT", foDesc3: "Prime Coat", seq: null },
+  "Paint1I": { foDesc2: "WT", foDesc3: "Paint1I", seq: null },
+  "Final WT Inspection": { foDesc2: "WT QC", foDesc3: "Final WT Inspection", seq: null },
+  "Paint1 Inspection": { foDesc2: "WT QC", foDesc3: "Paint1 Inspection", seq: null },
+  "Metalizing Inspection": { foDesc2: "WT QC", foDesc3: "Metalizing Inspection", seq: null },
+  "Wash Inspection": { foDesc2: "WT QC", foDesc3: "Wash Inspection", seq: null },
+};
+
 // Global state
 const AppState = {
     rawData: [],
@@ -530,12 +628,30 @@ function handleFileUpload(file) {
                             });
                             
                             updateMappingTable();
-                            console.log(`✅ ${AppState.processMapping.length} process mappings loaded`);
+                            console.log(`✅ ${AppState.processMapping.length} process mappings loaded from Mapping sheet`);
                         }
                     }
                 } catch (err) {
                     console.warn('매핑 시트 로드 실패:', err);
                 }
+            } else {
+                // Mapping 시트가 없으면 기본 하드코딩 매핑 사용
+                console.log('ℹ️ Mapping 시트가 없습니다. 하드코딩된 기본 매핑을 사용합니다.');
+                AppState.processMapping = [];
+                
+                // DEFAULT_PROCESS_MAPPING을 AppState.processMapping 형식으로 변환
+                Object.keys(DEFAULT_PROCESS_MAPPING).forEach(fdDesc => {
+                    const mapping = DEFAULT_PROCESS_MAPPING[fdDesc];
+                    AppState.processMapping.push({
+                        fdDesc: fdDesc,
+                        foDesc2: mapping.foDesc2,
+                        foDesc3: mapping.foDesc3,
+                        seq: mapping.seq || 999
+                    });
+                });
+                
+                updateMappingTable();
+                console.log(`✅ ${AppState.processMapping.length} process mappings loaded from DEFAULT_PROCESS_MAPPING`);
             }
             
             updateProgress(50);
