@@ -3207,15 +3207,9 @@ function loadDefaultProcessMapping() {
         // IM QC Category
         { fdDesc: 'QC Pre-assembly Inspection', foDesc2: 'IM QC', foDesc3: 'QC Pre-assembly Inspection', seq: 1 },
         { fdDesc: 'IM Pre-assembly Mounting', foDesc2: 'IM QC', foDesc3: 'IM Pre-assembly Mounting', seq: 1 },
-        { fdDesc: 'Wash Inspection', foDesc2: 'IM QC', foDesc3: 'Wash Inspection', seq: 1 },
-        { fdDesc: 'QC MT', foDesc2: 'IM QC', foDesc3: 'QC MT', seq: 1 },
+        { fdDesc: 'QC Pre-assembly Inspection', foDesc2: 'IM QC', foDesc3: 'QC Pre-assembly Inspection', seq: 1 },
         { fdDesc: 'Assembly Inspection', foDesc2: 'IM QC', foDesc3: 'Assembly Inspection', seq: 2 },
-        { fdDesc: 'QC VT/MT', foDesc2: 'IM QC', foDesc3: 'QC VT/MT', seq: 3 },
-        { fdDesc: 'Flatness Inspection', foDesc2: 'IM QC', foDesc3: 'Flatness Inspection', seq: 4 },
-        { fdDesc: 'Final IM Inspection', foDesc2: 'IM QC', foDesc3: 'Final IM Inspection', seq: 4 },
-        { fdDesc: 'Harness Inspection', foDesc2: 'IM QC', foDesc3: 'Harness Inspection', seq: 4 },
-        { fdDesc: 'Final BT Inspection', foDesc2: 'IM QC', foDesc3: 'Final BT Inspection', seq: 5 },
-        { fdDesc: 'Final WT Inspection', foDesc2: 'IM QC', foDesc3: 'Final WT Inspection', seq: 5 },
+        { fdDesc: 'Final IM Inspection', foDesc2: 'IM QC', foDesc3: 'Final IM Inspection', seq: 3 },
         
         // IM Category
         { fdDesc: 'Electrical', foDesc2: 'IM', foDesc3: 'Electrical', seq: 3 },
