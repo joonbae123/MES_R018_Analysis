@@ -5324,6 +5324,11 @@ function refreshExecutiveDashboard() {
 
 // ========== 1. Flight Deck ==========
 function updateFlightDeck(data) {
+  console.log('🎯 updateFlightDeck called with', data.length, 'records');
+  if (data.length > 0) {
+    console.log('📊 Sample record:', data[0]);
+  }
+  
   const workers = new Set(data.map(r => r.workerName)).size;
   const records = data.length;
   
@@ -5339,8 +5344,12 @@ function updateFlightDeck(data) {
     }
   });
   
+  console.log(`📈 KPI Counts: Util=${countUtil}, Eff=${countEff}, Total Util=${totalUtil.toFixed(1)}, Total Eff=${totalEff.toFixed(1)}`);
+  
   const avgUtil = countUtil > 0 ? (totalUtil / countUtil).toFixed(1) : 0;
   const avgEff = countEff > 0 ? (totalEff / countEff).toFixed(1) : 0;
+  
+  console.log(`📊 Final KPIs: Avg Util=${avgUtil}%, Avg Eff=${avgEff}%`);
   
   document.getElementById('flightWorkers').textContent = workers;
   document.getElementById('flightUtil').textContent = avgUtil + '%';
