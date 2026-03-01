@@ -5276,6 +5276,420 @@ function startProgressPolling(uploadId) {
 // ============================================================================
 
 const DashboardState = {
+    currentMetric: 'util', // 'util' or 'eff'
+    filters: {
+        period: 'all',
+        workingShift: '',
+        category: '',
+        process: ''
+    },
+    charts: {},
+    data: null
+};
+
+// Initialize Dashboard on page load
+function initDashboard() {
+    console.log('📊 Initializing Dashboard...');
+    
+    // Populate filter options from AppState
+    populateDashboardFilters();
+    
+    // Load initial data
+    loadDashboardData();
+}
+
+// Populate Dashboard filter dropdowns
+function populateDashboardFilters() {
+    if (!AppState.rawData || AppState.rawData.length === 0) {
+        console.warn('⚠️ No data available for Dashboard filters');
+        return;
+    }
+    
+    // Category (FO Desc 2)
+    const categories = [...new Set(AppState.rawData.map(d => d.foDesc2).filter(Boolean))].sort();
+    const categorySelect = document.getElementById('dashCategoryFilter');
+    categorySelect.innerHTML = '<option value="">All</option>' + 
+        categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    
+    // Process (FO Desc 3)
+    const processes = [...new Set(AppState.rawData.map(d => d.foDesc3).filter(Boolean))].sort();
+    const processSelect = document.getElementById('dashProcessFilter');
+    processSelect.innerHTML = '<option value="">All</option>' + 
+        processes.map(p => `<option value="${p}">${p}</option>`).join('');
+    
+    console.log(`✅ Dashboard filters populated: ${categories.length} categories, ${processes.length} processes`);
+}
+
+// Apply Dashboard filters
+function applyDashboardFilters() {
+    DashboardState.filters = {
+        period: document.getElementById('dashPeriodFilter').value,
+        workingShift: document.getElementById('dashWorkingShiftFilter').value,
+        category: document.getElementById('dashCategoryFilter').value,
+        process: document.getElementById('dashProcessFilter').value
+    };
+    
+    console.log('🎯 Dashboard filters applied:', DashboardState.filters);
+    loadDashboardData();
+}
+
+// Reset Dashboard filters
+function resetDashboardFilters() {
+    document.getElementById('dashPeriodFilter').value = 'all';
+    document.getElementById('dashWorkingShiftFilter').value = '';
+    document.getElementById('dashCategoryFilter').value = '';
+    document.getElementById('dashProcessFilter').value = '';
+    
+    applyDashboardFilters();
+}
+
+// Load and filter Dashboard data
+function loadDashboardData() {
+    if (!AppState.rawData || AppState.rawData.length === 0) {
+        console.warn('⚠️ No data available for Dashboard');
+        clearDashboard();
+        return;
+    }
+    
+    // Filter data based on Dashboard filters
+    let filteredData = AppState.rawData.filter(d => {
+        // Period filter
+        if (DashboardState.filters.period !== 'all') {
+            const date = new Date(d.workingDay);
+            const now = new Date();
+            const daysDiff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+            
+            if (DashboardState.filters.period === 'last7' && daysDiff > 7) return false;
+            if (DashboardState.filters.period === 'last14' && daysDiff > 14) return false;
+            if (DashboardState.filters.period === 'last30' && daysDiff > 30) return false;
+        }
+        
+        // Working Shift filter
+        if (DashboardState.filters.workingShift && d.workingShift !== DashboardState.filters.workingShift) {
+            return false;
+        }
+        
+        // Category filter
+        if (DashboardState.filters.category && d.foDesc2 !== DashboardState.filters.category) {
+            return false;
+        }
+        
+        // Process filter
+        if (DashboardState.filters.process && d.foDesc3 !== DashboardState.filters.process) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    console.log(`📊 Dashboard data: ${filteredData.length} records after filtering`);
+    
+    DashboardState.data = filteredData;
+    
+    // Update all Dashboard sections
+    updateDashboardKPIs(filteredData);
+    updateDashboardTrend(filteredData);
+    updateDashboardTopBottom(filteredData);
+    updateDashboardProcess(filteredData);
+    updateDashboardShift(filteredData);
+}
+
+// Clear Dashboard when no data
+function clearDashboard() {
+    document.getElementById('dashKpiWorkers').textContent = '-';
+    document.getElementById('dashKpiUtil').textContent = '-';
+    document.getElementById('dashKpiEff').textContent = '-';
+    document.getElementById('dashKpiRecords').textContent = '-';
+    
+    document.getElementById('dashTopWorkers').innerHTML = '<p class="text-sm text-gray-500 italic">No data available</p>';
+    document.getElementById('dashBottomWorkers').innerHTML = '<p class="text-sm text-gray-500 italic">No data available</p>';
+}
+
+// Update KPI Summary Cards
+function updateDashboardKPIs(data) {
+    if (!data || data.length === 0) {
+        clearDashboard();
+        return;
+    }
+    
+    const uniqueWorkers = new Set(data.map(d => d.workerName)).size;
+    const avgUtil = data.reduce((sum, d) => sum + (d.workerUtilRate || 0), 0) / data.length;
+    const avgEff = data.reduce((sum, d) => sum + (d.workerEffRate || 0), 0) / data.length;
+    
+    document.getElementById('dashKpiWorkers').textContent = uniqueWorkers.toLocaleString();
+    document.getElementById('dashKpiUtil').textContent = avgUtil.toFixed(1) + '%';
+    document.getElementById('dashKpiEff').textContent = avgEff.toFixed(1) + '%';
+    document.getElementById('dashKpiRecords').textContent = data.length.toLocaleString();
+}
+
+// Switch between Utilization and Efficiency trend
+function switchDashTrend(metric) {
+    DashboardState.currentMetric = metric;
+    
+    const utilBtn = document.getElementById('trendUtilBtn');
+    const effBtn = document.getElementById('trendEffBtn');
+    
+    if (metric === 'util') {
+        utilBtn.className = 'px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white';
+        effBtn.className = 'px-4 py-2 rounded-lg font-medium transition-all bg-gray-200 text-gray-700 hover:bg-gray-300';
+    } else {
+        effBtn.className = 'px-4 py-2 rounded-lg font-medium transition-all bg-purple-600 text-white';
+        utilBtn.className = 'px-4 py-2 rounded-lg font-medium transition-all bg-gray-200 text-gray-700 hover:bg-gray-300';
+    }
+    
+    updateDashboardTrend(DashboardState.data);
+}
+
+// Update Trend Chart
+function updateDashboardTrend(data) {
+    if (!data || data.length === 0) return;
+    
+    // Group by date
+    const grouped = {};
+    data.forEach(d => {
+        const date = d.workingDay || 'Unknown';
+        if (!grouped[date]) {
+            grouped[date] = { count: 0, totalUtil: 0, totalEff: 0 };
+        }
+        grouped[date].count++;
+        grouped[date].totalUtil += d.workerUtilRate || 0;
+        grouped[date].totalEff += d.workerEffRate || 0;
+    });
+    
+    const dates = Object.keys(grouped).sort();
+    const values = dates.map(date => {
+        const avg = DashboardState.currentMetric === 'util' 
+            ? grouped[date].totalUtil / grouped[date].count
+            : grouped[date].totalEff / grouped[date].count;
+        return avg.toFixed(1);
+    });
+    
+    const canvas = document.getElementById('dashTrendChart');
+    if (DashboardState.charts.trend) {
+        DashboardState.charts.trend.destroy();
+    }
+    
+    const color = DashboardState.currentMetric === 'util' ? '#3b82f6' : '#a855f7';
+    const label = DashboardState.currentMetric === 'util' ? 'Utilization Rate (%)' : 'Efficiency Rate (%)';
+    
+    DashboardState.charts.trend = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: label,
+                data: values,
+                borderColor: color,
+                backgroundColor: `${color}33`,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Rate (%)' }
+                }
+            }
+        }
+    });
+}
+
+// Update Top/Bottom Workers
+function updateDashboardTopBottom(data) {
+    if (!data || data.length === 0) return;
+    
+    // Group by worker
+    const workerStats = {};
+    data.forEach(d => {
+        const worker = d.workerName;
+        if (!workerStats[worker]) {
+            workerStats[worker] = { count: 0, totalUtil: 0, totalEff: 0 };
+        }
+        workerStats[worker].count++;
+        workerStats[worker].totalUtil += d.workerUtilRate || 0;
+        workerStats[worker].totalEff += d.workerEffRate || 0;
+    });
+    
+    const workers = Object.entries(workerStats).map(([name, stats]) => ({
+        name,
+        count: stats.count,
+        avgUtil: stats.totalUtil / stats.count,
+        avgEff: stats.totalEff / stats.count
+    }));
+    
+    const metric = DashboardState.currentMetric === 'util' ? 'avgUtil' : 'avgEff';
+    const sortedWorkers = workers.sort((a, b) => b[metric] - a[metric]);
+    
+    // Top 10
+    const top10 = sortedWorkers.slice(0, 10);
+    const topHtml = top10.map((w, i) => `
+        <div class="flex items-center gap-3 p-2 bg-green-50 rounded border border-green-200 cursor-pointer hover:bg-green-100 transition" 
+             onclick="showWorkerDetail('${w.name.replace(/'/g, "\\'")}')">
+            <span class="text-lg font-bold text-green-700">#${i + 1}</span>
+            <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800">${w.name}</p>
+                <p class="text-xs text-gray-500">${w.count} records</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-bold text-blue-600">${w.avgUtil.toFixed(1)}%</p>
+                <p class="text-xs text-gray-500">Util</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-bold text-purple-600">${w.avgEff.toFixed(1)}%</p>
+                <p class="text-xs text-gray-500">Eff</p>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('dashTopWorkers').innerHTML = topHtml || '<p class="text-sm text-gray-500 italic">No data available</p>';
+    
+    // Bottom 10
+    const bottom10 = sortedWorkers.slice(-10).reverse();
+    const bottomHtml = bottom10.map((w, i) => `
+        <div class="flex items-center gap-3 p-2 bg-red-50 rounded border border-red-200 cursor-pointer hover:bg-red-100 transition" 
+             onclick="showWorkerDetail('${w.name.replace(/'/g, "\\'")}')">
+            <span class="text-lg font-bold text-red-700">#${sortedWorkers.length - i}</span>
+            <div class="flex-1">
+                <p class="text-sm font-semibold text-gray-800">${w.name}</p>
+                <p class="text-xs text-gray-500">${w.count} records</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-bold text-blue-600">${w.avgUtil.toFixed(1)}%</p>
+                <p class="text-xs text-gray-500">Util</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-bold text-purple-600">${w.avgEff.toFixed(1)}%</p>
+                <p class="text-xs text-gray-500">Eff</p>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('dashBottomWorkers').innerHTML = bottomHtml || '<p class="text-sm text-gray-500 italic">No data available</p>';
+}
+
+// Update Process Analysis Chart
+function updateDashboardProcess(data) {
+    if (!data || data.length === 0) return;
+    
+    // Group by process
+    const processGroups = {};
+    data.forEach(d => {
+        const proc = d.foDesc3 || 'Other';
+        if (!processGroups[proc]) {
+            processGroups[proc] = { count: 0, totalUtil: 0, totalEff: 0 };
+        }
+        processGroups[proc].count++;
+        processGroups[proc].totalUtil += d.workerUtilRate || 0;
+        processGroups[proc].totalEff += d.workerEffRate || 0;
+    });
+    
+    const processes = Object.entries(processGroups).map(([name, stats]) => ({
+        name,
+        count: stats.count,
+        avgUtil: stats.totalUtil / stats.count,
+        avgEff: stats.totalEff / stats.count
+    }));
+    
+    const metric = DashboardState.currentMetric === 'util' ? 'avgUtil' : 'avgEff';
+    const sortedProcesses = processes.sort((a, b) => b[metric] - a[metric]).slice(0, 10);
+    
+    const labels = sortedProcesses.map(p => p.name);
+    const values = sortedProcesses.map(p => DashboardState.currentMetric === 'util' ? p.avgUtil.toFixed(1) : p.avgEff.toFixed(1));
+    
+    const canvas = document.getElementById('dashProcessChart');
+    if (DashboardState.charts.process) {
+        DashboardState.charts.process.destroy();
+    }
+    
+    const color = DashboardState.currentMetric === 'util' ? '#3b82f6' : '#a855f7';
+    
+    DashboardState.charts.process = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: DashboardState.currentMetric === 'util' ? 'Utilization (%)' : 'Efficiency (%)',
+                data: values,
+                backgroundColor: color
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Rate (%)' }
+                }
+            }
+        }
+    });
+}
+
+// Update Shift Analysis Chart
+function updateDashboardShift(data) {
+    if (!data || data.length === 0) return;
+    
+    // Group by shift
+    const dayData = data.filter(d => d.workingShift === 'Day');
+    const nightData = data.filter(d => d.workingShift === 'Night');
+    
+    const dayUtil = dayData.length > 0 ? dayData.reduce((sum, d) => sum + (d.workerUtilRate || 0), 0) / dayData.length : 0;
+    const dayEff = dayData.length > 0 ? dayData.reduce((sum, d) => sum + (d.workerEffRate || 0), 0) / dayData.length : 0;
+    const nightUtil = nightData.length > 0 ? nightData.reduce((sum, d) => sum + (d.workerUtilRate || 0), 0) / nightData.length : 0;
+    const nightEff = nightData.length > 0 ? nightData.reduce((sum, d) => sum + (d.workerEffRate || 0), 0) / nightData.length : 0;
+    
+    const canvas = document.getElementById('dashShiftChart');
+    if (DashboardState.charts.shift) {
+        DashboardState.charts.shift.destroy();
+    }
+    
+    DashboardState.charts.shift = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: ['Day', 'Night'],
+            datasets: [
+                {
+                    label: 'Utilization (%)',
+                    data: [dayUtil.toFixed(1), nightUtil.toFixed(1)],
+                    backgroundColor: '#3b82f6'
+                },
+                {
+                    label: 'Efficiency (%)',
+                    data: [dayEff.toFixed(1), nightEff.toFixed(1)],
+                    backgroundColor: '#a855f7'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: true, position: 'top' }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Rate (%)' }
+                }
+            }
+        }
+    });
+}
+
+// ========== Dashboard State ==========
+const DashboardState = {
   currentKPI: 'util',
   currentShiftMode: 'daynight',
   charts: {}
