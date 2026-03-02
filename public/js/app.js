@@ -5636,8 +5636,9 @@ function refreshExecutiveDashboard() {
   console.log('Refreshing Executive Dashboard...');
   const data = AppState.processedData;
   
-  // 1. Flight Deck
-  updateFlightDeck(data);
+  // 1. Flight Deck - REMOVED (HTML element removed from dashboard)
+  // updateFlightDeck(data);
+  
   // 2. Focus Queue
   updateFocusQueue(data);
   // 3. Trend
