@@ -5989,43 +5989,29 @@ function generateWarnings(data) {
   
   if (aggregated.length === 0) return warnings;
   
-  // Get utilization and efficiency from Report KPI cards
-  const reportUtilText = document.getElementById('kpiAvgWorkRate')?.textContent || '0%';
-  const reportEffText = document.getElementById('kpiAvgWorkRate')?.textContent || '0%';
+  // Calculate utilization and efficiency using same method as Report tab
+  // This ensures consistency between Report KPI and Dashboard AI Insights
   
-  // Determine which metric to use based on current mode
-  const isEfficiency = AppState.currentMetricType === 'efficiency';
+  // Get worker aggregation data
+  const workerAgg = Object.values(AppState.cachedWorkerAgg || {});
+  const uniqueDates = new Set(aggregated.map(r => r.workingDay)).size;
   
-  let avgUtil = 0;
-  let avgEff = 0;
+  // Calculate Utilization: (Total Work Time / Total Shift Time) × 100
+  const totalShifts = workerAgg.reduce((sum, w) => sum + (w.shiftCount || 0), 0);
+  const totalShiftTime = totalShifts * 660; // Each shift = 11 hours = 660 minutes
+  const totalWorkTime = workerAgg.reduce((sum, w) => sum + (w.totalMinutes || 0), 0);
+  const avgUtil = totalShiftTime > 0 ? (totalWorkTime / totalShiftTime) * 100 : 0;
   
-  if (isEfficiency) {
-    // In efficiency mode, get efficiency from report
-    avgEff = parseFloat(reportEffText.replace('%', ''));
-    // Calculate utilization from aggregated data for comparison
-    let totalUtil = 0, countUtil = 0;
-    aggregated.forEach(r => {
-      if (r.utilizationRate >= 0 && r.utilizationRate <= 100) {
-        totalUtil += r.utilizationRate;
-        countUtil++;
-      }
-    });
-    avgUtil = countUtil > 0 ? totalUtil / countUtil : 0;
-  } else {
-    // In utilization mode, get utilization from report
-    avgUtil = parseFloat(reportUtilText.replace('%', ''));
-    // Calculate efficiency from aggregated data for comparison
-    let totalEff = 0, countEff = 0;
-    aggregated.forEach(r => {
-      if (r.efficiencyRate >= 0 && r.efficiencyRate <= 200) {
-        totalEff += r.efficiencyRate;
-        countEff++;
-      }
-    });
-    avgEff = countEff > 0 ? totalEff / countEff : 0;
-  }
+  // Calculate Efficiency: (Total Adjusted S/T / Total Shift Time) × 100
+  const totalAdjustedST = workerAgg.reduce((sum, w) => sum + (w.assignedStandardTime || 0), 0);
+  const avgEff = totalShiftTime > 0 ? (totalAdjustedST / totalShiftTime) * 100 : 0;
   
-  console.log(`📊 AI Warnings using Report values: Util=${avgUtil.toFixed(1)}%, Eff=${avgEff.toFixed(1)}%`);
+  console.log(`📊 AI Warnings calculation:
+    - Data period: ${uniqueDates} days
+    - Total records: ${aggregated.length}
+    - Total shifts: ${totalShifts}
+    - Utilization: (${totalWorkTime.toFixed(0)} / ${totalShiftTime.toFixed(0)}) × 100 = ${avgUtil.toFixed(1)}%
+    - Efficiency: (${totalAdjustedST.toFixed(0)} / ${totalShiftTime.toFixed(0)}) × 100 = ${avgEff.toFixed(1)}%`);
   
   // Rule 1: Low Utilization (always check, regardless of current mode)
   if (avgUtil < 50 && aggregated.length >= 10) {
@@ -6035,7 +6021,7 @@ function generateWarnings(data) {
       color: 'border-red-500',
       bgColor: 'red-50',
       title: 'Low Overall Utilization Detected',
-      evidence: `Current average: ${avgUtil.toFixed(1)}% (threshold: <50%)`
+      evidence: `Current average: ${avgUtil.toFixed(1)}% (threshold: <50%) • ${uniqueDates} days of data`
     });
   }
   
@@ -6047,7 +6033,7 @@ function generateWarnings(data) {
       color: 'border-red-500',
       bgColor: 'red-50',
       title: 'Low Overall Efficiency Detected',
-      evidence: `Current average: ${avgEff.toFixed(1)}% (threshold: <50%)`
+      evidence: `Current average: ${avgEff.toFixed(1)}% (threshold: <50%) • ${uniqueDates} days of data`
     });
   }
   
