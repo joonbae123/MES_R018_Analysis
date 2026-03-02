@@ -1093,6 +1093,25 @@ function processData(rawData) {
             notFoundCount++;
         }
         
+        // Calculate utilization and efficiency rates
+        // Utilization = (Worker Act Mins / 660) * 100
+        // Efficiency = (Worker S/T / Worker Act Mins) * 100
+        const workerActMins = parseFloat(record.workerActMins) || 0;
+        const workerST = parseFloat(record.workerST) || 0;
+        
+        let utilizationRate = 0;
+        let efficiencyRate = 0;
+        
+        if (workerActMins > 0) {
+            // Utilization: percentage of shift time used (660 minutes = 11 hours)
+            utilizationRate = (workerActMins / 660) * 100;
+            
+            // Efficiency: standard time vs actual time
+            if (workerST > 0) {
+                efficiencyRate = (workerST / workerActMins) * 100;
+            }
+        }
+        
         const processedRecord = {
             ...record,
             validFlag: validFlag,
@@ -1101,13 +1120,30 @@ function processData(rawData) {
             foDesc2: mapping.foDesc2,
             foDesc3: mapping.foDesc3,
             seq: mapping.seq,
-            mappingStatus: mapping.status
+            mappingStatus: mapping.status,
+            utilizationRate: utilizationRate,
+            efficiencyRate: efficiencyRate
         };
         
         processed.push(processedRecord);
     });
     
     console.log(`✅ Mapping results: ${mappedCount} matched, ${notFoundCount} not found`);
+    
+    // Calculate overall statistics
+    let totalUtil = 0, totalEff = 0, validCount = 0;
+    processed.forEach(r => {
+        if (r.utilizationRate > 0) {
+            totalUtil += r.utilizationRate;
+            validCount++;
+        }
+        if (r.efficiencyRate > 0) {
+            totalEff += r.efficiencyRate;
+        }
+    });
+    const avgUtil = validCount > 0 ? (totalUtil / validCount).toFixed(2) : 0;
+    const avgEff = validCount > 0 ? (totalEff / validCount).toFixed(2) : 0;
+    console.log(`📊 Calculated rates: Avg Util=${avgUtil}%, Avg Eff=${avgEff}%, Valid records=${validCount}`);
     
     // Debug: Show sample records with detailed info
     if (processed.length > 0) {
@@ -1120,8 +1156,8 @@ function processData(rawData) {
             console.log(`      DateTime: ${timeStr}`);
             console.log(`      Working Day: ${r.workingDay}, Shift: ${r.workingShift}, Actual: ${r.actualShift}`);
             console.log(`      Result Cnt: "${r.resultCnt}", Valid: ${r.validFlag}, Minutes: ${r.workerActMins}`);
-            // ✅ DEBUG: Check efficiency fields
-            console.log(`      🔍 EFFICIENCY FIELDS: Worker S/T=${r['Worker S/T']}, Worker Rate(%)=${r['Worker Rate(%)']}, Worker Act=${r['Worker Act']}`);
+            console.log(`      🔍 RATES: Util=${r.utilizationRate?.toFixed(1)}%, Eff=${r.efficiencyRate?.toFixed(1)}%`);
+            console.log(`      🔍 RAW DATA: Worker S/T=${r.workerST}, Worker Act Mins=${r.workerActMins}`);
         });
     }
     
