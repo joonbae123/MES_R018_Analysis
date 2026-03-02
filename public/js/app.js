@@ -4533,6 +4533,7 @@ function showWorkerDetail(workerName) {
             <tr>
                 <th class="text-left p-2 font-semibold text-gray-700">Date</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Shift</th>
+                <th class="text-left p-2 font-semibold text-gray-700">Section ID</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Process</th>
                 <th class="text-right p-2 font-semibold text-gray-700">S/T<br><span class="text-xs font-normal text-gray-500">(min)</span></th>
                 <th class="text-right p-2 font-semibold text-gray-700">Worker Rate<br><span class="text-xs font-normal text-gray-500">(%)</span></th>
@@ -4547,6 +4548,7 @@ function showWorkerDetail(workerName) {
                 <th class="text-left p-2 font-semibold text-gray-700">Shift</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Start Time</th>
                 <th class="text-left p-2 font-semibold text-gray-700">End Time</th>
+                <th class="text-left p-2 font-semibold text-gray-700">Section ID</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Process</th>
                 <th class="text-right p-2 font-semibold text-gray-700">Original<br><span class="text-xs font-normal text-gray-500">(min)</span></th>
                 <th class="text-right p-2 font-semibold text-gray-700">Adjusted<br><span class="text-xs font-normal text-gray-500">(overlap removed)</span></th>
@@ -5105,6 +5107,7 @@ function renderUtilizationTable(workerRecords, tableBody) {
                     <td class="p-2"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">${r.workingShift || '-'}</span></td>
                     <td class="p-2 text-gray-600 font-mono text-xs">${formatTime(r.startDatetime)}</td>
                     <td class="p-2 text-gray-600 font-mono text-xs">${formatTime(r.endDatetime)}</td>
+                    <td class="p-2 text-gray-700 font-medium">${r.sectionId || '-'}</td>
                     <td class="p-2 font-medium">${r.foDesc3 || '-'}</td>
                     <td class="p-2 text-right text-gray-600">${originalMinutes}</td>
                     <td class="p-2 text-right ${minutesClass}" title="${overlapInfo}">
@@ -5141,6 +5144,7 @@ function renderEfficiencyTable(workerRecords, tableBody) {
                 <tr class="${rowClass}">
                     <td class="p-2">${outlierIcon}${r.workingDay || '-'}</td>
                     <td class="p-2"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">${r.workingShift || '-'} ${r.actualShift || ''}</span></td>
+                    <td class="p-2 text-gray-700 font-medium">${r.sectionId || '-'}</td>
                     <td class="p-2 font-medium">${r.foDesc3 || '-'}</td>
                     <td class="p-2 text-right text-gray-600">${Math.round(st)}</td>
                     <td class="p-2 text-right text-gray-600">${rate.toFixed(0)}%</td>
