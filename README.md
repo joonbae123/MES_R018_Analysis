@@ -249,6 +249,32 @@ CREATE TABLE shift_calendar (
 
 ---
 
+### Dashboard 그룹 분류 기준 (v4.3.0+)
+
+**Shift Performance Comparison 테이블**에서 사용하는 3대 그룹 분류:
+
+#### 🔵 **BT 그룹** (Body Tower - 본체 제작)
+- **포함 카테고리**: BT Process, BT Complete, BT QC
+- **지원 Shift**: A, B, C, D
+- **주요 공정**: Cut, Bevel, Bend, FU (Fitup), CSO/CSI (Corner Seam), Blasting Inspection, Final BT Inspection
+
+#### 🟢 **WT 그룹** (Wind Tower - 표면 처리)
+- **포함 카테고리**: WT, WT QC
+- **지원 Shift**: A, B, C, D
+- **주요 공정**: Blasting, Metallizing, Wash, Paint1/2, Final WT Inspection
+
+#### 🟣 **IM 그룹** (Inner Material - 내부 자재)
+- **포함 카테고리**: IM, IM QC
+- **지원 Shift**: A, B, C
+- **주요 공정**: IM Pre-assembly Mounting, Ring on/off, Ovality Repair, Final IM Inspection
+
+**참고:**
+- DS (Door & Stairs) 카테고리는 현재 그룹에 포함되지 않음
+- 각 그룹은 `foDesc2` 필드 기준으로 필터링됨
+- 코드 위치: `public/js/app.js` (refreshShiftComparison 함수)
+
+---
+
 ## 🚀 API 엔드포인트
 
 ### POST `/api/upload`
