@@ -7154,9 +7154,13 @@ function openAIInsightModal() {
 }
 
 function updateAIInsightContent() {
-  // Use the EXACT same aggregated data as Report tab
-  const aggregated = getFilteredData(); // This is AppState.aggregatedData (worker-day-shift level)
-  if (aggregated.length === 0) return;
+  // ✅ USE THE EXACT SAME DATA AS REPORT TAB: AppState.cachedWorkerAgg
+  // This is the aggregated worker-day-shift-process data created by aggregateByWorker()
+  const aggregated = AppState.cachedWorkerAgg || [];
+  if (aggregated.length === 0) {
+    console.warn('⚠️ AI Insights: No aggregated data available. Please ensure Report tab is loaded first.');
+    return;
+  }
   
   const isEfficiency = aiModalMetricType === 'efficiency';
   
