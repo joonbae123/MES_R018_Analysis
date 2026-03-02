@@ -5332,8 +5332,24 @@ function updateFlightDeck(data) {
   // Calculate KPIs from raw data by aggregating by worker
   const workerStats = new Map();
   
+  console.log('🔍 DEBUG: First 3 records for Flight Deck:');
+  data.slice(0, 3).forEach((r, idx) => {
+    console.log(`  Record ${idx}:`, {
+      workerName: r.workerName,
+      valid: r.valid,
+      workerActualTime: r.workerActualTime,
+      workerStandardTime: r.workerStandardTime,
+      workingDay: r.workingDay,
+      shift: r.shift
+    });
+  });
+  
+  let skippedCount = 0;
   data.forEach(r => {
-    if (!r.workerName || !r.valid) return;
+    if (!r.workerName || !r.valid) {
+      skippedCount++;
+      return;
+    }
     
     const key = r.workerName;
     if (!workerStats.has(key)) {
@@ -5352,14 +5368,35 @@ function updateFlightDeck(data) {
     }
   });
   
+  console.log(`📊 Processed ${data.length} records, skipped ${skippedCount} invalid records`);
+  
   console.log(`📊 Aggregated ${workerStats.size} workers from ${data.length} records`);
+  
+  // Show first 3 aggregated workers
+  console.log('🔍 DEBUG: First 3 aggregated workers:');
+  let debugCount = 0;
+  workerStats.forEach((stats, workerName) => {
+    if (debugCount < 3) {
+      console.log(`  ${workerName}:`, {
+        totalMinutes: stats.totalMinutes,
+        assignedStandardTime: stats.assignedStandardTime,
+        shiftCount: stats.shiftCount.size,
+        shifts: Array.from(stats.shiftCount)
+      });
+      debugCount++;
+    }
+  });
   
   // Calculate average utilization and efficiency
   let totalUtil = 0, totalEff = 0, countWorkers = 0;
+  let skippedWorkers = 0;
   
   workerStats.forEach((stats, workerName) => {
     const shiftCount = stats.shiftCount.size;
-    if (shiftCount === 0) return;
+    if (shiftCount === 0) {
+      skippedWorkers++;
+      return;
+    }
     
     // Utilization = Total Work Time / (660 min/shift * shift count) * 100
     const utilizationRate = (stats.totalMinutes / (660 * shiftCount)) * 100;
@@ -5382,7 +5419,8 @@ function updateFlightDeck(data) {
   const avgUtil = countWorkers > 0 ? (totalUtil / countWorkers).toFixed(1) : 0;
   const avgEff = countWorkers > 0 ? (totalEff / countWorkers).toFixed(1) : 0;
   
-  console.log(`📊 Final KPIs: Workers=${countWorkers}, Avg Util=${avgUtil}%, Avg Eff=${avgEff}%`);
+  console.log(`📊 Final KPIs: Workers=${countWorkers} (skipped ${skippedWorkers} with no shifts), Avg Util=${avgUtil}%, Avg Eff=${avgEff}%`);
+  console.log(`   Total aggregated: Util=${totalUtil.toFixed(1)}, Eff=${totalEff.toFixed(1)}`);
   
   document.getElementById('flightWorkers').textContent = countWorkers;
   document.getElementById('flightUtil').textContent = avgUtil + '%';
