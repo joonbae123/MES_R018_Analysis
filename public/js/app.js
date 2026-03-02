@@ -1,4 +1,5 @@
 // MES Individual Performance Report Application
+// Last Updated: 2026-03-02 - Added W/O Count to Performance Bands
 // Main application logic
 // Version: 3.0.0 - Two Metric System (Time Utilization & Work Efficiency)
 
@@ -150,7 +151,8 @@ const HEADER_SYNONYMS = {
     'sectionid': ['sectionid', 'section_id', 'sectionno'],
     'workerst': ['workerst', 'worker_st', 'workerstandard', 'worker_standard_time', 'st', 'standardtime'],
     'workerrate': ['workerrate', 'worker_rate', 'workerratepct', 'rate', 'ratepct'],
-    'rework': ['rework', 're_work', 'reworkflag']
+    'rework': ['rework', 're_work', 'reworkflag'],
+    'wo': ['wo', 'w/o', 'wo#', 'wonumber', 'workorder', 'work_order', 'workordernumber', 'work_order_number', 'orderno', 'order_no']
 };
 
 // Normalize header text
@@ -808,13 +810,15 @@ function parseRawData(headers, dataRows) {
     const colWorkerRate = findColumnIndex(headers, 'workerrate');
     const colRework = findColumnIndex(headers, 'rework');
     const colActualShift = findColumnIndex(headers, 'actualshift');
+    const colWO = findColumnIndex(headers, 'wo'); // W/O number column
     
     console.log(' Column indices:', {
         workerName: colWorkerName,
         workerST: colWorkerST,
         workerRate: colWorkerRate,
         workerAct: colWorkerAct,
-        rework: colRework
+        rework: colRework,
+        wo: colWO
     });
     
     //  DEBUG: Show actual Excel headers
@@ -867,7 +871,8 @@ function parseRawData(headers, dataRows) {
             'Worker Rate(%)': colWorkerRate !== -1 ? parseFloat(row[colWorkerRate]) || 0 : 0, // Alternative key
             rework: reworkFlag, // Rework flag
             resultCnt: row[colResultCnt],
-            actualShift: colActualShift !== -1 ? (row[colActualShift] || '').toString().trim() : '' // Actual Shift (A/B/C)
+            actualShift: colActualShift !== -1 ? (row[colActualShift] || '').toString().trim() : '', // Actual Shift (A/B/C)
+            'WO#': colWO !== -1 ? (row[colWO] || '').toString().trim() : '' // W/O number
         };
         
         parsed.push(record);
@@ -2241,7 +2246,8 @@ function aggregateByWorkerOnly(workerAgg) {
                 recordCount: 0,
                 shifts: new Set(), // Track unique shifts
                 processTimes: {}, // Track time per process
-                foDesc2: item.foDesc2 // Category for ordering
+                foDesc2: item.foDesc2, // Category for ordering
+                woNumbers: new Set() // Track unique W/O numbers
             };
         }
         
@@ -2252,6 +2258,20 @@ function aggregateByWorkerOnly(workerAgg) {
         byWorker[workerName]['Worker S/T'] += item['Worker S/T'] || 0; //  NEW: Accumulate S/T
         byWorker[workerName].validCount += item.validCount || 0;
         byWorker[workerName].recordCount += 1;
+        
+        // Track W/O numbers from pre-aggregated data
+        if (item['WO#']) {
+            // item['WO#'] is a Set from aggregateByWorker()
+            if (item['WO#'] instanceof Set) {
+                item['WO#'].forEach(wo => byWorker[workerName].woNumbers.add(wo));
+            }
+        }
+        // Also check if woCount is available (from already converted data)
+        if (item.woCount && !item['WO#']) {
+            // We can't recover the original W/O numbers from count alone
+            // This shouldn't happen in normal flow, but handle gracefully
+            console.warn(`Worker ${workerName}: woCount exists but no WO# Set found`);
+        }
         
         // Track shifts
         const shiftKey = `${item.workingDay}_${item.workingShift}`;
@@ -2287,14 +2307,25 @@ function aggregateByWorkerOnly(workerAgg) {
     });
     
     // Calculate metrics for each worker
+    let debugCount = 0; // Counter for debug logging
     const result = Object.values(byWorker).map(worker => {
         const shiftCount = worker.shifts.size;
         
-        // Calculate Time Utilization Rate: total work time / (660 min * shift count) � 100
+        // ✅ FIX: Use validCount (record count) as W/O Count, fallback to woNumbers.size if available
+        // This matches the logic in Worker Performance Report by Date
+        const woCount = worker.validCount || worker.woNumbers.size;
+        
+        // DEBUG: Log first 3 workers' W/O data
+        if (debugCount < 3) {
+            console.log(`📊 Worker "${worker.workerName}": validCount=${worker.validCount}, woNumbers Set size=${worker.woNumbers.size}, final woCount=${woCount}`);
+            debugCount++;
+        }
+        
+        // Calculate Time Utilization Rate: total work time / (660 min * shift count) × 100
         const utilizationRate = shiftCount > 0 ? (worker.totalMinutes / (660 * shiftCount)) * 100 : 0;
         const utilizationBand = getUtilizationBand(utilizationRate);
         
-        // Calculate Work Efficiency Rate: assigned standard time / shift time � 100
+        // Calculate Work Efficiency Rate: assigned standard time / shift time × 100
         // Shift-based productivity: How much standard work completed per shift (660 min)
         const shiftTime = shiftCount * 660; // Total available shift time
         const efficiencyRate = shiftTime > 0 
@@ -2305,6 +2336,7 @@ function aggregateByWorkerOnly(workerAgg) {
         return {
             ...worker,
             shiftCount: shiftCount,
+            woCount: woCount, // Add W/O count
             utilizationRate: utilizationRate,
             utilizationBand: utilizationBand,
             efficiencyRate: efficiencyRate,
@@ -2572,8 +2604,14 @@ function aggregateByWorker(data) {
                 //  FIX: Initialize accumulation fields for Efficiency mode
                 'Worker S/T': 0,  // Will accumulate S/T
                 assignedStandardTime: 0,  // Will accumulate Adjusted S/T
-                totalMinutesOriginal: 0  // Will accumulate Actual
+                totalMinutesOriginal: 0,  // Will accumulate Actual
+                'WO#': new Set()  // Track unique W/O numbers
             };
+        }
+        
+        // Track W/O numbers
+        if (record['WO#']) {
+            aggregated[key]['WO#'].add(record['WO#']);
         }
         
         //  CHANGED: Result CNT와 무관�� �� ����� ��
@@ -2590,12 +2628,13 @@ function aggregateByWorker(data) {
             
             //  DEBUG: Log first few records to check S/T values
             if (totalRecords <= 3) {
-                console.log(` Record ${totalRecords}: Worker="${record.workerName}", S/T=${st}, Rate=${rate}%, Assigned=${assigned.toFixed(1)}`, {
+                console.log(` Record ${totalRecords}: Worker="${record.workerName}", S/T=${st}, Rate=${rate}%, Assigned=${assigned.toFixed(1)}, WO#=${record['WO#']}`, {
                     process: record.foDesc3,
                     date: record.workingDay,
                     resultCnt: record.resultCnt,
                     workerActMins: record.workerActMins,
-                    availableFields: Object.keys(record).filter(k => k.includes('S/T') || k.includes('Rate'))
+                    'WO#': record['WO#'],
+                    availableFields: Object.keys(record).filter(k => k.includes('S/T') || k.includes('Rate') || k.includes('WO'))
                 });
             }
             
@@ -2618,6 +2657,8 @@ function aggregateByWorker(data) {
         'Worker S/T': item['Worker S/T'],
         'Adjusted S/T': item.assignedStandardTime,
         'Actual': item.totalMinutesOriginal,
+        'WO# Set size': item['WO#'] ? item['WO#'].size : 0,
+        'WO# Set': item['WO#'] ? Array.from(item['WO#']) : [],
         'Worker Rate(%)': item['Worker Rate(%)'],
         assignedStandardTime: item.assignedStandardTime,
         totalMinutesOriginal: item.totalMinutesOriginal,
@@ -2644,6 +2685,7 @@ function aggregateByWorker(data) {
         
         return {
             ...item,
+            woCount: item['WO#'] ? item['WO#'].size : 0, // Convert Set to count
             utilizationRate: utilizationRate,
             utilizationBand: getUtilizationBand(utilizationRate),
             efficiencyRate: efficiencyRate,
@@ -3066,18 +3108,19 @@ function updatePerformanceBands(workerAgg) {
     // Excellent workers
     const excellentDiv = document.getElementById('excellentWorkers');
     if (excellent.length > 0) {
-        excellentDiv.innerHTML = '<div class="space-y-2">' + excellent.map(w => 
-            `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
+        excellentDiv.innerHTML = '<div class="space-y-2">' + excellent.map(w => {
+            const woCount = w.woCount || 0;
+            return `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">${w.workerName}</span>
                     <span class="text-green-600 font-bold text-lg">${getRate(w).toFixed(1)}%</span>
                 </div>
                 <div class="flex justify-between items-center mt-2 text-xs">
                     <span class="text-gray-600"><i class="fas fa-cog mr-1"></i>${w.foDesc3 || 'N/A'}</span>
-                    <span class="text-gray-500">${w.workingDay || ''}</span>
+                    <span class="text-blue-600 font-medium"><i class="fas fa-file-alt mr-1"></i>${woCount} W/O${woCount !== 1 ? 's' : ''}</span>
                 </div>
-            </div>`
-        ).join('') + '</div>';
+            </div>`;
+        }).join('') + '</div>';
     } else {
         excellentDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No data available</p>';
     }
@@ -3085,18 +3128,19 @@ function updatePerformanceBands(workerAgg) {
     // Normal workers -  FIX: Use blue color consistently
     const normalDiv = document.getElementById('normalWorkers');
     if (normal.length > 0) {
-        normalDiv.innerHTML = '<div class="space-y-2">' + normal.map(w => 
-            `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
+        normalDiv.innerHTML = '<div class="space-y-2">' + normal.map(w => {
+            const woCount = w.woCount || 0;
+            return `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">${w.workerName}</span>
                     <span class="text-blue-600 font-bold text-lg">${getRate(w).toFixed(1)}%</span>
                 </div>
                 <div class="flex justify-between items-center mt-2 text-xs">
                     <span class="text-gray-600"><i class="fas fa-cog mr-1"></i>${w.foDesc3 || 'N/A'}</span>
-                    <span class="text-gray-500">${w.workingDay || ''}</span>
+                    <span class="text-blue-600 font-medium"><i class="fas fa-file-alt mr-1"></i>${woCount} W/O${woCount !== 1 ? 's' : ''}</span>
                 </div>
-            </div>`
-        ).join('') + '</div>';
+            </div>`;
+        }).join('') + '</div>';
     } else {
         normalDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No data available</p>';
     }
@@ -3104,18 +3148,19 @@ function updatePerformanceBands(workerAgg) {
     // Poor workers
     const poorDiv = document.getElementById('poorWorkers');
     if (poor.length > 0) {
-        poorDiv.innerHTML = '<div class="space-y-2">' + poor.map(w => 
-            `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
+        poorDiv.innerHTML = '<div class="space-y-2">' + poor.map(w => {
+            const woCount = w.woCount || 0;
+            return `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">${w.workerName}</span>
                     <span class="text-orange-600 font-bold text-lg">${getRate(w).toFixed(1)}%</span>
                 </div>
                 <div class="flex justify-between items-center mt-2 text-xs">
                     <span class="text-gray-600"><i class="fas fa-cog mr-1"></i>${w.foDesc3 || 'N/A'}</span>
-                    <span class="text-gray-500">${w.workingDay || ''}</span>
+                    <span class="text-blue-600 font-medium"><i class="fas fa-file-alt mr-1"></i>${woCount} W/O${woCount !== 1 ? 's' : ''}</span>
                 </div>
-            </div>`
-        ).join('') + '</div>';
+            </div>`;
+        }).join('') + '</div>';
     } else {
         poorDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No data available</p>';
     }
@@ -3123,18 +3168,19 @@ function updatePerformanceBands(workerAgg) {
     // Critical workers
     const criticalDiv = document.getElementById('criticalWorkers');
     if (critical.length > 0) {
-        criticalDiv.innerHTML = '<div class="space-y-2">' + critical.map(w => 
-            `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
+        criticalDiv.innerHTML = '<div class="space-y-2">' + critical.map(w => {
+            const woCount = w.woCount || 0;
+            return `<div class="flex flex-col p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">${w.workerName}</span>
                     <span class="text-red-600 font-bold text-lg">${getRate(w).toFixed(1)}%</span>
                 </div>
                 <div class="flex justify-between items-center mt-2 text-xs">
                     <span class="text-gray-600"><i class="fas fa-cog mr-1"></i>${w.foDesc3 || 'N/A'}</span>
-                    <span class="text-gray-500">${w.workingDay || ''}</span>
+                    <span class="text-blue-600 font-medium"><i class="fas fa-file-alt mr-1"></i>${woCount} W/O${woCount !== 1 ? 's' : ''}</span>
                 </div>
-            </div>`
-        ).join('') + '</div>';
+            </div>`;
+        }).join('') + '</div>';
     } else {
         criticalDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">No data available</p>';
     }
@@ -4501,6 +4547,7 @@ function sortPerformanceBand(bandType, order) {
         div.innerHTML = '<div class="space-y-2">' + workers.map(w => {
             //  FIX: Use the correct rate based on current metric type
             const displayRate = isEfficiency ? w.efficiencyRate : w.utilizationRate;
+            const woCount = w.woCount || 0;
             return `<div class="flex flex-col p-4 bg-white border-l-4 border-${colorClass}-500 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer" onclick="showWorkerDetail('${w.workerName.replace(/'/g, "\\'")}')">
                 <div class="flex justify-between items-center">
                     <span class="font-semibold text-gray-800">${w.workerName}</span>
@@ -4508,7 +4555,7 @@ function sortPerformanceBand(bandType, order) {
                 </div>
                 <div class="flex justify-between items-center mt-2 text-xs">
                     <span class="text-gray-600"><i class="fas fa-cog mr-1"></i>${w.foDesc3 || 'N/A'}</span>
-                    <span class="text-gray-500">${w.workingDay || ''}</span>
+                    <span class="text-blue-600 font-medium"><i class="fas fa-file-alt mr-1"></i>${woCount} W/O${woCount !== 1 ? 's' : ''}</span>
                 </div>
             </div>`;
         }).join('') + '</div>';
