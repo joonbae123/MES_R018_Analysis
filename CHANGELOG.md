@@ -5,6 +5,47 @@ All notable changes to MES R018 Analysis will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-03-02
+
+### 🎨 Enhanced - Dashboard Period Detail Modal UX Overhaul
+- **6-Card Layout**: Removed Total Records card, arranged 6 key KPI cards in single row
+  - Workers, Avg Utilization (emphasized), Avg Efficiency (emphasized), Total Shift Time, Total Work Time, Total Adjusted S/T
+- **Main KPI Emphasis**: Avg Utilization and Avg Efficiency cards with gradient backgrounds, larger fonts, and icons
+- **Process Breakdown Design Improvements**:
+  - Increased card size and font sizes (text-sm → text-base for values)
+  - Blue gradient backgrounds (from-blue-50 to-indigo-50)
+  - Enhanced hover effects (shadow-md, border-blue-400)
+  - Bold highlighted values for Workers/Util/Eff
+  - Left-right aligned layout for better readability
+- **Top Performers & Need Attention Improvements**:
+  - Criteria labels: "(Top 3)" / "(Bottom 3)" 
+  - English description: "Ranked by combined Utilization + Efficiency score"
+  - Gradient backgrounds (green/orange) for better visual separation
+  - Color-emphasized icons (trophy/warning)
+
+### 🐛 Fixed - Dashboard Modal Display Issues
+- **modalRecords Reference Error**: Removed reference to deleted Total Records element
+- **Duplicate ID Conflict**: Resolved ID conflict between Dashboard and Report modals
+  - Dashboard uses: `periodModalTotalShiftTime`, `periodModalTotalWorkTime`, `periodModalTotalAdjustedST`
+  - Report uses: `modalTotalShiftTime`, `modalTotalWorkTime`
+- **Missing Total Shift Time**: Fixed Dashboard modal not displaying Total Shift Time value
+
+### 📊 Improved - Data Display Formatting
+- **Thousand Separators**: Added commas to all hour values in modals (e.g., 3,643.2 hr)
+- **Unit Conversion**: Changed minutes to hours (÷ 60) for all time displays
+- **Console Logging**: Enhanced logs to show both minutes and hours for debugging
+
+## [4.0.0] - 2026-03-01
+
+### 🎊 Added - Dashboard Tab (Major Release)
+- **AI Insights & Warnings**: 6 types of automatic alerts (low utilization, low efficiency, gap, concentration, sample size)
+- **KPI Trend Intelligence**: Daily/Weekly toggle, process drill-down modal
+- **Process Performance Ranking**: Top 5 / Bottom 5 processes comparison
+- **Shift Comparison**: Day vs Night shift performance (click for detailed modal)
+- **Distribution & Outliers**: Utilization/Efficiency distribution histograms (click range for worker list)
+- **3 Drill-Down Modals**: Process Modal, Shift Modal, Distribution Modal
+- **Filter Integration**: Dashboard auto-updates when Report tab filters are applied
+
 ## [3.5.1] - 2026-02-27
 
 ### 🐛 Fixed - Worker Detail Modal Data Sync

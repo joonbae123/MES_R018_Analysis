@@ -7,8 +7,8 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis.pages.dev
 - **GitHub**: https://github.com/twokomi/MES_R018_Analysis
-- **최신 버전**: v4.0.0 (2026-03-01)
-- **최근 수정**: Dashboard 페이지 구현 (AI Insights, KPI Trends, Process Ranking, Shift Comparison, Distribution Analysis)
+- **최신 버전**: v4.1.0 (2026-03-02)
+- **최근 수정**: Dashboard 모달 개선 (Period Detail Modal - 6개 카드 배치, Process Breakdown 디자인, Top/Bottom Performers 기준 명시)
 
 ---
 
@@ -530,6 +530,31 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 ## 📝 개발 히스토리
+
+### v4.1.0 (2026-03-02) 🎨 **Dashboard Period Modal 대폭 개선**
+- ✅ **Period Detail Modal 레이아웃 개선**
+  - Total Records 카드 제거, 6개 주요 KPI 카드를 가로 한 줄 배치
+  - Workers, Avg Utilization, Avg Efficiency, Total Shift Time, Total Work Time, Total Adjusted S/T
+  - 메인 KPI (Utilization/Efficiency) 강조: 그라데이션 배경, 더 큰 폰트, 아이콘 추가
+- ✅ **Process Breakdown 디자인 대폭 개선**
+  - 카드 크기 확대 및 폰트 크기 증가 (text-sm → text-base)
+  - 파란색 그라데이션 배경 (from-blue-50 to-indigo-50)
+  - 호버 효과 강화 (shadow-md, border-blue-400)
+  - Workers/Util/Eff 값을 굵은 글씨로 강조
+  - 좌우 정렬 레이아웃으로 가독성 향상
+- ✅ **Top Performers & Need Attention 개선**
+  - 기준 명시: "(Top 3)" / "(Bottom 3)" 표시
+  - 영문 설명 추가: "Ranked by combined Utilization + Efficiency score"
+  - 섹션별 그라데이션 배경 (녹색/주황색)
+  - 아이콘 색상 강조 (트로피/경고)
+- ✅ **버그 수정**
+  - modalRecords 참조 오류 수정 (제거된 요소 참조 제거)
+  - Dashboard 및 Report 모달의 ID 중복 문제 해결
+  - Total Shift Time 값 표시 누락 수정
+- ✅ **데이터 표시 개선**
+  - 모든 시간 값에 천단위 구분자(콤마) 추가
+  - 시간 단위를 minutes에서 hours로 변경 (60으로 나눈 값)
+  - 콘솔 로그에 분(min)과 시간(hr) 모두 표시
 
 ### v4.0.0 (2026-03-01) 🎉 **Dashboard 페이지 구현**
 - ✅ **새로운 Dashboard 탭 추가**

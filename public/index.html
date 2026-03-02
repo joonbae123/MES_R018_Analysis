@@ -1532,6 +1532,35 @@
                                 <li><strong>Glossary</strong>: Context-specific term definitions at the bottom</li>
                             </ul>
                         </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                                <i class="fas fa-tachometer-alt text-blue-600 mr-2"></i>
+                                8. Dashboard Tab (NEW in v4.0+)
+                            </h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                                <li>
+                                    <strong>AI Insights & Alerts</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Automatic warnings for low utilization/efficiency, gaps, process concentration, sample size</p>
+                                </li>
+                                <li>
+                                    <strong>KPI Trend Intelligence</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Click data points to open Period Detail Modal with 6 key metrics, process breakdown, and top/bottom performers</p>
+                                </li>
+                                <li>
+                                    <strong>What Changed & Why</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Compare 7/14/30 day periods to see which processes contributed to performance changes</p>
+                                </li>
+                                <li>
+                                    <strong>Shift Comparison</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Compare Day vs Night shift performance visually</p>
+                                </li>
+                                <li>
+                                    <strong>Process Health Matrix</strong>
+                                    <p class="text-sm text-gray-600 ml-6">4-quadrant bubble chart showing process utilization vs efficiency with colored zones</p>
+                                </li>
+                            </ul>
+                        </section>
                     </div>
 
                     <!-- Right Column: Shift Calendar -->
@@ -1616,11 +1645,93 @@
                 </h2>
                 
                 <div class="space-y-6">
-                    <!-- Version 3.6.0 -->
+                    <!-- Version 4.1.0 -->
                     <div class="border-l-4 border-green-600 pl-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <h3 class="text-lg font-bold text-gray-800">Version 3.6.0</h3>
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.1.0</h3>
                             <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Latest</span>
+                            <span class="text-xs text-gray-500">2026-03-02</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-th-large mr-2"></i>Period Detail Modal Layout Improvements
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Removed</strong>: Total Records card eliminated for cleaner layout</li>
+                                    <li><strong>6-Card Row</strong>: Workers, Avg Utilization, Avg Efficiency, Total Shift Time, Total Work Time, Total Adjusted S/T</li>
+                                    <li><strong>Main KPI Emphasis</strong>: Avg Utilization & Efficiency with gradient backgrounds, larger fonts, and icons</li>
+                                    <li><strong>Time Format</strong>: All time values now display in hours (hr) with thousand separators (e.g., 3,643.2 hr)</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-project-diagram mr-2"></i>Process Breakdown Design Overhaul
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Larger Cards</strong>: Increased card size and padding for better visibility</li>
+                                    <li><strong>Font Improvements</strong>: Values upgraded from text-xs to text-base with bold highlighting</li>
+                                    <li><strong>Visual Polish</strong>: Blue gradient backgrounds, enhanced hover effects (shadow-md, border-blue-400)</li>
+                                    <li><strong>Layout</strong>: Left-right aligned layout for improved readability</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-trophy mr-2"></i>Top/Bottom Performers Enhancements
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Clear Labels</strong>: "(Top 3)" and "(Bottom 3)" badges added to section titles</li>
+                                    <li><strong>Criteria Explanation</strong>: "Ranked by combined Utilization + Efficiency score"</li>
+                                    <li><strong>Visual Separation</strong>: Gradient backgrounds (green for top, orange for bottom)</li>
+                                    <li><strong>Icon Colors</strong>: Yellow trophy and orange warning icons for emphasis</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-bug mr-2"></i>Bug Fixes
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Fixed</strong>: Modal TypeError caused by deleted Total Records element reference</li>
+                                    <li><strong>Fixed</strong>: Dashboard Period Modal Total Shift Time not displaying (duplicate ID conflict resolved)</li>
+                                    <li><strong>Fixed</strong>: ID conflicts between Dashboard and Report modals (periodModalTotalShiftTime vs modalTotalShiftTime)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Version 4.0.0 -->
+                    <div class="border-l-4 border-indigo-600 pl-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.0.0</h3>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Previous</span>
+                            <span class="text-xs text-gray-500">2026-03-01</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-indigo-700 mb-2">
+                                    <i class="fas fa-rocket mr-2"></i>Dashboard Tab - Major Release
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>AI Insights & Alerts</strong>: 6 types of automatic warnings</li>
+                                    <li><strong>KPI Trend Intelligence</strong>: Daily/Weekly toggle with drill-down modals</li>
+                                    <li><strong>What Changed & Why</strong>: 7/14/30 day comparison with contribution analysis</li>
+                                    <li><strong>Shift Comparison</strong>: Day vs Night performance visualization</li>
+                                    <li><strong>Process Health Matrix</strong>: 4-quadrant bubble chart with colored zones</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Version 3.6.0 -->
+                    <div class="border-l-4 border-blue-600 pl-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">Version 3.6.0</h3>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Previous</span>
                             <span class="text-xs text-gray-500">2026-02-27</span>
                         </div>
                         
@@ -2342,7 +2453,7 @@
             <div class="mt-4 pt-4 border-t border-gray-100 text-center">
                 <p class="text-xs text-gray-400">
                     <span class="inline-flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v3.6.0</span>
+                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.1.0</span>
                         <span>|</span>
                         <span><i class="fas fa-server mr-1"></i>Cloudflare Pages + D1</span>
                         <span>|</span>
