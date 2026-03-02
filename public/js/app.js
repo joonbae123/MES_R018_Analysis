@@ -6773,15 +6773,16 @@ function openPeriodModal(date, kpi) {
   document.getElementById('modalWorkers').textContent = workers.toLocaleString();
   document.getElementById('modalUtil').textContent = avgUtil.toFixed(1) + '%';
   document.getElementById('modalEff').textContent = avgEff.toFixed(1) + '%';
+  document.getElementById('modalRecords').textContent = totalRecords.toLocaleString();
   
   // Display in hours (hr) with comma formatting
   const totalShiftTimeHr = totalShiftTime / 60;
   const totalWorkTimeHr = totalWorkTime / 60;
+  const totalAdjustedSTHr = totalAdjustedST / 60;
   
   document.getElementById('periodModalTotalShiftTime').textContent = totalShiftTimeHr.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' hr';
   document.getElementById('periodModalTotalWorkTime').textContent = totalWorkTimeHr.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' hr';
-  
-  document.getElementById('modalRecords').textContent = totalRecords.toLocaleString();
+  document.getElementById('periodModalTotalAdjustedST').textContent = totalAdjustedSTHr.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' hr';
   
   // Draw distribution charts
   drawModalDistributionCharts(filtered);

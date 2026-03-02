@@ -2624,31 +2624,55 @@
             </div>
             
             <div class="p-6 overflow-y-auto" style="max-height: calc(95vh - 120px);">
-                <!-- Enhanced Summary Cards (6 cards) - Toned down colors -->
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-600 mb-1">Workers</p>
+                <!-- Enhanced Summary Cards with emphasis on main KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Workers -->
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Workers</p>
                         <p class="text-2xl font-bold text-gray-700" id="modalWorkers">-</p>
                     </div>
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-600 mb-1">Avg Utilization</p>
-                        <p class="text-2xl font-bold text-gray-700" id="modalUtil">-</p>
+                    
+                    <!-- Avg Utilization - EMPHASIZED -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border-2 border-blue-300 shadow-md">
+                        <p class="text-xs text-blue-700 mb-1 font-bold flex items-center gap-1">
+                            <i class="fas fa-chart-line"></i>
+                            Avg Utilization
+                        </p>
+                        <p class="text-3xl font-bold text-blue-900" id="modalUtil">-</p>
                     </div>
-                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-600 mb-1">Avg Efficiency</p>
-                        <p class="text-2xl font-bold text-gray-700" id="modalEff">-</p>
+                    
+                    <!-- Avg Efficiency - EMPHASIZED -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border-2 border-purple-300 shadow-md">
+                        <p class="text-xs text-purple-700 mb-1 font-bold flex items-center gap-1">
+                            <i class="fas fa-bolt"></i>
+                            Avg Efficiency
+                        </p>
+                        <p class="text-3xl font-bold text-purple-900" id="modalEff">-</p>
                     </div>
+                    
+                    <!-- Total Records -->
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Total Records</p>
+                        <p class="text-2xl font-bold text-gray-700" id="modalRecords">-</p>
+                    </div>
+                </div>
+                
+                <!-- Secondary Metrics (3 columns) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-600 mb-1">Total Shift Time</p>
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Total Shift Time</p>
                         <p class="text-xl font-bold text-gray-700" id="periodModalTotalShiftTime">-</p>
+                        <p class="text-xs text-gray-500 mt-1">available capacity</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-600 mb-1">Total Work Time</p>
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Total Work Time</p>
                         <p class="text-xl font-bold text-gray-700" id="periodModalTotalWorkTime">-</p>
+                        <p class="text-xs text-gray-500 mt-1">actual work</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-600 mb-1">Total Records</p>
-                        <p class="text-xl font-bold text-gray-700" id="modalRecords">-</p>
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Total Adjusted S/T</p>
+                        <p class="text-xl font-bold text-gray-700" id="periodModalTotalAdjustedST">-</p>
+                        <p class="text-xs text-gray-500 mt-1">standard time</p>
                     </div>
                 </div>
 
