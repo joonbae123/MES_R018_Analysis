@@ -5737,52 +5737,143 @@ function refreshTrendChart() {
     console.log(`Filtered to ${filteredData.length} entries for process: ${processFilter}`);
   }
   
-  const aggregated = aggregateByPeriod(filteredData, period, kpi);
-  
-  console.log(`Aggregated to ${aggregated.labels.length} periods`);
-  console.log(`Sample data:`, aggregated.labels.slice(0, 5), aggregated.values.slice(0, 5));
-  
   if (DashboardState.charts.trend) {
     DashboardState.charts.trend.destroy();
   }
   
   const ctx = document.getElementById('trendChart').getContext('2d');
-  DashboardState.charts.trend = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: aggregated.labels,
-      datasets: [{
-        label: kpi === 'util' ? 'Utilization %' : 'Efficiency %',
-        data: aggregated.values,
-        borderColor: kpi === 'util' ? '#10b981' : '#a855f7',
-        backgroundColor: kpi === 'util' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(168, 85, 247, 0.1)',
-        borderWidth: 2,
-        tension: 0.3,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'top' },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+  
+  // Handle "Both" option - show Utilization and Efficiency together
+  if (kpi === 'both') {
+    const utilAggregated = aggregateByPeriod(filteredData, period, 'util');
+    const effAggregated = aggregateByPeriod(filteredData, period, 'eff');
+    
+    console.log(`Aggregated to ${utilAggregated.labels.length} periods (both KPIs)`);
+    
+    DashboardState.charts.trend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: utilAggregated.labels,
+        datasets: [
+          {
+            label: 'Utilization %',
+            data: utilAggregated.values,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Efficiency %',
+            data: effAggregated.values,
+            borderColor: '#a855f7',
+            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const date = utilAggregated.labels[index];
+            openPeriodModal(date, 'both');
+          }
+        },
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            beginAtZero: true,
+            max: 100,
+            title: { display: true, text: 'Utilization (%)' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            beginAtZero: true,
+            title: { display: true, text: 'Efficiency (%)' },
+            grid: {
+              drawOnChartArea: false
             }
           }
         }
+      }
+    });
+  } else {
+    // Single KPI mode
+    const aggregated = aggregateByPeriod(filteredData, period, kpi);
+    
+    console.log(`Aggregated to ${aggregated.labels.length} periods`);
+    console.log(`Sample data:`, aggregated.labels.slice(0, 5), aggregated.values.slice(0, 5));
+    
+    DashboardState.charts.trend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: aggregated.labels,
+        datasets: [{
+          label: kpi === 'util' ? 'Utilization %' : 'Efficiency %',
+          data: aggregated.values,
+          borderColor: kpi === 'util' ? '#10b981' : '#a855f7',
+          backgroundColor: kpi === 'util' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(168, 85, 247, 0.1)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }]
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: kpi === 'util' ? 100 : undefined, // Utilization: 0-100%, Efficiency: auto scale
-          title: { display: true, text: 'Rate (%)' }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const date = aggregated.labels[index];
+            openPeriodModal(date, kpi);
+          }
+        },
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: kpi === 'util' ? 100 : undefined,
+            title: { display: true, text: 'Rate (%)' }
+          }
         }
       }
-    }
-  });
+    });
+  }
 }
 
 function aggregateByPeriod(data, period, kpi) {
@@ -6071,6 +6162,66 @@ function refreshHealthMatrix(data) {
       }
     }
   });
+}
+
+// ========== Period Detail Modal ==========
+function openPeriodModal(date, kpi) {
+  const aggregated = AppState.aggregatedData || [];
+  const filtered = aggregated.filter(r => r.workingDay === date);
+  
+  if (filtered.length === 0) {
+    alert('No data available for this period');
+    return;
+  }
+  
+  // Calculate summary
+  const workers = new Set(filtered.map(r => r.workerName)).size;
+  let totalUtil = 0, totalEff = 0;
+  filtered.forEach(r => {
+    totalUtil += r.utilizationRate || 0;
+    totalEff += r.efficiencyRate || 0;
+  });
+  const avgUtil = filtered.length > 0 ? totalUtil / filtered.length : 0;
+  const avgEff = filtered.length > 0 ? totalEff / filtered.length : 0;
+  const totalRecords = filtered.reduce((sum, r) => sum + r.recordCount, 0);
+  
+  // Update modal
+  document.getElementById('modalTitle').textContent = `Period: ${date}`;
+  document.getElementById('modalSubtitle').textContent = `${filtered.length} worker-shift entries`;
+  document.getElementById('modalWorkers').textContent = workers;
+  document.getElementById('modalUtil').textContent = avgUtil.toFixed(1) + '%';
+  document.getElementById('modalEff').textContent = avgEff.toFixed(1) + '%';
+  document.getElementById('modalRecords').textContent = totalRecords.toLocaleString();
+  
+  // Build table
+  const tbody = document.getElementById('modalTableBody');
+  tbody.innerHTML = filtered
+    .sort((a, b) => b.utilizationRate - a.utilizationRate)
+    .map(r => `
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-3 text-sm font-medium text-gray-900">${r.workerName}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">${r.foDesc2 || '-'}</td>
+        <td class="px-4 py-3 text-sm text-right">
+          <span class="px-2 py-1 rounded ${r.utilizationRate >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+            ${r.utilizationRate.toFixed(1)}%
+          </span>
+        </td>
+        <td class="px-4 py-3 text-sm text-right">
+          <span class="px-2 py-1 rounded ${r.efficiencyRate >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+            ${r.efficiencyRate.toFixed(1)}%
+          </span>
+        </td>
+        <td class="px-4 py-3 text-sm text-right text-gray-600">${r.totalActualMins.toFixed(0)}</td>
+        <td class="px-4 py-3 text-sm text-right text-gray-600">${r.shiftCount || 1}</td>
+      </tr>
+    `).join('');
+  
+  // Show modal
+  document.getElementById('periodDetailModal').classList.remove('hidden');
+}
+
+function closePeriodModal() {
+  document.getElementById('periodDetailModal').classList.add('hidden');
 }
 
 // ========== Utility Functions ==========

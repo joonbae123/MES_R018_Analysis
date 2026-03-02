@@ -875,6 +875,7 @@
                             <option value="weekly">Weekly</option>
                         </select>
                         <select id="trendKPI" class="px-3 py-1 text-sm border border-gray-300 rounded-lg" onchange="refreshTrendChart()">
+                            <option value="both">Both (Utilization + Efficiency)</option>
                             <option value="util">Utilization</option>
                             <option value="eff">Efficiency</option>
                         </select>
@@ -2627,6 +2628,67 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=1772424031"></script>
+    <!-- Period Detail Modal -->
+    <div id="periodDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 max-w-6xl max-h-[90vh] overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold" id="modalTitle">Period Details</h3>
+                    <button onclick="closePeriodModal()" class="text-white hover:text-gray-200">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <p class="text-sm mt-2 opacity-90" id="modalSubtitle">Detailed breakdown</p>
+            </div>
+            
+            <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 120px);">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Workers</p>
+                        <p class="text-2xl font-bold text-blue-600" id="modalWorkers">-</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Avg Utilization</p>
+                        <p class="text-2xl font-bold text-green-600" id="modalUtil">-</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Avg Efficiency</p>
+                        <p class="text-2xl font-bold text-purple-600" id="modalEff">-</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Total Records</p>
+                        <p class="text-2xl font-bold text-gray-700" id="modalRecords">-</p>
+                    </div>
+                </div>
+
+                <!-- Worker List Table -->
+                <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="p-4 bg-gray-50 border-b border-gray-200">
+                        <h4 class="font-bold text-gray-800">Worker Performance Details</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Worker</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Process</th>
+                                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Utilization</th>
+                                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Efficiency</th>
+                                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Actual Mins</th>
+                                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Shifts</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalTableBody" class="divide-y divide-gray-200">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=1772424613"></script>
 </body>
 </html>
