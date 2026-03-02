@@ -5992,24 +5992,53 @@ function generateWarnings(data) {
   // Calculate utilization and efficiency using same method as Report tab
   // This ensures consistency between Report KPI and Dashboard AI Insights
   
-  // Get worker aggregation data
-  const workerAgg = Object.values(AppState.cachedWorkerAgg || {});
   const uniqueDates = new Set(aggregated.map(r => r.workingDay)).size;
   
-  // Calculate Utilization: (Total Work Time / Total Shift Time) × 100
-  const totalShifts = workerAgg.reduce((sum, w) => sum + (w.shiftCount || 0), 0);
+  // Group by worker to calculate totals (same as Report tab logic)
+  const workerTotals = {};
+  aggregated.forEach(r => {
+    const key = r.workerName;
+    if (!workerTotals[key]) {
+      workerTotals[key] = {
+        totalMinutes: 0,
+        assignedStandardTime: 0,
+        shifts: new Set()
+      };
+    }
+    workerTotals[key].totalMinutes += (r.totalMinutes || 0);
+    workerTotals[key].assignedStandardTime += (r.assignedStandardTime || 0);
+    if (r.workingDay && r.workingShift) {
+      workerTotals[key].shifts.add(`${r.workingDay}_${r.workingShift}`);
+    }
+  });
+  
+  // Calculate totals across all workers
+  let totalWorkTime = 0;
+  let totalAdjustedST = 0;
+  let totalShifts = 0;
+  
+  Object.values(workerTotals).forEach(worker => {
+    totalWorkTime += worker.totalMinutes;
+    totalAdjustedST += worker.assignedStandardTime;
+    totalShifts += worker.shifts.size;
+  });
+  
   const totalShiftTime = totalShifts * 660; // Each shift = 11 hours = 660 minutes
-  const totalWorkTime = workerAgg.reduce((sum, w) => sum + (w.totalMinutes || 0), 0);
+  
+  // Calculate Utilization: (Total Work Time / Total Shift Time) × 100
   const avgUtil = totalShiftTime > 0 ? (totalWorkTime / totalShiftTime) * 100 : 0;
   
   // Calculate Efficiency: (Total Adjusted S/T / Total Shift Time) × 100
-  const totalAdjustedST = workerAgg.reduce((sum, w) => sum + (w.assignedStandardTime || 0), 0);
   const avgEff = totalShiftTime > 0 ? (totalAdjustedST / totalShiftTime) * 100 : 0;
   
   console.log(`📊 AI Warnings calculation:
     - Data period: ${uniqueDates} days
     - Total records: ${aggregated.length}
+    - Total workers: ${Object.keys(workerTotals).length}
     - Total shifts: ${totalShifts}
+    - Total work time: ${totalWorkTime.toFixed(0)} min
+    - Total shift time: ${totalShiftTime.toFixed(0)} min
+    - Total adjusted S/T: ${totalAdjustedST.toFixed(0)} min
     - Utilization: (${totalWorkTime.toFixed(0)} / ${totalShiftTime.toFixed(0)}) × 100 = ${avgUtil.toFixed(1)}%
     - Efficiency: (${totalAdjustedST.toFixed(0)} / ${totalShiftTime.toFixed(0)}) × 100 = ${avgEff.toFixed(1)}%`);
   
