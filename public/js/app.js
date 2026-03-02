@@ -109,6 +109,7 @@ const DEFAULT_PROCESS_MAPPING = {
 const AppState = {
     rawData: [],
     processedData: [],
+    aggregatedData: [], // NEW: Aggregated data for dashboard
     processMapping: [],
     shiftCalendar: [],
     currentFileName: '',
@@ -732,6 +733,9 @@ function handleFileUpload(file) {
             // Process data
             AppState.processedData = processData(AppState.rawData);
             
+            // Aggregate data for dashboard
+            AppState.aggregatedData = aggregateDataForDashboard(AppState.processedData);
+            
             updateProgress(100);
             
             // Show success
@@ -1216,6 +1220,73 @@ function processData(rawData) {
     mergeOverlappingIntervals(processed);
     
     return processed;
+}
+
+// ========================================
+// NEW: Aggregate processed data for dashboard
+// ========================================
+function aggregateDataForDashboard(processedData) {
+    console.log('🔄 Starting data aggregation for dashboard...');
+    
+    // Group by: Worker + Date + Shift
+    const aggregated = {};
+    
+    processedData.forEach(record => {
+        if (!record.validFlag || !record.workerName || !record.workingDay) return;
+        
+        const key = `${record.workerName}|${record.workingDay}|${record.workingShift}|${record.actualShift}`;
+        
+        if (!aggregated[key]) {
+            aggregated[key] = {
+                workerName: record.workerName,
+                workingDay: record.workingDay,
+                workingShift: record.workingShift,
+                actualShift: record.actualShift,
+                foDesc2: record.foDesc2,
+                foDesc3: record.foDesc3,
+                seq: record.seq,
+                totalActualMins: 0,
+                totalStandardTime: 0,
+                recordCount: 0,
+                records: []
+            };
+        }
+        
+        aggregated[key].totalActualMins += record.workerActMins || 0;
+        aggregated[key].totalStandardTime += record.workerST || 0;
+        aggregated[key].recordCount++;
+        aggregated[key].records.push(record);
+    });
+    
+    // Calculate rates for each aggregated entry
+    const aggregatedArray = Object.values(aggregated).map(agg => {
+        // Utilization: total actual minutes / 660 (11 hours shift)
+        const utilization = (agg.totalActualMins / 660) * 100;
+        
+        // Efficiency: total standard time / total actual minutes
+        const efficiency = agg.totalActualMins > 0 
+            ? (agg.totalStandardTime / agg.totalActualMins) * 100 
+            : 0;
+        
+        return {
+            ...agg,
+            utilizationRate: utilization,
+            efficiencyRate: efficiency
+        };
+    });
+    
+    console.log(`✅ Aggregated ${aggregatedArray.length} worker-day-shift entries`);
+    console.log(`📊 Sample aggregated data:`, aggregatedArray.slice(0, 3).map(a => ({
+        worker: a.workerName,
+        date: a.workingDay,
+        shift: a.workingShift,
+        actualShift: a.actualShift,
+        util: a.utilizationRate.toFixed(1) + '%',
+        eff: a.efficiencyRate.toFixed(1) + '%',
+        records: a.recordCount
+    })));
+    
+    return aggregatedArray;
 }
 
 // Calculate Working Day and Shift
@@ -5604,13 +5675,27 @@ function generateWarnings(data) {
   });
 }
 
-// ========== 3. KPI Trend Intelligence ==========
+// ========== 3. KPI Trend Intelligence (REWRITTEN) ==========
 function refreshTrendChart() {
   const period = document.getElementById('trendPeriod').value;
   const kpi = document.getElementById('trendKPI').value;
-  const data = AppState.processedData || [];
+  const processFilter = document.getElementById('trendProcess').value;
   
-  const aggregated = aggregateByPeriod(data, period, kpi);
+  const data = AppState.aggregatedData || [];
+  
+  console.log(`📈 Refreshing Trend Chart: period=${period}, kpi=${kpi}, process=${processFilter}, data=${data.length} entries`);
+  
+  // Filter by process if selected
+  let filteredData = data;
+  if (processFilter && processFilter !== 'all') {
+    filteredData = data.filter(d => d.foDesc2 === processFilter);
+    console.log(`  Filtered to ${filteredData.length} entries for process: ${processFilter}`);
+  }
+  
+  const aggregated = aggregateByPeriod(filteredData, period, kpi);
+  
+  console.log(`  Aggregated to ${aggregated.labels.length} periods`);
+  console.log(`  Sample data:`, aggregated.labels.slice(0, 5), aggregated.values.slice(0, 5));
   
   if (DashboardState.charts.trend) {
     DashboardState.charts.trend.destroy();
@@ -5635,7 +5720,14 @@ function refreshTrendChart() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: true, position: 'top' }
+        legend: { display: true, position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+            }
+          }
+        }
       },
       scales: {
         y: {
@@ -5674,13 +5766,15 @@ function getWeekKey(date) {
   return `Week ${week}`;
 }
 
-// ========== 4. What Changed & Why ==========
+// ========== 4. What Changed & Why (REWRITTEN) ==========
 function refreshContributionChart() {
   const period = document.getElementById('contributionPeriod').value;
   const kpi = document.getElementById('contributionKPI').value;
-  const data = AppState.processedData || [];
+  const data = AppState.aggregatedData || [];
   
-  // Simplified: show current distribution by FO Desc 2
+  console.log(`📊 Refreshing Contribution Chart: period=${period}, kpi=${kpi}, data=${data.length} entries`);
+  
+  // Group by process category (foDesc2)
   const groups = {};
   data.forEach(r => {
     const cat = r.foDesc2 || 'Unknown';
@@ -5695,6 +5789,10 @@ function refreshContributionChart() {
   
   const categories = Object.keys(groups).sort();
   const values = categories.map(c => groups[c].count > 0 ? groups[c].sum / groups[c].count : 0);
+  
+  console.log(`  Found ${categories.length} categories`);
+  console.log(`  Categories:`, categories);
+  console.log(`  Values:`, values.map(v => v.toFixed(1)));
   
   document.getElementById('contributionOverall').textContent = 'Current Distribution';
   
@@ -5717,7 +5815,16 @@ function refreshContributionChart() {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.parsed.x.toFixed(1)}%`;
+            }
+          }
+        }
+      },
       scales: {
         x: {
           beginAtZero: true,
@@ -5728,7 +5835,7 @@ function refreshContributionChart() {
   });
 }
 
-// ========== 5. Shift Comparison ==========
+// ========== 5. Shift Comparison (REWRITTEN) ==========
 function switchShiftMode(mode) {
   DashboardState.currentShiftMode = mode;
   
@@ -5749,13 +5856,17 @@ function switchShiftMode(mode) {
 function refreshShiftChart() {
   const mode = DashboardState.currentShiftMode;
   const kpi = document.getElementById('shiftKPI').value;
-  const data = AppState.processedData || [];
+  const data = AppState.aggregatedData || [];
+  
+  console.log(`🌓 Refreshing Shift Chart: mode=${mode}, kpi=${kpi}, data=${data.length} entries`);
   
   let labels, values;
   
   if (mode === 'daynight') {
     const dayData = data.filter(r => r.workingShift === 'Day');
     const nightData = data.filter(r => r.workingShift === 'Night');
+    
+    console.log(`  Day: ${dayData.length} entries, Night: ${nightData.length} entries`);
     
     labels = ['Day', 'Night'];
     values = [calcAvg(dayData, kpi), calcAvg(nightData, kpi)];
@@ -5764,9 +5875,13 @@ function refreshShiftChart() {
     const bData = data.filter(r => r.actualShift === 'B');
     const cData = data.filter(r => r.actualShift === 'C');
     
+    console.log(`  A: ${aData.length} entries, B: ${bData.length} entries, C: ${cData.length} entries`);
+    
     labels = ['A Shift', 'B Shift', 'C Shift'];
     values = [calcAvg(aData, kpi), calcAvg(bData, kpi), calcAvg(cData, kpi)];
   }
+  
+  console.log(`  Values:`, values.map(v => v.toFixed(1)));
   
   if (DashboardState.charts.shift) {
     DashboardState.charts.shift.destroy();
@@ -5788,7 +5903,16 @@ function refreshShiftChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.parsed.y.toFixed(1)}%`;
+            }
+          }
+        }
+      },
       scales: {
         y: {
           beginAtZero: true,
@@ -5811,11 +5935,16 @@ function calcAvg(data, kpi) {
   return count > 0 ? sum / count : 0;
 }
 
-// ========== 6. Process Health Matrix ==========
+// ========== 6. Process Health Matrix (REWRITTEN) ==========
 function refreshHealthMatrix(data) {
+  const aggregated = AppState.aggregatedData || [];
+  
+  console.log(`🎯 Refreshing Health Matrix: ${aggregated.length} aggregated entries`);
+  
+  // Group by process category
   const groups = {};
   
-  data.forEach(r => {
+  aggregated.forEach(r => {
     const cat = r.foDesc2 || 'Unknown';
     if (!groups[cat]) groups[cat] = { util: [], eff: [] };
     
@@ -5838,10 +5967,13 @@ function refreshHealthMatrix(data) {
     return {
       x: utilAvg,
       y: effAvg,
-      r: Math.sqrt(groups[cat].util.length + groups[cat].eff.length) / 5,
+      r: Math.sqrt(groups[cat].util.length) * 2, // Size based on data points
       label: cat
     };
   });
+  
+  console.log(`  Generated ${points.length} bubbles`);
+  console.log(`  Sample:`, points.slice(0, 3).map(p => ({ label: p.label, util: p.x.toFixed(1), eff: p.y.toFixed(1) })));
   
   if (DashboardState.charts.matrix) {
     DashboardState.charts.matrix.destroy();
@@ -5855,10 +5987,46 @@ function refreshHealthMatrix(data) {
         label: 'Process Health',
         data: points,
         backgroundColor: points.map(p => {
-          if (p.x >= 50 && p.y >= 50) return 'rgba(34, 197, 94, 0.6)'; // Green
-          if (p.x >= 50 && p.y < 50) return 'rgba(239, 68, 68, 0.6)'; // Red
-          if (p.x < 50 && p.y >= 50) return 'rgba(59, 130, 246, 0.6)'; // Blue
-          return 'rgba(156, 163, 175, 0.6)'; // Gray
+          if (p.x >= 50 && p.y >= 50) return 'rgba(34, 197, 94, 0.6)'; // Green: Good
+          if (p.x >= 50 && p.y < 50) return 'rgba(239, 68, 68, 0.6)'; // Red: High util, low eff
+          if (p.x < 50 && p.y >= 50) return 'rgba(59, 130, 246, 0.6)'; // Blue: Low util, high eff
+          return 'rgba(156, 163, 175, 0.6)'; // Gray: Both low
+        })
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const point = context.raw;
+              return [
+                `Process: ${point.label}`,
+                `Utilization: ${point.x.toFixed(1)}%`,
+                `Efficiency: ${point.y.toFixed(1)}%`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Utilization %' },
+          min: 0,
+          max: 100
+        },
+        y: {
+          title: { display: true, text: 'Efficiency %' },
+          min: 0,
+          max: 100
+        }
+      }
+    }
+  });
+}
         })
       }]
     },
