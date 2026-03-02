@@ -6570,7 +6570,7 @@ function refreshShiftComparison() {
   
   // Calculate metrics for each group and shift
   const calculateGroupMetrics = (groupProcesses) => {
-    const groupData = filteredData.filter(r => groupProcesses.includes(r.foDesc3));
+    const groupData = filteredData.filter(r => groupProcesses.includes(r.foDesc2));  // FIX: Use foDesc2 (category) not foDesc3 (process)
     
     // Group by shift
     const shiftMetrics = {};
@@ -7207,8 +7207,8 @@ function updateAIInsightContent() {
   const metric = isEfficiency ? 'efficiencyRate' : 'utilizationRate';
   const rates = workers.map(w => w[metric] || 0);
   
-  const topPerformers = workers.filter(w => (w[metric] || 0) >= (isEfficiency ? 100 : 80));
-  const atRiskWorkers = workers.filter(w => (w[metric] || 0) < (isEfficiency ? 60 : 30));
+  const topPerformers = workers.filter(w => (w[metric] || 0) >= 80);  // Both Util and Eff use 80% threshold
+  const atRiskWorkers = workers.filter(w => (w[metric] || 0) < (isEfficiency ? 50 : 30));  // Eff <50%, Util <30%
   
   // Update summary cards
   document.getElementById('aiTopPerformersCount').textContent = topPerformers.length;
@@ -7221,14 +7221,14 @@ function updateAIInsightContent() {
   if (topPerformers.length > 0) {
     keyFindings.push(`<li class="flex items-start gap-2">
       <i class="fas fa-check-circle text-green-500 mt-1"></i>
-      <span><strong>${topPerformers.length} workers</strong> are performing excellently with ${isEfficiency ? '≥100%' : '≥80%'} ${isEfficiency ? 'efficiency' : 'utilization'} rate.</span>
+      <span><strong>${topPerformers.length} workers</strong> are performing excellently with ≥80% ${isEfficiency ? 'efficiency' : 'utilization'} rate.</span>
     </li>`);
   }
   
   if (atRiskWorkers.length > 0) {
     keyFindings.push(`<li class="flex items-start gap-2">
       <i class="fas fa-exclamation-circle text-orange-500 mt-1"></i>
-      <span><strong>${atRiskWorkers.length} workers</strong> need attention with ${isEfficiency ? '<60%' : '<30%'} ${isEfficiency ? 'efficiency' : 'utilization'} rate.</span>
+      <span><strong>${atRiskWorkers.length} workers</strong> need attention with ${isEfficiency ? '<50%' : '<30%'} ${isEfficiency ? 'efficiency' : 'utilization'} rate.</span>
     </li>`);
   }
   
