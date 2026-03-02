@@ -7221,7 +7221,7 @@ function updateAIInsightContent() {
   if (topPerformers.length > 0) {
     keyFindings.push(`<li class="flex items-start gap-2">
       <i class="fas fa-check-circle text-green-500 mt-1"></i>
-      <span><strong>${topPerformers.length} workers</strong> are performing excellently with ≥80% ${isEfficiency ? 'efficiency' : 'utilization'} rate.</span>
+      <span><strong>${topPerformers.length} workers</strong> are performing excellently with ${isEfficiency ? '≥80%' : '≥50%'} ${isEfficiency ? 'efficiency' : 'utilization'} rate.</span>
     </li>`);
   }
   
@@ -7573,6 +7573,11 @@ console.log(' Executive Dashboard functions loaded');
       setTimeout(() => {
         refreshExecutiveDashboard();
         initExecutiveDashboard();
+      }, 100);
+    }
+  };
+})();
+);
       }, 100);
     }
   };
