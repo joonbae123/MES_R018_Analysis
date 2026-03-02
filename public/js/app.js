@@ -6199,6 +6199,16 @@ function openPeriodModal(date, kpi) {
   const avgEff = filtered.length > 0 ? totalEff / filtered.length : 0;
   const totalRecords = filtered.reduce((sum, r) => sum + r.recordCount, 0);
   
+  console.log('Modal Summary:', {
+    workers,
+    avgUtil: avgUtil.toFixed(1),
+    avgEff: avgEff.toFixed(1),
+    totalShiftTime,
+    totalWorkTime,
+    totalAdjustedST,
+    totalRecords
+  });
+  
   // Update header
   document.getElementById('modalTitle').textContent = `Period Details: ${date}`;
   document.getElementById('modalSubtitle').textContent = `${filtered.length} worker-shift entries | ${workers} unique workers`;
