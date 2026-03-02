@@ -5455,7 +5455,7 @@ function refreshExecutiveDashboard() {
     return;
   }
   
-  console.log(' Refreshing Executive Dashboard...');
+  console.log('Refreshing Executive Dashboard...');
   const data = AppState.processedData;
   
   // 1. Flight Deck
@@ -5471,14 +5471,14 @@ function refreshExecutiveDashboard() {
   // 6. Health Matrix
   refreshHealthMatrix(data);
   
-  console.log(' Dashboard refreshed');
+  console.log('Dashboard refreshed');
 }
 
 // ========== 1. Flight Deck ==========
 function updateFlightDeck(data) {
-  console.log(' updateFlightDeck called with', data.length, 'records');
+  console.log('updateFlightDeck called with', data.length, 'records');
   if (data.length > 0) {
-    console.log(' Sample record:', data[0]);
+    console.log('Sample record:', data[0]);
   }
   
   // Calculate KPIs from raw data by aggregating by worker
@@ -5508,7 +5508,7 @@ function updateFlightDeck(data) {
     }
   });
   
-  console.log(` Aggregated ${workerStats.size} workers from ${data.length} records`);
+  console.log(`Aggregated ${workerStats.size} workers from ${data.length} records`);
   
   // Calculate average utilization and efficiency
   let totalUtil = 0, totalEff = 0, countWorkers = 0;
@@ -5531,14 +5531,14 @@ function updateFlightDeck(data) {
     countWorkers++;
     
     if (countWorkers <= 3) {
-      console.log(`  Worker: ${workerName}, Util: ${utilizationRate.toFixed(1)}%, Eff: ${efficiencyRate.toFixed(1)}%`);
+      console.log(`Worker: ${workerName}, Util: ${utilizationRate.toFixed(1)}%, Eff: ${efficiencyRate.toFixed(1)}%`);
     }
   });
   
   const avgUtil = countWorkers > 0 ? (totalUtil / countWorkers).toFixed(1) : 0;
   const avgEff = countWorkers > 0 ? (totalEff / countWorkers).toFixed(1) : 0;
   
-  console.log(` Final KPIs: Workers=${countWorkers}, Avg Util=${avgUtil}%, Avg Eff=${avgEff}%`);
+  console.log(`Final KPIs: Workers=${countWorkers}, Avg Util=${avgUtil}%, Avg Eff=${avgEff}%`);
   
   document.getElementById('flightWorkers').textContent = countWorkers;
   document.getElementById('flightUtil').textContent = avgUtil + '%';
@@ -5559,7 +5559,7 @@ function updateFlightDeck(data) {
 }
 
 function drawSparkline(canvasId, data) {
-  console.log(` Drawing sparkline for ${canvasId}:`, data);
+  console.log(`Drawing sparkline for ${canvasId}:`, data);
   
   const canvas = document.getElementById(canvasId);
   if (!canvas) {
@@ -5567,7 +5567,7 @@ function drawSparkline(canvasId, data) {
     return;
   }
   
-  console.log(` Canvas found: ${canvasId}, dimensions: ${canvas.width}x${canvas.height}`);
+  console.log(`Canvas found: ${canvasId}, dimensions: ${canvas.width}x${canvas.height}`);
   
   // Check if Chart.js is loaded
   if (typeof Chart === 'undefined') {
@@ -5577,7 +5577,7 @@ function drawSparkline(canvasId, data) {
   
   // Destroy existing chart
   if (DashboardState.charts[canvasId]) {
-    console.log(` Destroying existing chart: ${canvasId}`);
+    console.log(`Destroying existing chart: ${canvasId}`);
     DashboardState.charts[canvasId].destroy();
   }
   
@@ -5611,7 +5611,7 @@ function drawSparkline(canvasId, data) {
         }
       }
     });
-    console.log(` Chart created successfully: ${canvasId}`);
+    console.log(`Chart created successfully: ${canvasId}`);
   } catch (error) {
     console.error(` Error creating chart ${canvasId}:`, error);
   }
@@ -5728,19 +5728,19 @@ function refreshTrendChart() {
   
   const data = AppState.aggregatedData || [];
   
-  console.log(` Refreshing Trend Chart: period=${period}, kpi=${kpi}, process=${processFilter}, data=${data.length} entries`);
+  console.log(`Refreshing Trend Chart: period=${period}, kpi=${kpi}, process=${processFilter}, data=${data.length} entries`);
   
   // Filter by process if selected
   let filteredData = data;
   if (processFilter && processFilter !== 'all') {
     filteredData = data.filter(d => d.foDesc2 === processFilter);
-    console.log(`  Filtered to ${filteredData.length} entries for process: ${processFilter}`);
+    console.log(`Filtered to ${filteredData.length} entries for process: ${processFilter}`);
   }
   
   const aggregated = aggregateByPeriod(filteredData, period, kpi);
   
-  console.log(`  Aggregated to ${aggregated.labels.length} periods`);
-  console.log(`  Sample data:`, aggregated.labels.slice(0, 5), aggregated.values.slice(0, 5));
+  console.log(`Aggregated to ${aggregated.labels.length} periods`);
+  console.log(`Sample data:`, aggregated.labels.slice(0, 5), aggregated.values.slice(0, 5));
   
   if (DashboardState.charts.trend) {
     DashboardState.charts.trend.destroy();
@@ -5817,7 +5817,7 @@ function refreshContributionChart() {
   const kpi = document.getElementById('contributionKPI').value;
   const data = AppState.aggregatedData || [];
   
-  console.log(` Refreshing Contribution Chart: period=${period}, kpi=${kpi}, data=${data.length} entries`);
+  console.log(`Refreshing Contribution Chart: period=${period}, kpi=${kpi}, data=${data.length} entries`);
   
   // Group by process category (foDesc2)
   const groups = {};
@@ -5835,9 +5835,9 @@ function refreshContributionChart() {
   const categories = Object.keys(groups).sort();
   const values = categories.map(c => groups[c].count > 0 ? groups[c].sum / groups[c].count : 0);
   
-  console.log(`  Found ${categories.length} categories`);
-  console.log(`  Categories:`, categories);
-  console.log(`  Values:`, values.map(v => v.toFixed(1)));
+  console.log(`Found ${categories.length} categories`);
+  console.log(`Categories:`, categories);
+  console.log(`Values:`, values.map(v => v.toFixed(1)));
   
   document.getElementById('contributionOverall').textContent = 'Current Distribution';
   
@@ -5903,7 +5903,7 @@ function refreshShiftChart() {
   const kpi = document.getElementById('shiftKPI').value;
   const data = AppState.aggregatedData || [];
   
-  console.log(` Refreshing Shift Chart: mode=${mode}, kpi=${kpi}, data=${data.length} entries`);
+  console.log(`Refreshing Shift Chart: mode=${mode}, kpi=${kpi}, data=${data.length} entries`);
   
   let labels, values;
   
@@ -5911,7 +5911,7 @@ function refreshShiftChart() {
     const dayData = data.filter(r => r.workingShift === 'Day');
     const nightData = data.filter(r => r.workingShift === 'Night');
     
-    console.log(`  Day: ${dayData.length} entries, Night: ${nightData.length} entries`);
+    console.log(`Day: ${dayData.length} entries, Night: ${nightData.length} entries`);
     
     labels = ['Day', 'Night'];
     values = [calcAvg(dayData, kpi), calcAvg(nightData, kpi)];
@@ -5920,13 +5920,13 @@ function refreshShiftChart() {
     const bData = data.filter(r => r.actualShift === 'B');
     const cData = data.filter(r => r.actualShift === 'C');
     
-    console.log(`  A: ${aData.length} entries, B: ${bData.length} entries, C: ${cData.length} entries`);
+    console.log(`A: ${aData.length} entries, B: ${bData.length} entries, C: ${cData.length} entries`);
     
     labels = ['A Shift', 'B Shift', 'C Shift'];
     values = [calcAvg(aData, kpi), calcAvg(bData, kpi), calcAvg(cData, kpi)];
   }
   
-  console.log(`  Values:`, values.map(v => v.toFixed(1)));
+  console.log(`Values:`, values.map(v => v.toFixed(1)));
   
   if (DashboardState.charts.shift) {
     DashboardState.charts.shift.destroy();
@@ -5984,7 +5984,7 @@ function calcAvg(data, kpi) {
 function refreshHealthMatrix(data) {
   const aggregated = AppState.aggregatedData || [];
   
-  console.log(` Refreshing Health Matrix: ${aggregated.length} aggregated entries`);
+  console.log(`Refreshing Health Matrix: ${aggregated.length} aggregated entries`);
   
   // Group by process category
   const groups = {};
@@ -6017,8 +6017,8 @@ function refreshHealthMatrix(data) {
     };
   });
   
-  console.log(`  Generated ${points.length} bubbles`);
-  console.log(`  Sample:`, points.slice(0, 3).map(p => ({ label: p.label, util: p.x.toFixed(1), eff: p.y.toFixed(1) })));
+  console.log(`Generated ${points.length} bubbles`);
+  console.log(`Sample:`, points.slice(0, 3).map(p => ({ label: p.label, util: p.x.toFixed(1), eff: p.y.toFixed(1) })));
   
   if (DashboardState.charts.matrix) {
     DashboardState.charts.matrix.destroy();
