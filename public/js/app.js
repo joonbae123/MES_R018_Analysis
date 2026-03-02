@@ -4302,6 +4302,22 @@ async function loadUploadById(uploadId) {
         
         updateReport();
         
+        // Aggregate data for dashboard (CRITICAL: needed for dashboard charts)
+        console.log(' Aggregating data for dashboard...');
+        AppState.aggregatedData = aggregateDataForDashboard(AppState.processedData);
+        console.log(` Aggregated ${AppState.aggregatedData ? AppState.aggregatedData.length : 0} entries for dashboard`);
+        
+        // Refresh Executive Dashboard if data exists
+        if (typeof refreshExecutiveDashboard === 'function' && AppState.processedData && AppState.processedData.length > 0) {
+            console.log('📊 Refreshing Dashboard after upload load...');
+            setTimeout(() => {
+                refreshExecutiveDashboard();
+                if (typeof initExecutiveDashboard === 'function') {
+                    initExecutiveDashboard();
+                }
+            }, 500);
+        }
+        
         // Switch to Report tab
         switchTab('report');
         
