@@ -7199,11 +7199,14 @@ function updateAIInsightContent() {
   const atRiskWorkersCount = atRiskWorkersSet.size;
   
   console.log(`📊 AI Modal Stats (${isEfficiency ? 'Efficiency' : 'Utilization'}):
+    - Total aggregated records: ${aggregated.length}
     - Total unique workers: ${workerAvgRates.length}
-    - Top Performers (≥${topThreshold}%): ${topPerformersCount} unique workers
-    - At-Risk (<${riskThreshold}%): ${atRiskWorkersCount} unique workers
+    - Calculated average from aggregated data: ${avgRate.toFixed(1)}%
+    - Top Performers (≥${topThreshold}%): ${topPerformersCount} unique workers (${(topPerformersCount/workerAvgRates.length*100).toFixed(1)}%)
+    - At-Risk (<${riskThreshold}%): ${atRiskWorkersCount} unique workers (${(atRiskWorkersCount/workerAvgRates.length*100).toFixed(1)}%)
     - Sample top workers:`, Array.from(topPerformersSet).slice(0, 3));
   console.log('🔍 Worker average rates sample:', workerAvgRates.slice(0, 5).map(w => `${w.name}: ${w.avgRate.toFixed(1)}%`));
+  console.log(`📊 Distribution check: Top (${topPerformersCount}) + At-Risk (${atRiskWorkersCount}) + Middle (${workerAvgRates.length - topPerformersCount - atRiskWorkersCount}) = ${workerAvgRates.length} total workers`);
   
   // Update toggle button states
   const utilBtn = document.getElementById('aiModalUtilBtn');
@@ -7216,9 +7219,10 @@ function updateAIInsightContent() {
     effBtn.className = 'px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 text-white hover:bg-white hover:bg-opacity-20';
   }
   
-  // CRITICAL FIX: Calculate average from workerAvgRates (not reportAvgRate!)
-  // This ensures the average matches the same dataset used for Top Performers/At-Risk classification
-  const avgRate = workerAvgRates.reduce((sum, w) => sum + w.avgRate, 0) / workerAvgRates.length;
+  // CRITICAL FIX: Use aggregated data's actual average (weight by shift count)
+  // Calculate weighted average: sum(rate * count) / total_count
+  const totalRate = aggregated.reduce((sum, r) => sum + (r[metric] || 0), 0);
+  const avgRate = totalRate / aggregated.length;
   
   // Update summary cards (using Set-based counts from above)
   document.getElementById('aiTopPerformersCount').textContent = topPerformersCount;
@@ -7291,15 +7295,6 @@ function updateAIInsightContent() {
     recommendations.push(`<li class="flex items-start gap-2">
       <i class="fas fa-arrow-right text-green-500 mt-1"></i>
       <span>Analyze best practices from top ${topPerformersCount} performers and share knowledge across the team.</span>
-    </li>`);
-  }
-  
-  if (sortedProcs.length > 1) {
-    const highest = sortedProcs[sortedProcs.length - 1];
-    const lowest = sortedProcs[0];
-    recommendations.push(`<li class="flex items-start gap-2">
-      <i class="fas fa-arrow-right text-green-500 mt-1"></i>
-      <span>Compare processes: <strong>${highest.name}</strong> (${highest.avg.toFixed(1)}%) vs <strong>${lowest.name}</strong> (${lowest.avg.toFixed(1)}%) to identify improvement opportunities.</span>
     </li>`);
   }
   
