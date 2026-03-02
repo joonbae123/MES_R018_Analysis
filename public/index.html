@@ -1390,28 +1390,38 @@
                     <!-- Left Column: Instructions -->
                     <div class="space-y-6">
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">1. Data Upload & Save</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">1. Data Upload</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>Upload Excel file</strong> (.xlsx, .xls) downloaded from MES R018</li>
                                 <li>Drag & drop file or click 'Select File' button</li>
                                 <li>System automatically detects data and processes it</li>
                                 <li>Review the processed data and reports</li>
-                                <li><strong>Click "Save to Database"</strong> to store data in Cloudflare D1</li>
+                                <li class="text-gray-400 line-through"><strong>Click "Save to Database"</strong> to store data in Cloudflare D1 (temporarily disabled)</li>
                             </ul>
+                            <div class="mt-2 p-3 bg-orange-50 border-l-4 border-orange-400 text-sm text-gray-700">
+                                <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
+                                <strong>Note:</strong> Server storage features are temporarily disabled. All data processing happens in your browser.
+                            </div>
+                        </section>
+
+                        <section class="opacity-50">
+                            <h3 class="text-lg font-semibold text-gray-400 mb-2">
+                                <s>2. Load Saved Data</s> (Temporarily Disabled)
+                            </h3>
+                            <ul class="list-disc list-inside text-gray-400 space-y-1 ml-4">
+                                <li class="line-through">View <strong>Saved Uploads</strong> list in Upload tab</li>
+                                <li class="line-through"><strong>Click any card</strong> to load saved data</li>
+                                <li class="line-through">Automatically switches to Report tab after loading</li>
+                                <li class="line-through">Delete uploads using the <strong>Delete button</strong> on each card</li>
+                            </ul>
+                            <div class="mt-2 p-3 bg-gray-50 border-l-4 border-gray-300 text-sm text-gray-500">
+                                <i class="fas fa-ban mr-2"></i>
+                                This feature is temporarily disabled due to Cloudflare Workers limitations. Use Excel upload instead.
+                            </div>
                         </section>
 
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">2. Load Saved Data</h3>
-                            <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                                <li>View <strong>Saved Uploads</strong> list in Upload tab</li>
-                                <li><strong>Click any card</strong> to load saved data</li>
-                                <li>Automatically switches to Report tab after loading</li>
-                                <li>Delete uploads using the <strong>Delete button</strong> on each card</li>
-                            </ul>
-                        </section>
-
-                        <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">3. View KPI Cards & Switch Metric Mode</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">2. View KPI Cards & Switch Metric Mode</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>4 KPI Cards</strong>: View key metrics at a glance</li>
                                 <li><strong>Utilization Mode</strong>: Total Workers, Total Shift Time, Total Work Time, Avg Utilization Rate</li>
@@ -1437,7 +1447,7 @@
                         </section>
 
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">4. Apply Filters</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">3. Apply Filters</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>Shift Filter</strong>: A Shift / B Shift / C Shift</li>
                                 <li><strong>Date Filter</strong>: Select by individual dates, weeks (WK#), or months</li>
@@ -1453,7 +1463,7 @@
                         <section>
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">
                                 <i class="fas fa-filter text-purple-600 mr-2"></i>
-                                5. Outlier Threshold (Efficiency Mode Only)
+                                4. Outlier Threshold (Efficiency Mode Only)
                             </h3>
                             <div class="bg-purple-50 border-l-4 border-purple-500 p-4 mb-3">
                                 <p class="text-gray-800 font-semibold mb-2">
@@ -1644,11 +1654,48 @@
                 </h2>
                 
                 <div class="space-y-6">
+                    <!-- Version 4.2.0 -->
+                    <div class="border-l-4 border-orange-600 pl-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.2.0</h3>
+                            <span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">Latest</span>
+                            <span class="text-xs text-gray-500">2026-03-02</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-orange-700 mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Server Storage Features Temporarily Disabled
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Disabled</strong>: "Save to Database" button (grayed out with tooltip)</li>
+                                    <li><strong>Disabled</strong>: "Saved Uploads" section (grayed out, click-blocked)</li>
+                                    <li><strong>Reason</strong>: Cloudflare Workers execution time limits prevent reliable storage of large datasets (32k+ records)</li>
+                                    <li><strong>Issue</strong>: Background tasks timeout after ~10k records, resulting in incomplete data saves</li>
+                                    <li><strong>Workaround</strong>: Use Excel upload feature (works perfectly in browser without server storage)</li>
+                                    <li><strong>Status</strong>: Temporary measure until alternative solution is implemented</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-orange-700 mb-2">
+                                    <i class="fas fa-info-circle mr-2"></i>Recommended Workflow
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Step 1</strong>: Upload Excel file from MES R018</li>
+                                    <li><strong>Step 2</strong>: Review Dashboard and Report tabs</li>
+                                    <li><strong>Step 3</strong>: Apply filters as needed</li>
+                                    <li><strong>Note</strong>: All data processing happens in your browser (fast and reliable)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Version 4.1.0 -->
                     <div class="border-l-4 border-green-600 pl-4">
                         <div class="flex items-center gap-3 mb-2">
                             <h3 class="text-lg font-bold text-gray-800">Version 4.1.0</h3>
-                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Latest</span>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Previous</span>
                             <span class="text-xs text-gray-500">2026-03-02</span>
                         </div>
                         
@@ -2452,9 +2499,9 @@
             <div class="mt-4 pt-4 border-t border-gray-100 text-center">
                 <p class="text-xs text-gray-400">
                     <span class="inline-flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.1.0</span>
+                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.2.0</span>
                         <span>|</span>
-                        <span><i class="fas fa-server mr-1"></i>Cloudflare Pages + D1</span>
+                        <span><i class="fas fa-cloud mr-1"></i>Cloudflare Pages</span>
                         <span>|</span>
                         <span><i class="fas fa-bolt mr-1"></i>Hono Framework</span>
                         <span>|</span>
