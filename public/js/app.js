@@ -6468,18 +6468,18 @@ function calcAvg(data, kpi) {
   return count > 0 ? sum / count : 0;
 }
 
-// ========== 6. Process Health Matrix (REWRITTEN) ==========
+// ========== 6. Process Health Matrix (ENHANCED) ==========
 function refreshHealthMatrix(data) {
   const aggregated = AppState.aggregatedData || [];
   
-  console.log(`Refreshing Health Matrix: ${aggregated.length} aggregated entries`);
+  console.log(`🔄 Refreshing Health Matrix: ${aggregated.length} aggregated entries`);
   
   // Group by process category
   const groups = {};
   
   aggregated.forEach(r => {
     const cat = r.foDesc2 || 'Unknown';
-    if (!groups[cat]) groups[cat] = { util: [], eff: [] };
+    if (!groups[cat]) groups[cat] = { util: [], eff: [], workers: new Set() };
     
     if (r.utilizationRate >= 0 && r.utilizationRate <= 1000) {
       groups[cat].util.push(r.utilizationRate);
@@ -6487,6 +6487,7 @@ function refreshHealthMatrix(data) {
     if (r.efficiencyRate >= 0 && r.efficiencyRate <= 1000) {
       groups[cat].eff.push(r.efficiencyRate);
     }
+    groups[cat].workers.add(r.workerName);
   });
   
   const points = Object.keys(groups).map(cat => {
@@ -6500,31 +6501,49 @@ function refreshHealthMatrix(data) {
     return {
       x: utilAvg,
       y: effAvg,
-      r: Math.sqrt(groups[cat].util.length) * 2, // Size based on data points
-      label: cat
+      r: Math.sqrt(groups[cat].workers.size) * 3, // Size based on unique workers
+      label: cat,
+      workers: groups[cat].workers.size,
+      records: groups[cat].util.length
     };
   });
   
-  console.log(`Generated ${points.length} bubbles`);
-  console.log(`Sample:`, points.slice(0, 3).map(p => ({ label: p.label, util: p.x.toFixed(1), eff: p.y.toFixed(1) })));
+  console.log(`✅ Generated ${points.length} bubbles`);
+  console.log(`📊 Sample:`, points.slice(0, 3).map(p => ({ 
+    label: p.label, 
+    util: p.x.toFixed(1), 
+    eff: p.y.toFixed(1),
+    workers: p.workers
+  })));
   
   if (DashboardState.charts.matrix) {
     DashboardState.charts.matrix.destroy();
   }
   
   const ctx = document.getElementById('healthMatrixChart').getContext('2d');
+  
+  // Define quadrant colors and labels
+  const getQuadrantInfo = (util, eff) => {
+    if (util >= 50 && eff >= 80) {
+      return { color: 'rgba(34, 197, 94, 0.7)', label: '✅ Optimal', border: 'rgb(34, 197, 94)' };
+    } else if (util >= 50 && eff < 80) {
+      return { color: 'rgba(251, 191, 36, 0.7)', label: '⚠️ Capacity Issue', border: 'rgb(251, 191, 36)' };
+    } else if (util < 50 && eff >= 80) {
+      return { color: 'rgba(59, 130, 246, 0.7)', label: '📊 Underutilized', border: 'rgb(59, 130, 246)' };
+    } else {
+      return { color: 'rgba(239, 68, 68, 0.7)', label: '🚨 Critical', border: 'rgb(239, 68, 68)' };
+    }
+  };
+  
   DashboardState.charts.matrix = new Chart(ctx, {
     type: 'bubble',
     data: {
       datasets: [{
         label: 'Process Health',
         data: points,
-        backgroundColor: points.map(p => {
-          if (p.x >= 50 && p.y >= 50) return 'rgba(34, 197, 94, 0.6)'; // Green: Good
-          if (p.x >= 50 && p.y < 50) return 'rgba(239, 68, 68, 0.6)'; // Red: High util, low eff
-          if (p.x < 50 && p.y >= 50) return 'rgba(59, 130, 246, 0.6)'; // Blue: Low util, high eff
-          return 'rgba(156, 163, 175, 0.6)'; // Gray: Both low
-        })
+        backgroundColor: points.map(p => getQuadrantInfo(p.x, p.y).color),
+        borderColor: points.map(p => getQuadrantInfo(p.x, p.y).border),
+        borderWidth: 2
       }]
     },
     options: {
@@ -6534,27 +6553,162 @@ function refreshHealthMatrix(data) {
         legend: { display: false },
         tooltip: {
           callbacks: {
+            title: function(context) {
+              const point = context[0].raw;
+              return `${point.label}`;
+            },
             label: function(context) {
               const point = context.raw;
+              const quadrant = getQuadrantInfo(point.x, point.y);
               return [
-                `Process: ${point.label}`,
+                `Status: ${quadrant.label}`,
                 `Utilization: ${point.x.toFixed(1)}%`,
-                `Efficiency: ${point.y.toFixed(1)}%`
+                `Efficiency: ${point.y.toFixed(1)}%`,
+                `Workers: ${point.workers}`,
+                `Records: ${point.records}`
               ];
+            }
+          }
+        },
+        // Add quadrant background annotations
+        annotation: {
+          annotations: {
+            optimal: {
+              type: 'box',
+              xMin: 50,
+              xMax: 100,
+              yMin: 80,
+              yMax: 200,
+              backgroundColor: 'rgba(34, 197, 94, 0.05)',
+              borderWidth: 0
+            },
+            capacity: {
+              type: 'box',
+              xMin: 50,
+              xMax: 100,
+              yMin: 0,
+              yMax: 80,
+              backgroundColor: 'rgba(251, 191, 36, 0.05)',
+              borderWidth: 0
+            },
+            underutilized: {
+              type: 'box',
+              xMin: 0,
+              xMax: 50,
+              yMin: 80,
+              yMax: 200,
+              backgroundColor: 'rgba(59, 130, 246, 0.05)',
+              borderWidth: 0
+            },
+            critical: {
+              type: 'box',
+              xMin: 0,
+              xMax: 50,
+              yMin: 0,
+              yMax: 80,
+              backgroundColor: 'rgba(239, 68, 68, 0.05)',
+              borderWidth: 0
+            },
+            // Reference lines
+            utilLine: {
+              type: 'line',
+              xMin: 50,
+              xMax: 50,
+              yMin: 0,
+              yMax: 200,
+              borderColor: 'rgba(156, 163, 175, 0.4)',
+              borderWidth: 2,
+              borderDash: [5, 5]
+            },
+            effLine: {
+              type: 'line',
+              xMin: 0,
+              xMax: 100,
+              yMin: 80,
+              yMax: 80,
+              borderColor: 'rgba(156, 163, 175, 0.4)',
+              borderWidth: 2,
+              borderDash: [5, 5]
+            },
+            // Quadrant labels
+            optimalLabel: {
+              type: 'label',
+              xValue: 75,
+              yValue: 140,
+              content: ['✅ Optimal'],
+              color: 'rgba(34, 197, 94, 0.6)',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
+            },
+            capacityLabel: {
+              type: 'label',
+              xValue: 75,
+              yValue: 40,
+              content: ['⚠️ Capacity Issue'],
+              color: 'rgba(251, 191, 36, 0.7)',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
+            },
+            underutilizedLabel: {
+              type: 'label',
+              xValue: 25,
+              yValue: 140,
+              content: ['📊 Underutilized'],
+              color: 'rgba(59, 130, 246, 0.7)',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
+            },
+            criticalLabel: {
+              type: 'label',
+              xValue: 25,
+              yValue: 40,
+              content: ['🚨 Critical'],
+              color: 'rgba(239, 68, 68, 0.7)',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
             }
           }
         }
       },
       scales: {
         x: {
-          title: { display: true, text: 'Utilization %' },
+          title: { 
+            display: true, 
+            text: 'Utilization %',
+            font: { size: 14, weight: 'bold' }
+          },
           min: 0,
-          max: 100
+          max: 100,
+          grid: {
+            color: 'rgba(156, 163, 175, 0.1)'
+          }
         },
         y: {
-          title: { display: true, text: 'Efficiency %' },
-          min: 0
-          // No max limit for efficiency - let it scale automatically
+          title: { 
+            display: true, 
+            text: 'Efficiency %',
+            font: { size: 14, weight: 'bold' }
+          },
+          min: 0,
+          max: 200,
+          grid: {
+            color: 'rgba(156, 163, 175, 0.1)'
+          }
+        }
+      },
+      onClick: (event, elements) => {
+        if (elements.length > 0) {
+          const point = points[elements[0].index];
+          const quadrant = getQuadrantInfo(point.x, point.y);
+          alert(`📊 ${point.label}\n\n${quadrant.label}\nUtilization: ${point.x.toFixed(1)}%\nEfficiency: ${point.y.toFixed(1)}%\nWorkers: ${point.workers}\nRecords: ${point.records}\n\n💡 Click OK to close`);
         }
       }
     }
