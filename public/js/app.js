@@ -1276,14 +1276,27 @@ function aggregateDataForDashboard(processedData) {
     });
     
     console.log(`✅ Aggregated ${aggregatedArray.length} worker-day-shift entries`);
+    
+    // Calculate overall statistics
+    const avgUtil = aggregatedArray.length > 0 
+        ? (aggregatedArray.reduce((s, a) => s + a.utilizationRate, 0) / aggregatedArray.length).toFixed(1)
+        : 0;
+    const avgEff = aggregatedArray.length > 0
+        ? (aggregatedArray.reduce((s, a) => s + a.efficiencyRate, 0) / aggregatedArray.length).toFixed(1)
+        : 0;
+    
+    console.log(`📊 Overall aggregated stats: Avg Util=${avgUtil}%, Avg Eff=${avgEff}%`);
     console.log(`📊 Sample aggregated data:`, aggregatedArray.slice(0, 3).map(a => ({
         worker: a.workerName,
         date: a.workingDay,
         shift: a.workingShift,
         actualShift: a.actualShift,
+        process: a.foDesc2,
         util: a.utilizationRate.toFixed(1) + '%',
         eff: a.efficiencyRate.toFixed(1) + '%',
-        records: a.recordCount
+        records: a.recordCount,
+        totalActual: a.totalActualMins,
+        totalST: a.totalStandardTime
     })));
     
     return aggregatedArray;
@@ -5733,7 +5746,7 @@ function refreshTrendChart() {
       scales: {
         y: {
           beginAtZero: true,
-          max: 100,
+          max: kpi === 'util' ? 100 : undefined, // Utilization: 0-100%, Efficiency: auto scale
           title: { display: true, text: 'Rate (%)' }
         }
       }
@@ -5829,7 +5842,7 @@ function refreshContributionChart() {
       scales: {
         x: {
           beginAtZero: true,
-          max: 100
+          max: kpi === 'util' ? 100 : undefined // Auto scale for efficiency
         }
       }
     }
@@ -5917,7 +5930,7 @@ function refreshShiftChart() {
       scales: {
         y: {
           beginAtZero: true,
-          max: 100
+          max: kpi === 'util' ? 100 : undefined // Auto scale for efficiency
         }
       }
     }
@@ -6021,8 +6034,8 @@ function refreshHealthMatrix(data) {
         },
         y: {
           title: { display: true, text: 'Efficiency %' },
-          min: 0,
-          max: 100
+          min: 0
+          // No max limit for efficiency - let it scale automatically
         }
       }
     }
