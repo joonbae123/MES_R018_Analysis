@@ -7167,34 +7167,33 @@ function updateAIInsightContent() {
   const isEfficiency = aiModalMetricType === 'efficiency';
   const metric = isEfficiency ? 'efficiencyRate' : 'utilizationRate';
   
-  // Calculate statistics directly from aggregated data
-  // Each record is already worker-day-shift level with calculated rates
+  // Calculate statistics from aggregated data
+  // Step 1: Calculate average rate per worker across all their shifts
+  const workerRatesByName = {};
+  aggregated.forEach(r => {
+    const name = r.workerName;
+    if (!workerRatesByName[name]) {
+      workerRatesByName[name] = [];
+    }
+    workerRatesByName[name].push(r[metric] || 0);
+  });
   
-  // Collect unique workers who meet the threshold
-  const topPerformersSet = new Set();
-  const atRiskWorkersSet = new Set();
+  // Step 2: Calculate average for each worker
+  const workerAvgRates = Object.entries(workerRatesByName).map(([name, rates]) => ({
+    name,
+    avgRate: rates.reduce((a, b) => a + b, 0) / rates.length
+  }));
   
+  // Step 3: Classify workers based on their average rate
   const topThreshold = isEfficiency ? 80 : 50;  // Eff ≥80%, Util ≥50%
   const riskThreshold = isEfficiency ? 50 : 30;  // Eff <50%, Util <30%
   
-  // Debug: sample 10 records
-  const samples = aggregated.slice(0, 10).map(r => ({
-    worker: r.workerName,
-    util: r.utilizationRate?.toFixed(1),
-    eff: r.efficiencyRate?.toFixed(1),
-    metric: r[metric]?.toFixed(1)
-  }));
-  console.log('📊 Sample records:', samples);
-  
-  aggregated.forEach(r => {
-    const rate = r[metric] || 0;
-    if (rate >= topThreshold) {
-      topPerformersSet.add(r.workerName);
-    }
-    if (rate < riskThreshold) {
-      atRiskWorkersSet.add(r.workerName);
-    }
-  });
+  const topPerformersSet = new Set(
+    workerAvgRates.filter(w => w.avgRate >= topThreshold).map(w => w.name)
+  );
+  const atRiskWorkersSet = new Set(
+    workerAvgRates.filter(w => w.avgRate < riskThreshold).map(w => w.name)
+  );
   
   const topPerformersCount = topPerformersSet.size;
   const atRiskWorkersCount = atRiskWorkersSet.size;
@@ -7246,22 +7245,8 @@ function updateAIInsightContent() {
     <span>Average ${isEfficiency ? 'efficiency' : 'utilization'} rate across all workers is <strong>${avgRate.toFixed(1)}%</strong>.</span>
   </li>`);
   
-  // Find best and worst performers from aggregated data
-  const workerRatesMap = {};
-  aggregated.forEach(r => {
-    const name = r.workerName;
-    if (!workerRatesMap[name]) {
-      workerRatesMap[name] = [];
-    }
-    workerRatesMap[name].push(r[metric] || 0);
-  });
-  
-  const workerAvgRates = Object.entries(workerRatesMap).map(([name, rates]) => ({
-    name,
-    avgRate: rates.reduce((a, b) => a + b, 0) / rates.length
-  }));
-  
-  const sorted = workerAvgRates.sort((a, b) => b.avgRate - a.avgRate);
+  // Find best and worst performers (reuse workerAvgRates calculated above)
+  const sorted = [...workerAvgRates].sort((a, b) => b.avgRate - a.avgRate);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   
