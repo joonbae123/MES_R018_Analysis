@@ -916,9 +916,17 @@
                             </select>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-600 mb-3">
+                    <p class="text-sm text-gray-600 mb-2">
                         Overall Change: <span id="contributionOverall" class="font-bold">-</span>
                     </p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                            <div class="text-xs text-gray-700">
+                                <strong>How to interpret:</strong> This chart shows which processes contributed to the overall change in performance. Positive bars indicate processes that improved, negative bars show processes that declined. The size of each bar represents the magnitude of impact.
+                            </div>
+                        </div>
+                    </div>
                     <div style="height: 300px; position: relative;">
                         <canvas id="contributionChart"></canvas>
                     </div>

@@ -2934,13 +2934,13 @@ function updatePerformanceBands(workerAgg) {
     
     if (isEfficiency) {
         // Work Efficiency bands
-        excellentTitle.innerHTML = '<i class="fas fa-trophy mr-2"></i>Excellent (��100%)';
+        excellentTitle.innerHTML = '<i class="fas fa-trophy mr-2"></i>Excellent (≥100%)';
         normalTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Normal (80-<100%)';
         poorTitle.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Poor (60-<80%)';
         criticalTitle.innerHTML = '<i class="fas fa-times-circle mr-2"></i>At-Risk (<60%)';
     } else {
         // Time Utilization bands
-        excellentTitle.innerHTML = '<i class="fas fa-trophy mr-2"></i>Excellent (��80%)';
+        excellentTitle.innerHTML = '<i class="fas fa-trophy mr-2"></i>Excellent (≥80%)';
         normalTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Normal (50-<80%)';
         poorTitle.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Poor (30-<50%)';
         criticalTitle.innerHTML = '<i class="fas fa-times-circle mr-2"></i>At-Risk (<30%)';
@@ -6669,22 +6669,46 @@ function openAIInsightModal() {
   const modal = document.getElementById('aiInsightModal');
   if (!modal) return;
   
-  // Generate AI insights from current data
-  const workerAgg = AppState.workerAggregated || [];
-  const isEfficiency = AppState.currentMetricType === 'efficiency';
+  // Use Dashboard aggregated data instead of Report data
+  const aggregated = AppState.aggregatedData || [];
   
-  if (workerAgg.length === 0) {
+  if (aggregated.length === 0) {
     alert('No data available for AI analysis. Please upload an Excel file first.');
     return;
   }
   
+  // Group by worker to calculate metrics
+  const workerMap = {};
+  aggregated.forEach(r => {
+    const name = r.workerName;
+    if (!workerMap[name]) {
+      workerMap[name] = {
+        workerName: name,
+        totalUtil: 0,
+        totalEff: 0,
+        count: 0
+      };
+    }
+    workerMap[name].totalUtil += r.utilizationRate || 0;
+    workerMap[name].totalEff += r.efficiencyRate || 0;
+    workerMap[name].count++;
+  });
+  
+  const workers = Object.values(workerMap).map(w => ({
+    workerName: w.workerName,
+    utilizationRate: w.totalUtil / w.count,
+    efficiencyRate: w.totalEff / w.count
+  }));
+  
+  const isEfficiency = AppState.currentMetricType === 'efficiency';
+  
   // Calculate statistics
   const metric = isEfficiency ? 'efficiencyRate' : 'utilizationRate';
-  const rates = workerAgg.map(w => w[metric] || 0);
+  const rates = workers.map(w => w[metric] || 0);
   const avgRate = rates.reduce((sum, r) => sum + r, 0) / rates.length;
   
-  const topPerformers = workerAgg.filter(w => (w[metric] || 0) >= (isEfficiency ? 100 : 80));
-  const atRiskWorkers = workerAgg.filter(w => (w[metric] || 0) < (isEfficiency ? 60 : 30));
+  const topPerformers = workers.filter(w => (w[metric] || 0) >= (isEfficiency ? 100 : 80));
+  const atRiskWorkers = workers.filter(w => (w[metric] || 0) < (isEfficiency ? 60 : 30));
   
   // Update summary cards
   document.getElementById('aiTopPerformersCount').textContent = topPerformers.length;
