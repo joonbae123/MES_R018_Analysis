@@ -804,6 +804,133 @@
                 </button>
             </div>
 
+            <!-- 2. Shift Performance Comparison -->
+            <div class="card mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">
+                        <i class="fas fa-table-cells text-teal-600 mr-2"></i>
+                        Shift Performance Comparison
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-600" id="shiftComparisonPeriod">Data period: Loading...</span>
+                        <select id="shiftComparisonDays" class="text-xs px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" onchange="refreshShiftComparison()">
+                            <option value="7">Last 7 days</option>
+                            <option value="14">Last 14 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="all">All data</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">
+                    Compare shift performance across process groups (BT, WT, IM)
+                </p>
+                
+                <!-- BT Group -->
+                <div class="border border-gray-200 rounded-lg mb-3 overflow-hidden">
+                    <button class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors" onclick="toggleShiftGroup('bt')">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-chevron-right transition-transform duration-200" id="btChevron"></i>
+                            <span class="font-bold text-gray-800">BT Process Group</span>
+                            <span class="text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded-full" id="btWorkerCount">0 workers</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span class="text-blue-700">Util: <strong id="btAvgUtil">0%</strong></span>
+                            <span class="text-purple-700">Eff: <strong id="btAvgEff">0%</strong></span>
+                        </div>
+                    </button>
+                    <div id="btTable" class="hidden p-4 bg-white">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b-2 border-gray-300">
+                                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Shift</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Workers</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Shift Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Work Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-blue-700">Utilization</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Standard Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-purple-700">Efficiency</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="btTableBody">
+                                    <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WT Group -->
+                <div class="border border-gray-200 rounded-lg mb-3 overflow-hidden">
+                    <button class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors" onclick="toggleShiftGroup('wt')">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-chevron-right transition-transform duration-200" id="wtChevron"></i>
+                            <span class="font-bold text-gray-800">WT Process Group</span>
+                            <span class="text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded-full" id="wtWorkerCount">0 workers</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span class="text-blue-700">Util: <strong id="wtAvgUtil">0%</strong></span>
+                            <span class="text-purple-700">Eff: <strong id="wtAvgEff">0%</strong></span>
+                        </div>
+                    </button>
+                    <div id="wtTable" class="hidden p-4 bg-white">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b-2 border-gray-300">
+                                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Shift</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Workers</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Shift Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Work Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-blue-700">Utilization</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Standard Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-purple-700">Efficiency</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wtTableBody">
+                                    <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IM Group -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors" onclick="toggleShiftGroup('im')">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-chevron-right transition-transform duration-200" id="imChevron"></i>
+                            <span class="font-bold text-gray-800">IM Process Group</span>
+                            <span class="text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded-full" id="imWorkerCount">0 workers</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span class="text-blue-700">Util: <strong id="imAvgUtil">0%</strong></span>
+                            <span class="text-purple-700">Eff: <strong id="imAvgEff">0%</strong></span>
+                        </div>
+                    </button>
+                    <div id="imTable" class="hidden p-4 bg-white">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b-2 border-gray-300">
+                                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Shift</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Workers</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Shift Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Work Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-blue-700">Utilization</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Standard Time</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-purple-700">Efficiency</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imTableBody">
+                                    <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 3. KPI Trend Intelligence -->
             <div class="card mb-6">
                 <div class="flex items-center justify-between mb-4">
@@ -835,7 +962,7 @@
                 </p>
             </div>
 
-            <!-- 4. What Changed & Why + 5. Shift Comparison -->
+            <!-- 4. What Changed & Why -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <!-- What Changed & Why -->
                 <div class="card">
@@ -916,134 +1043,7 @@
                 </div>
             </div>
 
-            <!-- 6. Shift Performance Comparison -->
-            <div class="card mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-800">
-                        <i class="fas fa-table-cells text-teal-600 mr-2"></i>
-                        Shift Performance Comparison
-                    </h3>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs text-gray-600" id="shiftComparisonPeriod">Data period: Loading...</span>
-                        <select id="shiftComparisonDays" class="text-xs px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500" onchange="refreshShiftComparison()">
-                            <option value="7">Last 7 days</option>
-                            <option value="14">Last 14 days</option>
-                            <option value="30" selected>Last 30 days</option>
-                            <option value="all">All data</option>
-                        </select>
-                    </div>
-                </div>
-                <p class="text-sm text-gray-600 mb-4">
-                    Compare shift performance across process groups (BT, WT, IM)
-                </p>
-                
-                <!-- BT Group -->
-                <div class="border border-gray-200 rounded-lg mb-3 overflow-hidden">
-                    <button class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-150 transition-colors" onclick="toggleShiftGroup('bt')">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-chevron-right transition-transform duration-200" id="btChevron"></i>
-                            <span class="font-bold text-blue-800">BT Process Group</span>
-                            <span class="text-xs text-blue-600 bg-blue-200 px-2 py-1 rounded-full" id="btWorkerCount">0 workers</span>
-                        </div>
-                        <div class="flex items-center gap-4 text-sm">
-                            <span class="text-blue-700">Util: <strong id="btAvgUtil">0%</strong></span>
-                            <span class="text-purple-700">Eff: <strong id="btAvgEff">0%</strong></span>
-                        </div>
-                    </button>
-                    <div id="btTable" class="hidden p-4 bg-white">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50 border-b-2 border-gray-300">
-                                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Shift</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Workers</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Shift Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Work Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-blue-700">Utilization</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Standard Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-purple-700">Efficiency</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="btTableBody">
-                                    <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- WT Group -->
-                <div class="border border-gray-200 rounded-lg mb-3 overflow-hidden">
-                    <button class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-150 transition-colors" onclick="toggleShiftGroup('wt')">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-chevron-right transition-transform duration-200" id="wtChevron"></i>
-                            <span class="font-bold text-green-800">WT Process Group</span>
-                            <span class="text-xs text-green-600 bg-green-200 px-2 py-1 rounded-full" id="wtWorkerCount">0 workers</span>
-                        </div>
-                        <div class="flex items-center gap-4 text-sm">
-                            <span class="text-blue-700">Util: <strong id="wtAvgUtil">0%</strong></span>
-                            <span class="text-purple-700">Eff: <strong id="wtAvgEff">0%</strong></span>
-                        </div>
-                    </button>
-                    <div id="wtTable" class="hidden p-4 bg-white">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50 border-b-2 border-gray-300">
-                                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Shift</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Workers</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Shift Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Work Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-blue-700">Utilization</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Standard Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-purple-700">Efficiency</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="wtTableBody">
-                                    <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- IM Group -->
-                <div class="border border-gray-200 rounded-lg overflow-hidden">
-                    <button class="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-150 transition-colors" onclick="toggleShiftGroup('im')">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-chevron-right transition-transform duration-200" id="imChevron"></i>
-                            <span class="font-bold text-purple-800">IM Process Group</span>
-                            <span class="text-xs text-purple-600 bg-purple-200 px-2 py-1 rounded-full" id="imWorkerCount">0 workers</span>
-                        </div>
-                        <div class="flex items-center gap-4 text-sm">
-                            <span class="text-blue-700">Util: <strong id="imAvgUtil">0%</strong></span>
-                            <span class="text-purple-700">Eff: <strong id="imAvgEff">0%</strong></span>
-                        </div>
-                    </button>
-                    <div id="imTable" class="hidden p-4 bg-white">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50 border-b-2 border-gray-300">
-                                        <th class="px-3 py-2 text-left font-semibold text-gray-700">Shift</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Workers</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Shift Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Work Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-blue-700">Utilization</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-gray-700">Standard Time</th>
-                                        <th class="px-3 py-2 text-right font-semibold text-purple-700">Efficiency</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="imTableBody">
-                                    <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 7. Outlier Scanner (Collapsible) -->
+            <!-- 5. Outlier Scanner (Collapsible) -->
             <div class="card mb-6 hidden" id="outlierScanner">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">
                     <i class="fas fa-magnifying-glass-chart text-red-600 mr-2"></i>
