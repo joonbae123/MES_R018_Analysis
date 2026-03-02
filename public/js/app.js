@@ -7184,6 +7184,11 @@ function updateAIInsightContent() {
     avgRate: rates.reduce((a, b) => a + b, 0) / rates.length
   }));
   
+  // CRITICAL FIX: Calculate avgRate FIRST before using it
+  // Use aggregated data's actual average (weight by shift count)
+  const totalRate = aggregated.reduce((sum, r) => sum + (r[metric] || 0), 0);
+  const avgRate = totalRate / aggregated.length;
+  
   // Step 3: Classify workers based on their average rate
   const topThreshold = isEfficiency ? 80 : 50;  // Eff ≥80%, Util ≥50%
   const riskThreshold = isEfficiency ? 50 : 30;  // Eff <50%, Util <30%
@@ -7218,11 +7223,6 @@ function updateAIInsightContent() {
     utilBtn.className = 'px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 bg-white text-purple-700 shadow-md';
     effBtn.className = 'px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 text-white hover:bg-white hover:bg-opacity-20';
   }
-  
-  // CRITICAL FIX: Use aggregated data's actual average (weight by shift count)
-  // Calculate weighted average: sum(rate * count) / total_count
-  const totalRate = aggregated.reduce((sum, r) => sum + (r[metric] || 0), 0);
-  const avgRate = totalRate / aggregated.length;
   
   // Update summary cards (using Set-based counts from above)
   document.getElementById('aiTopPerformersCount').textContent = topPerformersCount;
