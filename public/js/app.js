@@ -7281,53 +7281,12 @@ function updateAIInsightContent() {
   
   document.getElementById('aiKeyFindings').innerHTML = keyFindings.join('');
   
-  // Generate Anomalies
+  // Generate Anomalies (disabled - use aggregated data instead)
   const anomalies = [];
-  
-  // Check for outliers (>2 standard deviations)
-  const mean = avgRate;
-  const variance = rates.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / rates.length;
-  const stdDev = Math.sqrt(variance);
-  const outliers = workers.filter(w => Math.abs((w[metric] || 0) - mean) > 2 * stdDev);
-  
-  if (outliers.length > 0) {
-    anomalies.push(`<li class="flex items-start gap-2">
-      <i class="fas fa-bolt text-orange-500 mt-1"></i>
-      <span><strong>${outliers.length} workers</strong> show performance significantly different from the average (>2σ deviation).</span>
-    </li>`);
-  }
-  
-  // Check for process-specific issues
-  const processes = {};
-  workers.forEach(w => {
-    const proc = w.foDesc2 || 'Unknown';
-    if (!processes[proc]) processes[proc] = [];
-    processes[proc].push(w[metric] || 0);
-  });
-  
-  const processAvgs = Object.entries(processes).map(([name, rates]) => ({
-    name,
-    avg: rates.reduce((sum, r) => sum + r, 0) / rates.length,
-    count: rates.length
-  }));
-  
-  const sortedProcs = processAvgs.sort((a, b) => a.avg - b.avg);
-  if (sortedProcs.length > 0) {
-    const lowest = sortedProcs[0];
-    if (lowest.count >= 3 && lowest.avg < avgRate * 0.7) {
-      anomalies.push(`<li class="flex items-start gap-2">
-        <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
-        <span>Process <strong>${lowest.name}</strong> shows consistently low performance (${lowest.avg.toFixed(1)}% avg).</span>
-      </li>`);
-    }
-  }
-  
-  if (anomalies.length === 0) {
-    anomalies.push(`<li class="flex items-start gap-2">
-      <i class="fas fa-check-circle text-green-500 mt-1"></i>
-      <span>No significant performance anomalies detected. All workers are within expected ranges.</span>
-    </li>`);
-  }
+  anomalies.push(`<li class="flex items-start gap-2">
+    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+    <span>Anomaly detection temporarily disabled. Review Top Performers and At-Risk workers above for actionable insights.</span>
+  </li>`);
   
   document.getElementById('aiAnomalies').innerHTML = anomalies.join('');
   
