@@ -5679,7 +5679,8 @@ function generateWarnings(data) {
 function refreshTrendChart() {
   const period = document.getElementById('trendPeriod').value;
   const kpi = document.getElementById('trendKPI').value;
-  const processFilter = document.getElementById('trendProcess').value;
+  const processFilterEl = document.getElementById('trendProcess');
+  const processFilter = processFilterEl ? processFilterEl.value : 'all';
   
   const data = AppState.aggregatedData || [];
   
