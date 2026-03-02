@@ -4279,6 +4279,10 @@ async function loadUploadById(uploadId) {
         // Re-process the data with current mappings (async chunks for large datasets)
         console.log(' Re-processing data with mappings...');
         
+        // DEBUG: Check rawData date range
+        const rawDates = [...new Set(AppState.rawData.map(d => d.workingDay).filter(Boolean))].sort();
+        console.log(`📅 DEBUG: rawData date range: ${rawDates[0]} to ${rawDates[rawDates.length - 1]} (${rawDates.length} unique dates)`);
+        
         // For large datasets, process in chunks to avoid blocking UI
         if (AppState.rawData.length > 5000) {
             console.log(`🔄 Large dataset detected (${AppState.rawData.length} records) - processing in chunks...`);
@@ -4286,6 +4290,10 @@ async function loadUploadById(uploadId) {
         } else {
             AppState.processedData = processData(AppState.rawData);
         }
+        
+        // DEBUG: Check processedData date range
+        const processedDates = [...new Set(AppState.processedData.map(d => d.workingDay).filter(Boolean))].sort();
+        console.log(`📅 DEBUG: processedData date range: ${processedDates[0]} to ${processedDates[processedDates.length - 1]} (${processedDates.length} unique dates)`);
         
         // Aggregate data for dashboard (SAME ORDER AS EXCEL UPLOAD)
         console.log(`🔄 Aggregating ${AppState.processedData.length} processed records for dashboard...`);
@@ -4324,8 +4332,10 @@ async function loadUploadById(uploadId) {
             }, 500);
         }
         
-        // Don't switch tabs - let user stay where they are (like Excel upload)
-        // switchTab('report'); // REMOVED: Keep current tab
+        // Switch to Dashboard tab (user wants to see dashboard after load)
+        setTimeout(() => {
+            switchTab('dashboard');
+        }, 600);
         
         console.log(' Data loaded successfully!');
         console.log(` Loaded ${AppState.processedData.length} records from upload #${uploadId}`);
