@@ -2863,7 +2863,7 @@ function calculateAndDisplayWoW(currentWorkerAgg, currentWorkers, currentSecond,
         const sign = value >= 0 ? '+' : '';
         const color = value >= 0 ? 'text-green-600' : 'text-red-600';
         const icon = value >= 0 ? '▲' : '▼';
-        return `<span class="${color}">${icon} ${sign}${value.toFixed(1)}% WoW</span>`;
+        return `<span class="${color}">${icon} ${sign}${value.toFixed(1)}% vs 7d ago</span>`;
     };
     
     document.getElementById('kpiWorkersWoW').innerHTML = formatWoW(workersWoW);
@@ -2935,14 +2935,14 @@ function updatePerformanceBands(workerAgg) {
     if (isEfficiency) {
         // Work Efficiency bands
         excellentTitle.innerHTML = '<i class="fas fa-trophy mr-2"></i>Excellent (≥100%)';
-        normalTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Normal (80-<100%)';
-        poorTitle.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Poor (60-<80%)';
+        normalTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Normal (80-100%)';
+        poorTitle.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Poor (60-80%)';
         criticalTitle.innerHTML = '<i class="fas fa-times-circle mr-2"></i>At-Risk (<60%)';
     } else {
         // Time Utilization bands
         excellentTitle.innerHTML = '<i class="fas fa-trophy mr-2"></i>Excellent (≥80%)';
-        normalTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Normal (50-<80%)';
-        poorTitle.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Poor (30-<50%)';
+        normalTitle.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Normal (50-80%)';
+        poorTitle.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Poor (30-50%)';
         criticalTitle.innerHTML = '<i class="fas fa-times-circle mr-2"></i>At-Risk (<30%)';
     }
     
