@@ -6669,11 +6669,11 @@ function refreshShiftComparison() {
       return `
         <tr class="border-b border-gray-100 hover:bg-gray-50">
           <td class="px-3 py-2 font-semibold text-gray-800">Shift ${shift}</td>
-          <td class="px-3 py-2 text-right text-gray-700">${m.workers}</td>
-          <td class="px-3 py-2 text-right text-gray-600">${(m.totalShiftTime / 60).toFixed(1)} hrs</td>
-          <td class="px-3 py-2 text-right text-gray-600">${(m.totalWorkTime / 60).toFixed(1)} hrs</td>
+          <td class="px-3 py-2 text-right text-gray-700">${m.workers.toLocaleString()}</td>
+          <td class="px-3 py-2 text-right text-gray-600">${(m.totalShiftTime / 60).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})} hrs</td>
+          <td class="px-3 py-2 text-right text-gray-600">${(m.totalWorkTime / 60).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})} hrs</td>
           <td class="px-3 py-2 text-right ${utilColor}">${m.utilization.toFixed(1)}%</td>
-          <td class="px-3 py-2 text-right text-gray-600">${(m.totalStandardTime / 60).toFixed(1)} hrs</td>
+          <td class="px-3 py-2 text-right text-gray-600">${(m.totalStandardTime / 60).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})} hrs</td>
           <td class="px-3 py-2 text-right ${effColor}">${m.efficiency.toFixed(1)}%</td>
         </tr>
       `;
