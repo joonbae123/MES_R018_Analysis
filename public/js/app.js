@@ -5396,10 +5396,10 @@ function updateFlightDeck(data) {
   document.getElementById('flightRecordsChange').textContent = 'WoW: -';
   
   // Sparklines (simplified - just show trend)
-  drawSparkline('sparkWorkers', [workers, workers, workers, workers, workers, workers, workers]);
+  drawSparkline('sparkWorkers', [countWorkers, countWorkers, countWorkers, countWorkers, countWorkers, countWorkers, countWorkers]);
   drawSparkline('sparkUtil', [avgUtil, avgUtil, avgUtil, avgUtil, avgUtil, avgUtil, avgUtil]);
   drawSparkline('sparkEff', [avgEff, avgEff, avgEff, avgEff, avgEff, avgEff, avgEff]);
-  drawSparkline('sparkRecords', [records, records, records, records, records, records, records]);
+  drawSparkline('sparkRecords', [data.length, data.length, data.length, data.length, data.length, data.length, data.length]);
 }
 
 function drawSparkline(canvasId, data) {
