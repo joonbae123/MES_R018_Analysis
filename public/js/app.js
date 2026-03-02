@@ -1253,23 +1253,36 @@ function aggregateDataForDashboard(processedData) {
         }
         
         aggregated[key].totalActualMins += record.workerActMins || 0;
-        aggregated[key].totalStandardTime += record.workerST || 0;
+        
+        // Calculate assigned standard time: Worker S/T × Worker Rate(%) / 100
+        const st = record.workerST || record['Worker S/T'] || 0;
+        const rate = record.workerRate || record['Worker Rate(%)'] || 0;
+        const assignedST = (st * rate / 100);
+        
+        aggregated[key].totalStandardTime += assignedST;
         aggregated[key].recordCount++;
         aggregated[key].records.push(record);
     });
     
     // Calculate rates for each aggregated entry
     const aggregatedArray = Object.values(aggregated).map(agg => {
-        // Utilization: total actual minutes / 660 (11 hours shift)
-        const utilization = (agg.totalActualMins / 660) * 100;
+        // Count unique shifts
+        const shiftCount = agg.records.length > 0 
+            ? new Set(agg.records.map(r => `${r.workingDay}_${r.workingShift}`)).size 
+            : 1;
         
-        // Efficiency: total standard time / total actual minutes
-        const efficiency = agg.totalActualMins > 0 
-            ? (agg.totalStandardTime / agg.totalActualMins) * 100 
+        // Utilization: total actual minutes / (660 min × shift count)
+        const utilization = shiftCount > 0 ? (agg.totalActualMins / (660 * shiftCount)) * 100 : 0;
+        
+        // Efficiency: total assigned standard time / (660 min × shift count)
+        const shiftTime = shiftCount * 660;
+        const efficiency = shiftTime > 0 
+            ? (agg.totalStandardTime / shiftTime) * 100 
             : 0;
         
         return {
             ...agg,
+            shiftCount: shiftCount,
             utilizationRate: utilization,
             efficiencyRate: efficiency
         };
