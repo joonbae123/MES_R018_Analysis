@@ -7154,46 +7154,29 @@ function openAIInsightModal() {
 }
 
 function updateAIInsightContent() {
-  // ✅ USE THE EXACT SAME DATA AS REPORT TAB: AppState.cachedWorkerAgg
-  // This is the aggregated worker-day-shift-process data created by aggregateByWorker()
-  const aggregated = AppState.cachedWorkerAgg || [];
-  if (aggregated.length === 0) {
-    console.warn('⚠️ AI Insights: No aggregated data available. Please ensure Report tab is loaded first.');
+  // ✅ USE THE EXACT SAME DATA AS REPORT TAB: AppState.workerSummary
+  // This is the worker-level summary created by aggregateByWorkerOnly() (used in updateKPIs)
+  const workerSummary = AppState.workerSummary || [];
+  if (workerSummary.length === 0) {
+    console.warn('⚠️ AI Insights: No worker summary data available. Please ensure Report tab is loaded first.');
     return;
   }
   
   const isEfficiency = aiModalMetricType === 'efficiency';
   
-  // ===== USE EXACT SAME CALCULATION AS REPORT TAB (line 2700-2799) =====
-  // Data is ALREADY aggregated at worker-day-shift level
+  // ===== USE EXACT SAME CALCULATION AS REPORT TAB (updateKPIs at line 2700) =====
+  // workerSummary is ALREADY aggregated at worker level with shiftCount
   // Each record has: workerName, totalMinutes, assignedStandardTime, shiftCount
-  
-  // Group by worker to sum across all their shifts
-  const workerTotals = {};
-  aggregated.forEach(r => {
-    const key = r.workerName;
-    if (!workerTotals[key]) {
-      workerTotals[key] = {
-        totalWorkTime: 0,
-        totalAssignedST: 0,
-        totalShifts: 0
-      };
-    }
-    // Sum across all worker-day-shift records for this worker
-    workerTotals[key].totalWorkTime += (r.totalMinutes || 0);
-    workerTotals[key].totalAssignedST += (r.assignedStandardTime || 0);
-    workerTotals[key].totalShifts += (r.shiftCount || 0);
-  });
   
   // Calculate totals across ALL workers (same as Report KPI calculation)
   let totalWorkTime = 0;
   let totalAdjustedST = 0;
   let totalShifts = 0;
   
-  Object.values(workerTotals).forEach(worker => {
-    totalWorkTime += worker.totalWorkTime;
-    totalAdjustedST += worker.totalAssignedST;
-    totalShifts += worker.totalShifts;
+  workerSummary.forEach(worker => {
+    totalWorkTime += (worker.totalMinutes || 0);
+    totalAdjustedST += (worker.assignedStandardTime || 0);
+    totalShifts += (worker.shiftCount || 0);
   });
   
   const totalShiftTime = totalShifts * 660; // Each shift = 11 hours = 660 minutes
@@ -7203,14 +7186,10 @@ function updateAIInsightContent() {
     ? (totalShiftTime > 0 ? (totalAdjustedST / totalShiftTime) * 100 : 0)
     : (totalShiftTime > 0 ? (totalWorkTime / totalShiftTime) * 100 : 0);
   
-  // Calculate PER-WORKER average rates for classification
-  const workerAvgRates = Object.entries(workerTotals).map(([name, totals]) => {
-    const workerShiftTime = totals.totalShifts * 660;
-    const workerRate = isEfficiency
-      ? (workerShiftTime > 0 ? (totals.totalAssignedST / workerShiftTime) * 100 : 0)
-      : (workerShiftTime > 0 ? (totals.totalWorkTime / workerShiftTime) * 100 : 0);
-    
-    return { name, avgRate: workerRate };
+  // Calculate PER-WORKER average rates for classification (use workerSummary directly)
+  const workerAvgRates = workerSummary.map(worker => {
+    const workerRate = isEfficiency ? worker.efficiencyRate : worker.utilizationRate;
+    return { name: worker.workerName, avgRate: workerRate };
   });
   
   // Classify workers based on their average rate
@@ -7223,8 +7202,8 @@ function updateAIInsightContent() {
   const topPerformersCount = topPerformers.length;
   const atRiskWorkersCount = atRiskWorkers.length;
   
-  console.log(`📊 AI Modal Stats (${isEfficiency ? 'Efficiency' : 'Utilization'}) - USING REPORT CALCULATION:
-    - Total aggregated records: ${aggregated.length}
+  console.log(`📊 AI Modal Stats (${isEfficiency ? 'Efficiency' : 'Utilization'}) - USING REPORT workerSummary:
+    - Total worker summary records: ${workerSummary.length}
     - Total unique workers: ${workerAvgRates.length}
     - Total shifts: ${totalShifts}
     - Total shift time: ${totalShiftTime.toFixed(0)} min
