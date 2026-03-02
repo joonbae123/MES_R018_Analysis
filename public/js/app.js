@@ -2763,9 +2763,6 @@ function updateKPIs(workerAgg) {
     document.getElementById('kpiThirdValue').textContent = Math.round(thirdValue).toLocaleString();
     document.getElementById('kpiAvgWorkRate').textContent = avgRate.toFixed(1) + '%';
     
-    // Calculate Week-over-Week (WoW) changes
-    calculateAndDisplayWoW(workerAgg, totalWorkers, secondValue, thirdValue, avgRate);
-    
     // Show/hide Outlier Threshold control based on metric type
     const outlierControl = document.getElementById('outlierThresholdControl');
     if (outlierControl) {
