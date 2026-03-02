@@ -2645,27 +2645,27 @@
             </div>
             
             <div class="p-6 overflow-y-auto" style="max-height: calc(95vh - 120px);">
-                <!-- Enhanced Summary Cards (6 cards) -->
+                <!-- Enhanced Summary Cards (6 cards) - Toned down colors -->
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1">Workers</p>
-                        <p class="text-2xl font-bold text-blue-600" id="modalWorkers">-</p>
+                        <p class="text-2xl font-bold text-gray-700" id="modalWorkers">-</p>
                     </div>
-                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1">Avg Utilization</p>
-                        <p class="text-2xl font-bold text-green-600" id="modalUtil">-</p>
+                        <p class="text-2xl font-bold text-gray-700" id="modalUtil">-</p>
                     </div>
-                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1">Avg Efficiency</p>
-                        <p class="text-2xl font-bold text-purple-600" id="modalEff">-</p>
+                        <p class="text-2xl font-bold text-gray-700" id="modalEff">-</p>
                     </div>
-                    <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1">Total Shift Time</p>
-                        <p class="text-xl font-bold text-orange-600" id="modalTotalShiftTime">-</p>
+                        <p class="text-xl font-bold text-gray-700" id="modalTotalShiftTime">-</p>
                     </div>
-                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1">Total Work Time</p>
-                        <p class="text-xl font-bold text-indigo-600" id="modalTotalWorkTime">-</p>
+                        <p class="text-xl font-bold text-gray-700" id="modalTotalWorkTime">-</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1">Total Records</p>
@@ -2699,19 +2699,19 @@
                     </div>
                 </div>
 
-                <!-- Top/Bottom Performers -->
+                <!-- Top/Bottom Performers - Toned down colors -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-green-50 rounded-lg border border-green-200 p-4">
-                        <h4 class="font-bold text-green-800 mb-3 flex items-center">
-                            <i class="fas fa-trophy mr-2"></i>Top Performers
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-trophy mr-2 text-gray-600"></i>Top Performers
                         </h4>
                         <div id="modalTopPerformers" class="space-y-2">
                             <!-- Dynamic content -->
                         </div>
                     </div>
-                    <div class="bg-red-50 rounded-lg border border-red-200 p-4">
-                        <h4 class="font-bold text-red-800 mb-3 flex items-center">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>Need Attention
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2 text-gray-600"></i>Need Attention
                         </h4>
                         <div id="modalBottomPerformers" class="space-y-2">
                             <!-- Dynamic content -->
@@ -2719,18 +2719,16 @@
                     </div>
                 </div>
 
-                <!-- Search and Filter Controls -->
+                <!-- Search and Filter Controls - Horizontal Layout like Report Page -->
                 <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-                    <div class="flex flex-wrap gap-3 items-center">
-                        <div class="flex-1 min-w-[200px]">
-                            <input 
-                                type="text" 
-                                id="modalSearchInput" 
-                                placeholder="Search worker or process..." 
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                oninput="filterModalTable()"
-                            >
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input 
+                            type="text" 
+                            id="modalSearchInput" 
+                            placeholder="Search worker or process..." 
+                            class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            oninput="filterModalTable()"
+                        >
                         <select id="modalProcessFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg" onchange="filterModalTable()">
                             <option value="all">All Processes</option>
                         </select>
@@ -2745,15 +2743,15 @@
                     </div>
                 </div>
 
-                <!-- Worker Details Table -->
+                <!-- Worker Details Table - With Fixed Height and Scroll -->
                 <div class="bg-white rounded-lg border border-gray-200">
                     <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                         <h4 class="font-bold text-gray-800">Worker Performance Details</h4>
                         <span class="text-sm text-gray-600" id="modalTableCount">0 workers</span>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="overflow-auto" style="max-height: 400px;">
                         <table class="w-full">
-                            <thead class="bg-gray-50 border-b border-gray-200">
+                            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onclick="sortModalTable('worker')">
                                         Worker <i class="fas fa-sort text-xs ml-1"></i>

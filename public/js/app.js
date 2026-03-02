@@ -6217,8 +6217,14 @@ function openPeriodModal(date, kpi) {
   document.getElementById('modalWorkers').textContent = workers;
   document.getElementById('modalUtil').textContent = avgUtil.toFixed(1) + '%';
   document.getElementById('modalEff').textContent = avgEff.toFixed(1) + '%';
-  document.getElementById('modalTotalShiftTime').textContent = formatMinutes(totalShiftTime);
-  document.getElementById('modalTotalWorkTime').textContent = formatMinutes(totalWorkTime);
+  
+  // Fix: Ensure Total Shift Time is displayed correctly
+  const totalShiftTimeHours = totalShiftTime / 60;
+  document.getElementById('modalTotalShiftTime').textContent = totalShiftTimeHours.toFixed(1) + ' hr';
+  
+  const totalWorkTimeHours = totalWorkTime / 60;
+  document.getElementById('modalTotalWorkTime').textContent = totalWorkTimeHours.toFixed(1) + ' hr';
+  
   document.getElementById('modalRecords').textContent = totalRecords.toLocaleString();
   
   // Draw distribution charts
@@ -6288,9 +6294,25 @@ function drawModalDistributionCharts(data) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.parsed.y + ' Workers';
+            }
+          }
+        }
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        x: { 
+          title: { display: true, text: 'Utilization Rate (%)' }
+        },
+        y: { 
+          beginAtZero: true, 
+          ticks: { stepSize: 1 },
+          title: { display: true, text: 'Number of Workers' }
+        }
       }
     }
   });
@@ -6304,15 +6326,31 @@ function drawModalDistributionCharts(data) {
       datasets: [{
         label: 'Workers',
         data: Object.values(effRanges),
-        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#a855f7']
+        backgroundColor: ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#16a34a', '#7c3aed']
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { 
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.parsed.y + ' Workers';
+            }
+          }
+        }
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        x: { 
+          title: { display: true, text: 'Efficiency Rate (%)' }
+        },
+        y: { 
+          beginAtZero: true, 
+          ticks: { stepSize: 1 },
+          title: { display: true, text: 'Number of Workers' }
+        }
       }
     }
   });
@@ -6323,10 +6361,11 @@ function generateProcessBreakdown(data) {
   
   data.forEach(r => {
     const proc = r.foDesc2 || 'Unknown';
-    if (!processes[proc]) processes[proc] = { count: 0, util: 0, eff: 0 };
+    if (!processes[proc]) processes[proc] = { count: 0, util: 0, eff: 0, workers: [] };
     processes[proc].count++;
     processes[proc].util += r.utilizationRate || 0;
     processes[proc].eff += r.efficiencyRate || 0;
+    processes[proc].workers.push(r);
   });
   
   const html = Object.keys(processes)
@@ -6336,16 +6375,127 @@ function generateProcessBreakdown(data) {
       const avgUtil = p.count > 0 ? p.util / p.count : 0;
       const avgEff = p.count > 0 ? p.eff / p.count : 0;
       return `
-        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+        <div class="bg-gray-50 p-3 rounded border border-gray-200 cursor-pointer hover:bg-gray-100 transition" onclick="openProcessDetailModal('${proc.replace(/'/g, "\\'")}')">
           <p class="text-xs font-semibold text-gray-700 mb-1">${proc}</p>
           <p class="text-xs text-gray-600">${p.count} workers</p>
-          <p class="text-xs text-green-600">Util: ${avgUtil.toFixed(1)}%</p>
-          <p class="text-xs text-purple-600">Eff: ${avgEff.toFixed(1)}%</p>
+          <p class="text-xs text-gray-700">Util: ${avgUtil.toFixed(1)}%</p>
+          <p class="text-xs text-gray-700">Eff: ${avgEff.toFixed(1)}%</p>
         </div>
       `;
     }).join('');
   
   document.getElementById('modalProcessBreakdown').innerHTML = html;
+}
+
+// New function: Open Process Detail Modal (2nd level)
+function openProcessDetailModal(processName) {
+  const filtered = ModalState.currentData.filter(r => r.foDesc2 === processName);
+  
+  if (filtered.length === 0) {
+    alert('No data for this process');
+    return;
+  }
+  
+  // Calculate summary
+  const workers = new Set(filtered.map(r => r.workerName)).size;
+  const avgUtil = filtered.reduce((sum, r) => sum + (r.utilizationRate || 0), 0) / filtered.length;
+  const avgEff = filtered.reduce((sum, r) => sum + (r.efficiencyRate || 0), 0) / filtered.length;
+  const totalRecords = filtered.reduce((sum, r) => sum + r.recordCount, 0);
+  
+  // Build worker list HTML
+  const sorted = [...filtered].sort((a, b) => (b.utilizationRate || 0) - (a.utilizationRate || 0));
+  const workersHtml = sorted.map(r => `
+    <tr class="hover:bg-gray-50">
+      <td class="px-3 py-2 text-sm text-gray-900">${r.workerName}</td>
+      <td class="px-3 py-2 text-sm text-center">
+        <span class="px-2 py-1 rounded text-xs ${r.workingShift === 'Day' ? 'bg-yellow-100 text-yellow-800' : 'bg-indigo-100 text-indigo-800'}">
+          ${r.workingShift || '-'}
+        </span>
+      </td>
+      <td class="px-3 py-2 text-sm text-right">
+        <span class="font-semibold ${r.utilizationRate >= 70 ? 'text-green-700' : r.utilizationRate >= 50 ? 'text-yellow-700' : 'text-red-700'}">
+          ${r.utilizationRate.toFixed(1)}%
+        </span>
+      </td>
+      <td class="px-3 py-2 text-sm text-right">
+        <span class="font-semibold ${r.efficiencyRate >= 70 ? 'text-green-700' : r.efficiencyRate >= 50 ? 'text-yellow-700' : 'text-red-700'}">
+          ${r.efficiencyRate.toFixed(1)}%
+        </span>
+      </td>
+      <td class="px-3 py-2 text-sm text-right text-gray-600">${r.recordCount || 0}</td>
+    </tr>
+  `).join('');
+  
+  // Build modal HTML
+  const modalHtml = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center" onclick="closeProcessDetailModal()">
+      <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
+        <div class="bg-gradient-to-r from-gray-700 to-gray-800 p-5 text-white">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-xl font-bold">${processName}</h3>
+              <p class="text-sm mt-1 opacity-90">${workers} workers • ${totalRecords.toLocaleString()} records</p>
+            </div>
+            <button onclick="closeProcessDetailModal()" class="text-white hover:text-gray-200 transition">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 120px);">
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p class="text-xs text-gray-600 mb-1">Workers</p>
+              <p class="text-2xl font-bold text-gray-700">${workers}</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p class="text-xs text-gray-600 mb-1">Avg Utilization</p>
+              <p class="text-2xl font-bold text-gray-700">${avgUtil.toFixed(1)}%</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p class="text-xs text-gray-600 mb-1">Avg Efficiency</p>
+              <p class="text-2xl font-bold text-gray-700">${avgEff.toFixed(1)}%</p>
+            </div>
+          </div>
+          
+          <!-- Workers Table -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="p-3 bg-gray-50 border-b border-gray-200">
+              <h4 class="font-bold text-gray-800 text-sm">Worker Details</h4>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Worker</th>
+                    <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700">Shift</th>
+                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-700">Utilization</th>
+                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-700">Efficiency</th>
+                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-700">Records</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  ${workersHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Insert modal
+  const modalContainer = document.createElement('div');
+  modalContainer.id = 'processDetailModal';
+  modalContainer.innerHTML = modalHtml;
+  document.body.appendChild(modalContainer);
+}
+
+function closeProcessDetailModal() {
+  const modal = document.getElementById('processDetailModal');
+  if (modal) modal.remove();
 }
 
 function generateTopBottomPerformers(data) {
@@ -6360,30 +6510,30 @@ function generateTopBottomPerformers(data) {
   const bottom3 = sorted.slice(-3).reverse();
   
   const topHtml = top3.map((r, i) => `
-    <div class="flex items-center justify-between p-2 bg-white rounded border border-green-200">
+    <div class="flex items-center justify-between p-2 bg-white rounded border border-gray-300">
       <div class="flex items-center gap-2">
-        <span class="w-6 h-6 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-bold">${i+1}</span>
+        <span class="w-6 h-6 rounded-full bg-gray-700 text-white text-xs flex items-center justify-center font-bold">${i+1}</span>
         <div>
           <p class="text-sm font-medium text-gray-900">${r.workerName}</p>
           <p class="text-xs text-gray-500">${r.foDesc2 || '-'}</p>
         </div>
       </div>
       <div class="text-right">
-        <p class="text-xs text-green-600 font-semibold">U: ${r.utilizationRate.toFixed(1)}%</p>
-        <p class="text-xs text-purple-600 font-semibold">E: ${r.efficiencyRate.toFixed(1)}%</p>
+        <p class="text-xs text-gray-700 font-semibold">U: ${r.utilizationRate.toFixed(1)}%</p>
+        <p class="text-xs text-gray-700 font-semibold">E: ${r.efficiencyRate.toFixed(1)}%</p>
       </div>
     </div>
   `).join('');
   
   const bottomHtml = bottom3.map(r => `
-    <div class="flex items-center justify-between p-2 bg-white rounded border border-red-200">
+    <div class="flex items-center justify-between p-2 bg-white rounded border border-gray-300">
       <div>
         <p class="text-sm font-medium text-gray-900">${r.workerName}</p>
         <p class="text-xs text-gray-500">${r.foDesc2 || '-'}</p>
       </div>
       <div class="text-right">
-        <p class="text-xs text-red-600 font-semibold">U: ${r.utilizationRate.toFixed(1)}%</p>
-        <p class="text-xs text-purple-600 font-semibold">E: ${r.efficiencyRate.toFixed(1)}%</p>
+        <p class="text-xs text-gray-700 font-semibold">U: ${r.utilizationRate.toFixed(1)}%</p>
+        <p class="text-xs text-gray-700 font-semibold">E: ${r.efficiencyRate.toFixed(1)}%</p>
       </div>
     </div>
   `).join('');
