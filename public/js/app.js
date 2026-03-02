@@ -7207,8 +7207,11 @@ function updateAIInsightContent() {
   const metric = isEfficiency ? 'efficiencyRate' : 'utilizationRate';
   const rates = workers.map(w => w[metric] || 0);
   
-  const topPerformers = workers.filter(w => (w[metric] || 0) >= 80);  // Both Util and Eff use 80% threshold
+  // Different thresholds for Utilization vs Efficiency
+  const topPerformers = workers.filter(w => (w[metric] || 0) >= (isEfficiency ? 80 : 50));  // Eff ≥80%, Util ≥50%
   const atRiskWorkers = workers.filter(w => (w[metric] || 0) < (isEfficiency ? 50 : 30));  // Eff <50%, Util <30%
+  
+  console.log(`📊 AI Modal Stats: ${workers.length} workers, Top: ${topPerformers.length}, At-Risk: ${atRiskWorkers.length}`);
   
   // Update summary cards
   document.getElementById('aiTopPerformersCount').textContent = topPerformers.length;
