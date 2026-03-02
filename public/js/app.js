@@ -7580,8 +7580,3 @@ console.log(' Executive Dashboard functions loaded');
     }
   };
 })();
-);
-      }, 100);
-    }
-  };
-})();
