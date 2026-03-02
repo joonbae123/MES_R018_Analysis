@@ -6005,8 +6005,9 @@ function generateWarnings(data) {
         shifts: new Set()
       };
     }
-    workerTotals[key].totalMinutes += (r.totalMinutes || 0);
-    workerTotals[key].assignedStandardTime += (r.assignedStandardTime || 0);
+    // FIX: Use correct field names from aggregatedData
+    workerTotals[key].totalMinutes += (r.totalActualMins || 0);
+    workerTotals[key].assignedStandardTime += (r.totalStandardTime || 0);
     if (r.workingDay && r.workingShift) {
       workerTotals[key].shifts.add(`${r.workingDay}_${r.workingShift}`);
     }
