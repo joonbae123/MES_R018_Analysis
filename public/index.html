@@ -886,6 +886,26 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Period Selector -->
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex gap-2">
+                            <button onclick="setShiftChartPeriod(7)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition shift-period-btn">
+                                Last 7d
+                            </button>
+                            <button onclick="setShiftChartPeriod(14)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition shift-period-btn">
+                                Last 14d
+                            </button>
+                            <button onclick="setShiftChartPeriod(30)" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition shift-period-btn">
+                                Last 30d
+                            </button>
+                            <button onclick="setShiftChartPeriod(0)" class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition shift-period-btn">
+                                All
+                            </button>
+                        </div>
+                        <span id="shiftChartDateRange" class="text-xs text-gray-500"></span>
+                    </div>
+                    
                     <select id="shiftKPI" class="w-full px-3 py-1 text-sm border border-gray-300 rounded-lg mb-3" onchange="refreshShiftChart()">
                         <option value="util">Utilization</option>
                         <option value="eff">Efficiency</option>

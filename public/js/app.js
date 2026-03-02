@@ -5593,6 +5593,7 @@ function startProgressPolling(uploadId) {
 const DashboardState = {
   currentKPI: 'util',
   currentShiftMode: 'daynight',
+  shiftChartPeriod: 30,
   charts: {}
 };
 
@@ -6393,10 +6394,53 @@ function switchShiftMode(mode) {
   refreshShiftChart();
 }
 
+function setShiftChartPeriod(days) {
+  DashboardState.shiftChartPeriod = days;
+  
+  // Update button styles
+  const buttons = document.querySelectorAll('.shift-period-btn');
+  buttons.forEach((btn, idx) => {
+    const periods = [7, 14, 30, 0];
+    if (periods[idx] === days) {
+      btn.className = 'px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition shift-period-btn';
+    } else {
+      btn.className = 'px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition shift-period-btn';
+    }
+  });
+  
+  refreshShiftChart();
+}
+
 function refreshShiftChart() {
   const mode = DashboardState.currentShiftMode;
   const kpi = document.getElementById('shiftKPI').value;
-  const data = AppState.aggregatedData || [];
+  let data = AppState.aggregatedData || [];
+  
+  // Apply period filter
+  const period = DashboardState.shiftChartPeriod;
+  if (period > 0 && data.length > 0) {
+    const today = new Date();
+    const cutoffDate = new Date(today);
+    cutoffDate.setDate(today.getDate() - period);
+    
+    data = data.filter(r => {
+      if (!r.workingDay) return false;
+      const recordDate = new Date(r.workingDay);
+      return recordDate >= cutoffDate;
+    });
+    
+    console.log(`Period filter: ${period} days, filtered from ${AppState.aggregatedData.length} to ${data.length} entries`);
+  }
+  
+  // Update date range display
+  if (data.length > 0) {
+    const dates = data.map(r => r.workingDay).filter(d => d).sort();
+    if (dates.length > 0) {
+      const startDate = dates[0];
+      const endDate = dates[dates.length - 1];
+      document.getElementById('shiftChartDateRange').textContent = `${startDate} ~ ${endDate}`;
+    }
+  }
   
   console.log(`Refreshing Shift Chart: mode=${mode}, kpi=${kpi}, data=${data.length} entries`);
   
