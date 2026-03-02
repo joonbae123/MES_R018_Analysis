@@ -6623,14 +6623,32 @@ function refreshShiftComparison() {
   const calculateGroupMetrics = (groupProcesses) => {
     const groupData = filteredData.filter(r => groupProcesses.includes(r.foDesc2));  // FIX: Use foDesc2 (category) not foDesc3 (process)
     
+    // First, determine each worker's primary shift (earliest start time per day)
+    const workerPrimaryShifts = {}; // { workerName_date: shift }
+    
+    groupData.forEach(r => {
+      const key = `${r.workerName}_${r.workingDay}`;
+      const shift = r.actualShift || 'Unknown';
+      
+      if (!workerPrimaryShifts[key]) {
+        workerPrimaryShifts[key] = shift;
+      }
+      // Note: aggregatedData should already have the earliest shift as actualShift
+      // based on calculateWorkingDayShift logic
+    });
+    
     // Group by shift
     const shiftMetrics = {};
+    const allWorkersSet = new Set(); // Track all unique workers across all shifts
     
     groupData.forEach(r => {
       const shift = r.actualShift || 'Unknown';
+      const key = `${r.workerName}_${r.workingDay}`;
+      const primaryShift = workerPrimaryShifts[key];
+      
       if (!shiftMetrics[shift]) {
         shiftMetrics[shift] = {
-          workers: new Set(),
+          workers: new Set(), // Workers whose PRIMARY shift is this shift
           totalShiftTime: 0,
           totalWorkTime: 0,
           totalStandardTime: 0,
@@ -6638,7 +6656,14 @@ function refreshShiftComparison() {
         };
       }
       
-      shiftMetrics[shift].workers.add(r.workerName);
+      // Only count worker in this shift if it's their PRIMARY shift
+      if (shift === primaryShift) {
+        shiftMetrics[shift].workers.add(r.workerName);
+      }
+      
+      // Track all unique workers for group total
+      allWorkersSet.add(r.workerName);
+      
       const shiftTime = (r.shiftCount || 1) * 660; // 11 hours = 660 minutes
       shiftMetrics[shift].totalShiftTime += shiftTime;
       shiftMetrics[shift].totalWorkTime += r.totalActualMins || 0;
@@ -6647,11 +6672,14 @@ function refreshShiftComparison() {
     });
     
     // Calculate rates
-    const result = {};
+    const result = {
+      _uniqueWorkers: allWorkersSet // Store unique workers for header display
+    };
+    
     Object.keys(shiftMetrics).forEach(shift => {
       const m = shiftMetrics[shift];
       result[shift] = {
-        workers: m.workers.size,
+        workers: m.workers.size, // Count of workers whose PRIMARY shift is this
         totalShiftTime: m.totalShiftTime,
         totalWorkTime: m.totalWorkTime,
         totalStandardTime: m.totalStandardTime,
@@ -6674,13 +6702,17 @@ function refreshShiftComparison() {
   
   // Update group summary
   const updateGroupSummary = (groupMetrics, prefix) => {
-    let totalWorkers = 0;
+    // Use unique workers count from _uniqueWorkers Set
+    const totalWorkers = groupMetrics._uniqueWorkers ? groupMetrics._uniqueWorkers.size : 0;
+    
     let totalWorkTime = 0;
     let totalShiftTime = 0;
     let totalStandardTime = 0;
     
-    Object.values(groupMetrics).forEach(m => {
-      totalWorkers += m.workers;
+    Object.keys(groupMetrics).forEach(key => {
+      if (key === '_uniqueWorkers') return; // Skip internal field
+      
+      const m = groupMetrics[key];
       totalWorkTime += m.totalWorkTime;
       totalShiftTime += m.totalShiftTime;
       totalStandardTime += m.totalStandardTime;
