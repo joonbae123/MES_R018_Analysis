@@ -5407,36 +5407,62 @@ function updateFlightDeck(data) {
 }
 
 function drawSparkline(canvasId, data) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
+  console.log(`📈 Drawing sparkline for ${canvasId}:`, data);
   
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) {
+    console.error(`❌ Canvas not found: ${canvasId}`);
+    return;
+  }
+  
+  console.log(`✅ Canvas found: ${canvasId}, dimensions: ${canvas.width}x${canvas.height}`);
+  
+  // Check if Chart.js is loaded
+  if (typeof Chart === 'undefined') {
+    console.error('❌ Chart.js is not loaded!');
+    return;
+  }
+  
+  // Destroy existing chart
   if (DashboardState.charts[canvasId]) {
+    console.log(`🗑️ Destroying existing chart: ${canvasId}`);
     DashboardState.charts[canvasId].destroy();
   }
   
-  DashboardState.charts[canvasId] = new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: ['', '', '', '', '', '', ''],
-      datasets: [{
-        data: data,
-        borderColor: '#3b82f6',
-        borderWidth: 1.5,
-        tension: 0.3,
-        pointRadius: 0,
-        fill: false
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      scales: {
-        x: { display: false },
-        y: { display: false }
+  try {
+    DashboardState.charts[canvasId] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: ['', '', '', '', '', '', ''],
+        datasets: [{
+          data: data,
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          tension: 0.4,
+          pointRadius: 0,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+          legend: { display: false }, 
+          tooltip: { enabled: false } 
+        },
+        scales: {
+          x: { display: false },
+          y: { 
+            display: false,
+            beginAtZero: true
+          }
+        }
       }
-    }
-  });
+    });
+    console.log(`✅ Chart created successfully: ${canvasId}`);
+  } catch (error) {
+    console.error(`❌ Error creating chart ${canvasId}:`, error);
+  }
 }
 
 // ========== 2. Focus Queue ==========
