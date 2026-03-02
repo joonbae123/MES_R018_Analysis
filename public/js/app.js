@@ -6932,11 +6932,20 @@ function generateProcessBreakdown(data) {
       const avgUtil = p.count > 0 ? p.util / p.count : 0;
       const avgEff = p.count > 0 ? p.eff / p.count : 0;
       return `
-        <div class="bg-gray-50 p-3 rounded border border-gray-200 cursor-pointer hover:bg-gray-100 transition" onclick="openProcessDetailModal('${proc.replace(/'/g, "\\'")}')">
-          <p class="text-xs font-semibold text-gray-700 mb-1">${proc}</p>
-          <p class="text-xs text-gray-600">${p.count} workers</p>
-          <p class="text-xs text-gray-700">Util: ${avgUtil.toFixed(1)}%</p>
-          <p class="text-xs text-gray-700">Eff: ${avgEff.toFixed(1)}%</p>
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border-2 border-blue-200 cursor-pointer hover:shadow-md hover:border-blue-400 transition-all" onclick="openProcessDetailModal('${proc.replace(/'/g, "\\'")}')">
+          <p class="text-sm font-bold text-gray-800 mb-2 truncate" title="${proc}">${proc}</p>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-600">Workers</span>
+            <span class="text-base font-bold text-blue-700">${p.count}</span>
+          </div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-600">Avg Util</span>
+            <span class="text-base font-bold text-blue-900">${avgUtil.toFixed(1)}%</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-600">Avg Eff</span>
+            <span class="text-base font-bold text-purple-900">${avgEff.toFixed(1)}%</span>
+          </div>
         </div>
       `;
     }).join('');

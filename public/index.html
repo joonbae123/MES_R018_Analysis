@@ -2624,8 +2624,8 @@
             </div>
             
             <div class="p-6 overflow-y-auto" style="max-height: calc(95vh - 120px);">
-                <!-- Enhanced Summary Cards with emphasis on main KPIs -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- Enhanced Summary Cards - 6 cards in one row -->
+                <div class="grid grid-cols-6 gap-4 mb-6">
                     <!-- Workers -->
                     <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <p class="text-xs text-gray-600 mb-1 font-medium">Workers</p>
@@ -2650,29 +2650,25 @@
                         <p class="text-3xl font-bold text-purple-900" id="modalEff">-</p>
                     </div>
                     
-                    <!-- Total Records -->
-                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <p class="text-xs text-gray-600 mb-1 font-medium">Total Records</p>
-                        <p class="text-2xl font-bold text-gray-700" id="modalRecords">-</p>
-                    </div>
-                </div>
-                
-                <!-- Secondary Metrics (3 columns) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Total Shift Time -->
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1 font-medium">Total Shift Time</p>
                         <p class="text-xl font-bold text-gray-700" id="periodModalTotalShiftTime">-</p>
-                        <p class="text-xs text-gray-500 mt-1">available capacity</p>
+                        <p class="text-xs text-gray-500 mt-1">available</p>
                     </div>
+                    
+                    <!-- Total Work Time -->
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1 font-medium">Total Work Time</p>
                         <p class="text-xl font-bold text-gray-700" id="periodModalTotalWorkTime">-</p>
-                        <p class="text-xs text-gray-500 mt-1">actual work</p>
+                        <p class="text-xs text-gray-500 mt-1">actual</p>
                     </div>
+                    
+                    <!-- Total Adjusted S/T -->
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p class="text-xs text-gray-600 mb-1 font-medium">Total Adjusted S/T</p>
                         <p class="text-xl font-bold text-gray-700" id="periodModalTotalAdjustedST">-</p>
-                        <p class="text-xs text-gray-500 mt-1">standard time</p>
+                        <p class="text-xs text-gray-500 mt-1">standard</p>
                     </div>
                 </div>
 
@@ -2694,28 +2690,37 @@
                     </div>
                 </div>
 
-                <!-- Process Breakdown -->
-                <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                    <h4 class="font-bold text-gray-800 mb-3">Process Breakdown</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="modalProcessBreakdown">
+                <!-- Process Breakdown - Enhanced Design -->
+                <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+                    <h4 class="font-bold text-gray-800 mb-4 text-lg flex items-center gap-2">
+                        <i class="fas fa-project-diagram text-blue-600"></i>
+                        Process Breakdown
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="modalProcessBreakdown">
                         <!-- Dynamic content -->
                     </div>
                 </div>
 
-                <!-- Top/Bottom Performers - Toned down colors -->
+                <!-- Top/Bottom Performers - With criteria explanation -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                        <h4 class="font-bold text-gray-800 mb-3 flex items-center">
-                            <i class="fas fa-trophy mr-2 text-gray-600"></i>Top Performers
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200 p-5">
+                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2 text-lg">
+                            <i class="fas fa-trophy text-yellow-500"></i>
+                            Top Performers
+                            <span class="text-xs font-normal text-gray-600 ml-auto">(최상위 3명)</span>
                         </h4>
+                        <p class="text-xs text-gray-600 mb-3 italic">기준: Utilization + Efficiency 합계 기준 상위 3명</p>
                         <div id="modalTopPerformers" class="space-y-2">
                             <!-- Dynamic content -->
                         </div>
                     </div>
-                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                        <h4 class="font-bold text-gray-800 mb-3 flex items-center">
-                            <i class="fas fa-exclamation-triangle mr-2 text-gray-600"></i>Need Attention
+                    <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200 p-5">
+                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2 text-lg">
+                            <i class="fas fa-exclamation-triangle text-orange-500"></i>
+                            Need Attention
+                            <span class="text-xs font-normal text-gray-600 ml-auto">(최하위 3명)</span>
                         </h4>
+                        <p class="text-xs text-gray-600 mb-3 italic">기준: Utilization + Efficiency 합계 기준 하위 3명</p>
                         <div id="modalBottomPerformers" class="space-y-2">
                             <!-- Dynamic content -->
                         </div>
