@@ -5710,8 +5710,8 @@ function refreshExecutiveDashboard() {
   refreshContributionChart();
   // 5. Shift
   refreshShiftChart();
-  // 6. Health Matrix
-  refreshHealthMatrix(data);
+  // 6. Shift Performance Comparison (NEW - replaces Health Matrix)
+  refreshShiftComparison();
   
   console.log('Dashboard refreshed');
 }
@@ -6569,250 +6569,191 @@ function calcAvg(data, kpi) {
 }
 
 // ========== 6. Process Health Matrix (ENHANCED) ==========
-function refreshHealthMatrix(data) {
+// ========== 6. Shift Performance Comparison (NEW) ==========
+function refreshShiftComparison() {
   const aggregated = AppState.aggregatedData || [];
   
-  console.log(`🔄 Refreshing Health Matrix: ${aggregated.length} aggregated entries`);
+  console.log(`🔄 Refreshing Shift Comparison: ${aggregated.length} aggregated entries`);
   
-  // Group by process category
-  const groups = {};
-  
-  aggregated.forEach(r => {
-    const cat = r.foDesc2 || 'Unknown';
-    if (!groups[cat]) groups[cat] = { util: [], eff: [], workers: new Set() };
-    
-    if (r.utilizationRate >= 0 && r.utilizationRate <= 1000) {
-      groups[cat].util.push(r.utilizationRate);
-    }
-    if (r.efficiencyRate >= 0 && r.efficiencyRate <= 1000) {
-      groups[cat].eff.push(r.efficiencyRate);
-    }
-    groups[cat].workers.add(r.workerName);
-  });
-  
-  const points = Object.keys(groups).map(cat => {
-    const utilAvg = groups[cat].util.length > 0 
-      ? groups[cat].util.reduce((a,b) => a+b, 0) / groups[cat].util.length 
-      : 0;
-    const effAvg = groups[cat].eff.length > 0 
-      ? groups[cat].eff.reduce((a,b) => a+b, 0) / groups[cat].eff.length 
-      : 0;
-    
-    return {
-      x: utilAvg,
-      y: effAvg,
-      r: Math.sqrt(groups[cat].workers.size) * 3, // Size based on unique workers
-      label: cat,
-      workers: groups[cat].workers.size,
-      records: groups[cat].util.length
-    };
-  });
-  
-  console.log(`✅ Generated ${points.length} bubbles`);
-  console.log(`📊 Sample:`, points.slice(0, 3).map(p => ({ 
-    label: p.label, 
-    util: p.x.toFixed(1), 
-    eff: p.y.toFixed(1),
-    workers: p.workers
-  })));
-  
-  if (DashboardState.charts.matrix) {
-    DashboardState.charts.matrix.destroy();
+  if (aggregated.length === 0) {
+    console.warn('⚠️ No aggregated data for shift comparison');
+    return;
   }
   
-  const ctx = document.getElementById('healthMatrixChart').getContext('2d');
+  // Get selected period
+  const periodDays = parseInt(document.getElementById('shiftComparisonDays')?.value || '30');
   
-  // Define quadrant colors and labels
-  const getQuadrantInfo = (util, eff) => {
-    if (util >= 50 && eff >= 80) {
-      return { color: 'rgba(34, 197, 94, 0.7)', label: '✅ Optimal', border: 'rgb(34, 197, 94)' };
-    } else if (util >= 50 && eff < 80) {
-      return { color: 'rgba(251, 191, 36, 0.7)', label: '⚠️ Capacity Issue', border: 'rgb(251, 191, 36)' };
-    } else if (util < 50 && eff >= 80) {
-      return { color: 'rgba(59, 130, 246, 0.7)', label: '📊 Underutilized', border: 'rgb(59, 130, 246)' };
-    } else {
-      return { color: 'rgba(239, 68, 68, 0.7)', label: '🚨 Critical', border: 'rgb(239, 68, 68)' };
+  // Filter data by period
+  let filteredData = aggregated;
+  if (periodDays !== 'all' && !isNaN(periodDays)) {
+    const dates = [...new Set(aggregated.map(r => r.workingDay))].sort();
+    if (dates.length > 0) {
+      const latestDate = new Date(dates[dates.length - 1]);
+      const cutoffDate = new Date(latestDate);
+      cutoffDate.setDate(cutoffDate.getDate() - periodDays);
+      
+      filteredData = aggregated.filter(r => {
+        const date = new Date(r.workingDay);
+        return date > cutoffDate && date <= latestDate;
+      });
+      
+      const periodStart = new Date(Math.min(...filteredData.map(r => new Date(r.workingDay))));
+      const periodEnd = new Date(Math.max(...filteredData.map(r => new Date(r.workingDay))));
+      document.getElementById('shiftComparisonPeriod').textContent = 
+        `Data period: ${periodStart.toISOString().split('T')[0]} ~ ${periodEnd.toISOString().split('T')[0]}`;
     }
+  } else {
+    const dates = [...new Set(aggregated.map(r => r.workingDay))].sort();
+    document.getElementById('shiftComparisonPeriod').textContent = 
+      `Data period: ${dates[0]} ~ ${dates[dates.length - 1]} (${dates.length} days)`;
+  }
+  
+  console.log(`📅 Filtered to ${filteredData.length} entries for comparison`);
+  
+  // Define process groups based on foDesc3
+  const processGroups = {
+    bt: ['BT Process', 'BT Complete', 'BT QC', 'DS'],
+    wt: ['WT', 'WT QC'],
+    im: ['IM', 'IM QC']
   };
   
-  DashboardState.charts.matrix = new Chart(ctx, {
-    type: 'bubble',
-    data: {
-      datasets: [{
-        label: 'Process Health',
-        data: points,
-        backgroundColor: points.map(p => getQuadrantInfo(p.x, p.y).color),
-        borderColor: points.map(p => getQuadrantInfo(p.x, p.y).border),
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: function(context) {
-              const point = context[0].raw;
-              return `${point.label}`;
-            },
-            label: function(context) {
-              const point = context.raw;
-              const quadrant = getQuadrantInfo(point.x, point.y);
-              return [
-                `Status: ${quadrant.label}`,
-                `Utilization: ${point.x.toFixed(1)}%`,
-                `Efficiency: ${point.y.toFixed(1)}%`,
-                `Workers: ${point.workers}`,
-                `Records: ${point.records}`
-              ];
-            }
-          }
-        },
-        // Add quadrant background annotations
-        annotation: {
-          annotations: {
-            optimal: {
-              type: 'box',
-              xMin: 50,
-              xMax: 100,
-              yMin: 80,
-              yMax: 200,
-              backgroundColor: 'rgba(34, 197, 94, 0.05)',
-              borderWidth: 0
-            },
-            capacity: {
-              type: 'box',
-              xMin: 50,
-              xMax: 100,
-              yMin: 0,
-              yMax: 80,
-              backgroundColor: 'rgba(251, 191, 36, 0.05)',
-              borderWidth: 0
-            },
-            underutilized: {
-              type: 'box',
-              xMin: 0,
-              xMax: 50,
-              yMin: 80,
-              yMax: 200,
-              backgroundColor: 'rgba(59, 130, 246, 0.05)',
-              borderWidth: 0
-            },
-            critical: {
-              type: 'box',
-              xMin: 0,
-              xMax: 50,
-              yMin: 0,
-              yMax: 80,
-              backgroundColor: 'rgba(239, 68, 68, 0.05)',
-              borderWidth: 0
-            },
-            // Reference lines
-            utilLine: {
-              type: 'line',
-              xMin: 50,
-              xMax: 50,
-              yMin: 0,
-              yMax: 200,
-              borderColor: 'rgba(156, 163, 175, 0.4)',
-              borderWidth: 2,
-              borderDash: [5, 5]
-            },
-            effLine: {
-              type: 'line',
-              xMin: 0,
-              xMax: 100,
-              yMin: 80,
-              yMax: 80,
-              borderColor: 'rgba(156, 163, 175, 0.4)',
-              borderWidth: 2,
-              borderDash: [5, 5]
-            },
-            // Quadrant labels
-            optimalLabel: {
-              type: 'label',
-              xValue: 75,
-              yValue: 140,
-              content: ['✅ Optimal'],
-              color: 'rgba(34, 197, 94, 0.6)',
-              font: {
-                size: 14,
-                weight: 'bold'
-              }
-            },
-            capacityLabel: {
-              type: 'label',
-              xValue: 75,
-              yValue: 40,
-              content: ['⚠️ Capacity Issue'],
-              color: 'rgba(251, 191, 36, 0.7)',
-              font: {
-                size: 14,
-                weight: 'bold'
-              }
-            },
-            underutilizedLabel: {
-              type: 'label',
-              xValue: 25,
-              yValue: 140,
-              content: ['📊 Underutilized'],
-              color: 'rgba(59, 130, 246, 0.7)',
-              font: {
-                size: 14,
-                weight: 'bold'
-              }
-            },
-            criticalLabel: {
-              type: 'label',
-              xValue: 25,
-              yValue: 40,
-              content: ['🚨 Critical'],
-              color: 'rgba(239, 68, 68, 0.7)',
-              font: {
-                size: 14,
-                weight: 'bold'
-              }
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: { 
-            display: true, 
-            text: 'Utilization %',
-            font: { size: 14, weight: 'bold' }
-          },
-          min: 0,
-          max: 100,
-          grid: {
-            color: 'rgba(156, 163, 175, 0.1)'
-          }
-        },
-        y: {
-          title: { 
-            display: true, 
-            text: 'Efficiency %',
-            font: { size: 14, weight: 'bold' }
-          },
-          min: 0,
-          max: 200,
-          grid: {
-            color: 'rgba(156, 163, 175, 0.1)'
-          }
-        }
-      },
-      onClick: (event, elements) => {
-        if (elements.length > 0) {
-          const point = points[elements[0].index];
-          const quadrant = getQuadrantInfo(point.x, point.y);
-          alert(`📊 ${point.label}\n\n${quadrant.label}\nUtilization: ${point.x.toFixed(1)}%\nEfficiency: ${point.y.toFixed(1)}%\nWorkers: ${point.workers}\nRecords: ${point.records}\n\n💡 Click OK to close`);
-        }
+  // Calculate metrics for each group and shift
+  const calculateGroupMetrics = (groupProcesses) => {
+    const groupData = filteredData.filter(r => groupProcesses.includes(r.foDesc3));
+    
+    // Group by shift
+    const shiftMetrics = {};
+    
+    groupData.forEach(r => {
+      const shift = r.actualShift || 'Unknown';
+      if (!shiftMetrics[shift]) {
+        shiftMetrics[shift] = {
+          workers: new Set(),
+          totalShiftTime: 0,
+          totalWorkTime: 0,
+          totalStandardTime: 0,
+          shifts: 0
+        };
       }
+      
+      shiftMetrics[shift].workers.add(r.workerName);
+      const shiftTime = (r.shiftCount || 1) * 660; // 11 hours = 660 minutes
+      shiftMetrics[shift].totalShiftTime += shiftTime;
+      shiftMetrics[shift].totalWorkTime += r.totalActualMins || 0;
+      shiftMetrics[shift].totalStandardTime += r.totalStandardTime || 0;
+      shiftMetrics[shift].shifts += (r.shiftCount || 1);
+    });
+    
+    // Calculate rates
+    const result = {};
+    Object.keys(shiftMetrics).forEach(shift => {
+      const m = shiftMetrics[shift];
+      result[shift] = {
+        workers: m.workers.size,
+        totalShiftTime: m.totalShiftTime,
+        totalWorkTime: m.totalWorkTime,
+        totalStandardTime: m.totalStandardTime,
+        utilization: m.totalShiftTime > 0 ? (m.totalWorkTime / m.totalShiftTime) * 100 : 0,
+        efficiency: m.totalShiftTime > 0 ? (m.totalStandardTime / m.totalShiftTime) * 100 : 0
+      };
+    });
+    
+    return result;
+  };
+  
+  // Calculate metrics for each group
+  const btMetrics = calculateGroupMetrics(processGroups.bt);
+  const wtMetrics = calculateGroupMetrics(processGroups.wt);
+  const imMetrics = calculateGroupMetrics(processGroups.im);
+  
+  console.log('📊 BT Metrics:', btMetrics);
+  console.log('📊 WT Metrics:', wtMetrics);
+  console.log('📊 IM Metrics:', imMetrics);
+  
+  // Update group summary
+  const updateGroupSummary = (groupMetrics, prefix) => {
+    let totalWorkers = 0;
+    let totalWorkTime = 0;
+    let totalShiftTime = 0;
+    let totalStandardTime = 0;
+    
+    Object.values(groupMetrics).forEach(m => {
+      totalWorkers += m.workers;
+      totalWorkTime += m.totalWorkTime;
+      totalShiftTime += m.totalShiftTime;
+      totalStandardTime += m.totalStandardTime;
+    });
+    
+    const avgUtil = totalShiftTime > 0 ? (totalWorkTime / totalShiftTime) * 100 : 0;
+    const avgEff = totalShiftTime > 0 ? (totalStandardTime / totalShiftTime) * 100 : 0;
+    
+    document.getElementById(`${prefix}WorkerCount`).textContent = `${totalWorkers} workers`;
+    document.getElementById(`${prefix}AvgUtil`).textContent = `${avgUtil.toFixed(1)}%`;
+    document.getElementById(`${prefix}AvgEff`).textContent = `${avgEff.toFixed(1)}%`;
+  };
+  
+  updateGroupSummary(btMetrics, 'bt');
+  updateGroupSummary(wtMetrics, 'wt');
+  updateGroupSummary(imMetrics, 'im');
+  
+  // Render tables
+  const renderTable = (groupMetrics, tbodyId) => {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    
+    const shifts = ['A', 'B', 'C', 'D'].filter(s => groupMetrics[s]);
+    
+    if (shifts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-4 text-center text-gray-500">No data available</td></tr>';
+      return;
     }
-  });
+    
+    const rows = shifts.map(shift => {
+      const m = groupMetrics[shift];
+      
+      // Color coding for performance
+      const utilColor = m.utilization >= 50 ? 'text-blue-700 font-bold' : 'text-orange-600';
+      const effColor = m.efficiency >= 50 ? 'text-purple-700 font-bold' : 'text-orange-600';
+      
+      return `
+        <tr class="border-b border-gray-100 hover:bg-gray-50">
+          <td class="px-3 py-2 font-semibold text-gray-800">Shift ${shift}</td>
+          <td class="px-3 py-2 text-right text-gray-700">${m.workers}</td>
+          <td class="px-3 py-2 text-right text-gray-600">${(m.totalShiftTime / 60).toFixed(1)} hrs</td>
+          <td class="px-3 py-2 text-right text-gray-600">${(m.totalWorkTime / 60).toFixed(1)} hrs</td>
+          <td class="px-3 py-2 text-right ${utilColor}">${m.utilization.toFixed(1)}%</td>
+          <td class="px-3 py-2 text-right text-gray-600">${(m.totalStandardTime / 60).toFixed(1)} hrs</td>
+          <td class="px-3 py-2 text-right ${effColor}">${m.efficiency.toFixed(1)}%</td>
+        </tr>
+      `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+  };
+  
+  renderTable(btMetrics, 'btTableBody');
+  renderTable(wtMetrics, 'wtTableBody');
+  renderTable(imMetrics, 'imTableBody');
+  
+  console.log('✅ Shift Comparison tables updated');
+}
+
+// Toggle shift group expand/collapse
+function toggleShiftGroup(groupId) {
+  const table = document.getElementById(`${groupId}Table`);
+  const chevron = document.getElementById(`${groupId}Chevron`);
+  
+  if (table && chevron) {
+    const isHidden = table.classList.contains('hidden');
+    
+    if (isHidden) {
+      table.classList.remove('hidden');
+      chevron.style.transform = 'rotate(90deg)';
+    } else {
+      table.classList.add('hidden');
+      chevron.style.transform = 'rotate(0deg)';
+    }
+  }
 }
 
 // ========== Period Detail Modal ==========
