@@ -6,9 +6,9 @@
 
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis.pages.dev
-- **GitHub**: https://github.com/twokomi/MES_R018_Analysis
-- **최신 버전**: v4.3.3 (2026-03-02)
-- **최근 수정**: Excel Export 기능 완전 수정 및 사용 가이드 추가
+- **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
+- **최신 버전**: v4.3.4 (2026-03-12)
+- **최근 수정**: Rework 제외 표시 추가 및 Efficiency Rate에 Overlap 조정 적용
 
 ---
 
@@ -559,6 +559,19 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 
 ## 📝 개발 히스토리
 
+### v4.3.4 (2026-03-12) ✅ **Rework 제외 표시 및 Efficiency Overlap 조정**
+- ✅ **Rework Exclusion Display**
+  - Report 탭 KPI 카드에 Rework 제외 통계 표시 추가
+  - 제외된 레코드 수와 비율을 시각적으로 표시
+  - 데이터 품질 투명성 향상
+- ✅ **Efficiency Rate Overlap Adjustment**
+  - Work Efficiency 계산 시 시간 겹침(Overlap) 제거 적용
+  - 중복 작업 시간을 정확히 조정하여 효율성 계산
+  - Time Utilization과 동일한 겹침 제거 로직 적용
+- ✅ **데이터 정확도 개선**
+  - 작업자별 실제 작업 시간을 정확히 반영
+  - 멀티태스킹 상황에서의 효율성 계산 정확도 향상
+
 ### v4.3.3 (2026-03-02) ✅ **Excel Export 기능 완전 수정**
 - ✅ **Global Function Registration**
   - `exportToExcel()` 함수를 `window.exportToExcel`로 전역 스코프에 등록
@@ -737,12 +750,12 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 **제작자**: twokomi  
-**최종 업데이트**: 2026-03-02 (v4.3.3)  
+**최종 업데이트**: 2026-03-12 (v4.3.4)  
 **라이선스**: MIT
 
 ---
 
 ## 📞 문의
 
-- GitHub Issues: https://github.com/twokomi/MES_R018_Analysis/issues
+- GitHub Issues: https://github.com/joonbae123/MES_R018_Analysis/issues
 - Deployment: https://mes-r018-analysis.pages.dev
