@@ -318,6 +318,15 @@
             background-color: #ef9a9a !important;
         }
         
+        /* Modal table rework styling */
+        tr.modal-rework-row td {
+            background-color: #DBEAFE !important;
+        }
+        
+        tr.modal-rework-row:hover td {
+            background-color: #BFDBFE !important;
+        }
+        
         .filter-section {
             background: #f8fafc;
             border-radius: 8px;
@@ -1695,11 +1704,14 @@
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>Click any worker card</strong> in Performance Bands to view detailed information</li>
                                 <li><strong>KPI Summary</strong>: Total Shifts, Shift/Work Time, Performance Rate</li>
+                                <li><strong>Rework Records</strong>: Total Records card shows Rework count in gray text below</li>
+                                <li><strong>Excl. Rework Rate</strong>: Utilization/Efficiency rate excluding Rework shown below main rate</li>
                                 <li><strong>Daily Trends</strong>: Line chart showing work time by date</li>
                                 <li><strong>Hourly Distribution</strong>: Bar chart showing work time by hour</li>
                                 <li><strong>Detailed Records Table</strong>: Date, shift, process, time breakdown</li>
-                                <li><strong>Utilization Mode</strong>: Shows individual records with start/end times</li>
-                                <li><strong>Efficiency Mode</strong>: Shows aggregated records with outlier indicators (🚫)</li>
+                                <li><strong>Utilization Mode</strong>: Shows individual records with start/end times, orange highlighting for overlap removal</li>
+                                <li><strong>Efficiency Mode</strong>: Shows records with start/end times, S/T, Worker Rate, Adjusted S/T (orange when overlap removed), outlier indicators (🚫)</li>
+                                <li><strong>Rework Indicators</strong>: Blue background with 🔄 icon for Rework records</li>
                                 <li><strong>Glossary</strong>: Context-specific term definitions at the bottom</li>
                             </ul>
                         </section>
@@ -1860,11 +1872,65 @@
                 </h2>
                 
                 <div class="space-y-6">
-                    <!-- Version 4.3.3 -->
+                    <!-- Version 4.3.5 -->
                     <div class="border-l-4 border-green-600 pl-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <h3 class="text-lg font-bold text-gray-800">Version 4.3.3</h3>
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.3.5</h3>
                             <span class="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full">Latest</span>
+                            <span class="text-xs text-gray-500">2026-03-12</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-eye mr-2"></i>Rework Visual Enhancement
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Blue Background Highlighting</strong>: Rework records now displayed with blue background in Worker Detail Modal tables</li>
+                                    <li><strong>🔄 Rework Icon</strong>: Visual indicator added to Date column for easy identification</li>
+                                    <li><strong>Rework Count Display</strong>: Total Records card shows Rework count in gray text below total count</li>
+                                    <li><strong>Excl. Rework Rate</strong>: Utilization/Efficiency rate excluding Rework shown below main rate</li>
+                                    <li><strong>CSS Priority Fix</strong>: Added <code>!important</code> flag to ensure blue background displays correctly</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-table mr-2"></i>Worker Detail Modal Enhancement
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Start/End Time Added</strong>: Efficiency Mode now shows Start Time and End Time columns (matching Utilization Mode)</li>
+                                    <li><strong>Overlap Adjustment Applied</strong>: Efficiency's Adjusted S/T now applies overlap removal ratio (same as Utilization)</li>
+                                    <li><strong>Orange Highlighting</strong>: Adjusted S/T values highlighted in orange when overlap detected and removed</li>
+                                    <li><strong>Tooltip Enhancement</strong>: Hover tooltip shows overlap adjustment details (e.g., "50min → 25min (ratio: 50%)")</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-book mr-2"></i>Glossary Update
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Rework Definition Added</strong>: Both Efficiency and Utilization glossaries now include 🔄 Rework explanation</li>
+                                    <li><strong>Header Matching</strong>: Glossary terms now exactly match table header names for clarity</li>
+                                    <li><strong>Overlap Notes</strong>: Clear indication that overlap removal is applied to both Assigned and Actual in Efficiency Mode</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
+                                <p class="text-sm text-green-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <strong>Visual Improvements:</strong> Rework records now clearly distinguished with blue background and icon. Overlap adjustments highlighted in orange across both metric modes.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Version 4.3.3 -->
+                    <div class="border-l-4 border-purple-600 pl-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.3.3</h3>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Previous</span>
                             <span class="text-xs text-gray-500">2026-03-02</span>
                         </div>
                         
@@ -2832,7 +2898,7 @@
             <div class="mt-4 pt-4 border-t border-gray-100 text-center">
                 <p class="text-xs text-gray-400">
                     <span class="inline-flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.3.3</span>
+                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.3.5</span>
                         <span>|</span>
                         <span><i class="fas fa-cloud mr-1"></i>Cloudflare Pages</span>
                         <span>|</span>
@@ -3461,6 +3527,6 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=9999999999"></script>
+    <script src="js/app.js?v=1773300081192"></script>
 </body>
 </html>

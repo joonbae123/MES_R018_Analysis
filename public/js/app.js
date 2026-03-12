@@ -1,7 +1,7 @@
 // MES Individual Performance Report Application
-// Last Updated: 2026-03-02 - Excel Export Function Complete Fix (v4.3.3)
+// Last Updated: 2026-03-12 - Rework Visual Enhancement & Worker Detail Modal Improvements (v4.3.5)
 // Main application logic
-// Version: 3.0.0 - Two Metric System (Time Utilization & Work Efficiency)
+// Version: 4.3.5 - Rework Display, Efficiency Modal Enhancement, Overlap Adjustment
 
 // Category order for sorting
 const CATEGORY_ORDER = {
@@ -849,10 +849,16 @@ function parseRawData(headers, dataRows) {
         let reworkFlag = false;
         if (colRework !== -1) {
             const reworkValue = row[colRework];
+            // DEBUG: Log first few rework values
+            if (index < 5) {
+                console.log(` Row ${index}: Rework column value = ${reworkValue} (type: ${typeof reworkValue})`);
+            }
             if (reworkValue === true || reworkValue === 'true' || reworkValue === 'True' || 
                 reworkValue === 'TRUE' || reworkValue === 1 || reworkValue === '1') {
                 reworkFlag = true;
             }
+        } else if (index === 0) {
+            console.warn('⚠️ Rework column NOT FOUND in Excel file!');
         }
         
         const record = {
@@ -4587,6 +4593,8 @@ function showWorkerDetail(workerName) {
             <tr>
                 <th class="text-left p-2 font-semibold text-gray-700">Date</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Shift</th>
+                <th class="text-left p-2 font-semibold text-gray-700">Start Time</th>
+                <th class="text-left p-2 font-semibold text-gray-700">End Time</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Section ID</th>
                 <th class="text-left p-2 font-semibold text-gray-700">Process</th>
                 <th class="text-right p-2 font-semibold text-gray-700">S/T<br><span class="text-xs font-normal text-gray-500">(min)</span></th>
@@ -4618,6 +4626,9 @@ function showWorkerDetail(workerName) {
     const rawRecords = rawDataSource.filter(r => r.workerName === workerName && !r.rework); // Exclude rework
     const reworkRecords = rawDataSource.filter(r => r.workerName === workerName && r.rework); // Only rework
     
+    // 🔍 DEBUG: Log rework counts
+    console.log(`🔍 Worker ${workerName} - Total: ${allRecords.length}, Non-rework: ${rawRecords.length}, Rework: ${reworkRecords.length}`);
+    
     //  FIX: Aggregate rawRecords directly to match current filter state
     // Don't use cachedWorkerAgg because it may be out of sync with filters
     
@@ -4632,12 +4643,12 @@ function showWorkerDetail(workerName) {
         // Outliers are real work and should be included in calculations
         dataForSummary = aggregatedAllRecords; // 🔥 NEW: Include rework (main rate)
         dataForSummaryExclRework = aggregatedRecords; // 🔥 NEW: Exclude rework (for reference)
-        dataForTable = rawRecords; // Show individual activity records (exclude rework)
+        dataForTable = allRecords; // 🔥 FIXED: Show ALL records including rework (with rework indicator)
     } else {
         // Utilization: Use aggregated data for KPI, raw data for table
         dataForSummary = aggregatedAllRecords; // 🔥 NEW: Include rework (main rate)
         dataForSummaryExclRework = aggregatedRecords; // 🔥 NEW: Exclude rework (for reference)
-        dataForTable = rawRecords; // Show individual records with start/end times (exclude rework)
+        dataForTable = allRecords; // 🔥 FIXED: Show ALL records including rework (with rework indicator)
     }
     
     // Check if we have any records to display
@@ -4736,7 +4747,7 @@ function showWorkerDetail(workerName) {
         // 🔥 v4.3.4: Add Rework-excluded rate if rework exists
         const modalWorkRateElement = document.getElementById('modalWorkRate');
         if (reworkCount > 0) {
-            modalWorkRateElement.innerHTML = `${currentRate.toFixed(1)}%<br><span class="text-xs text-gray-500">Excl. rework: ${rateExclRework.toFixed(1)}% (${reworkCount} records)</span>`;
+            modalWorkRateElement.innerHTML = `${currentRate.toFixed(1)}%<br><span class="text-xs text-gray-500">Excl. rework: ${rateExclRework.toFixed(1)}%</span>`;
         } else {
             modalWorkRateElement.textContent = currentRate.toFixed(1) + '%';
         }
@@ -4771,7 +4782,7 @@ function showWorkerDetail(workerName) {
         // 🔥 v4.3.4: Add Rework-excluded rate if rework exists
         const modalWorkRateElement = document.getElementById('modalWorkRate');
         if (reworkCount > 0) {
-            modalWorkRateElement.innerHTML = `${currentRate.toFixed(1)}%<br><span class="text-xs text-gray-500">Excl. rework: ${rateExclRework.toFixed(1)}% (${reworkCount} records)</span>`;
+            modalWorkRateElement.innerHTML = `${currentRate.toFixed(1)}%<br><span class="text-xs text-gray-500">Excl. rework: ${rateExclRework.toFixed(1)}%</span>`;
         } else {
             modalWorkRateElement.textContent = currentRate.toFixed(1) + '%';
         }
@@ -4784,7 +4795,13 @@ function showWorkerDetail(workerName) {
     }
     
     // Set Total Records count based on table data (individual activity records)
-    document.getElementById('modalRecordCount').textContent = dataForTable.length.toLocaleString();
+    const modalRecordCountElement = document.getElementById('modalRecordCount');
+    const reworkCount = reworkRecords.length;
+    if (reworkCount > 0) {
+        modalRecordCountElement.innerHTML = `${dataForTable.length.toLocaleString()}<br><span class="text-xs text-gray-500">Rework: ${reworkCount}</span>`;
+    } else {
+        modalRecordCountElement.textContent = dataForTable.length.toLocaleString();
+    }
     
     //  FIX: Remove background color, only use text color
     const bandElement = document.getElementById('modalPerformanceBand');
@@ -4797,22 +4814,24 @@ function showWorkerDetail(workerName) {
     if (isEfficiency) {
         glossaryDiv.innerHTML = `
             <strong class="text-purple-700">Work Efficiency Glossary (Shift Productivity):</strong><br>
-            📊 <strong>S/T</strong>: Standard Time - Expected time to complete a task<br>
-            📈 <strong>Worker Rate(%)</strong>: Work Progress Rate - Portion of the task completed by this worker (e.g., 60% of the task)<br>
-            ⚙️ <strong>Adjusted S/T(m)</strong>: Adjusted Standard Time = S/T × Worker Rate ÷ 100<br>
-            ⏰ <strong>Shift Time</strong>: Available shift time (660 minutes = 11 hours)<br>
-            💯 <strong>Efficiency(%)</strong>: Shift productivity = Adjusted S/T ÷ Shift Time × 100<br>
-            🚨 <strong>⚠️ Outlier</strong>: Records with efficiency > ${AppState.outlierThreshold || 1000}% (shown in red for visual reference, but <strong>included in all calculations</strong>)<br>
+            📊 <strong>S/T (min)</strong>: Standard Time - Expected time to complete a task<br>
+            📈 <strong>Worker Rate (%)</strong>: Worker's completion rate (e.g., 60% = worker completed 60% of task)<br>
+            ⚙️ <strong>Adjusted S/T (min)</strong>: S/T × Worker Rate ÷ 100 (with overlap removal applied)<br>
+            ⏱️ <strong>Actual (min)</strong>: Actual work time (with overlap removal applied)<br>
+            💯 <strong>Efficiency</strong>: Adjusted S/T ÷ Actual × 100%<br>
+            🚨 <strong>⚠️ Outlier</strong>: Efficiency > ${AppState.outlierThreshold || 1000}% (red background, included in calculations)<br>
+            🔄 <strong>Rework</strong>: Re-processed work orders (blue background with 🔄 icon)<br>
             <br>
-            <strong class="text-purple-600">📌 Note:</strong> Efficiency (also called "Shift Productivity") measures how much standard work was completed per shift. 100% = completed exactly the standard amount of work in one shift (660 min).
+            <strong class="text-purple-600">📌 Note:</strong> Overlap time is automatically removed from both Adjusted S/T and Actual values.
         `;
     } else {
         glossaryDiv.innerHTML = `
             <strong class="text-blue-700">Time Utilization Glossary:</strong><br>
-            🕐 <strong>Original(m)</strong>: Time calculated from End - Start time<br>
-            ✅ <strong>Adjusted(m)</strong>: Original time after removing overlapping intervals<br>
-            🔄 <strong>Removed overlap</strong>: Duplicate time periods detected and excluded<br>
-            📊 <strong>Utilization Rate</strong>: Adjusted time ÷ Available shift time × 100
+            🕐 <strong>Original (min)</strong>: Time calculated from End - Start<br>
+            ✅ <strong>Adjusted (min)</strong>: Actual work time after removing overlapping time periods (shown in orange if overlap detected)<br>
+            🔄 <strong>Rework</strong>: Re-processed work orders (blue background with 🔄 icon)<br>
+            <br>
+            <strong class="text-blue-600">📌 Note:</strong> Work Rate = Total Adjusted Time ÷ Total Shift Time × 100%
         `;
     }
     
@@ -5189,9 +5208,14 @@ function renderUtilizationTable(workerRecords, tableBody) {
                 ? `Overlap removed: -${(originalMinutes - adjustedMinutes)} min` 
                 : 'No overlap';
             
+            // Rework indicator
+            const isRework = r.rework === true;
+            const reworkIcon = isRework ? '<i class="fas fa-redo text-blue-500 text-xs mr-1" title="Rework"></i>' : '';
+            const rowClass = isRework ? 'modal-rework-row' : 'hover:bg-gray-50';
+            
             return `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-2">${r.workingDay || '-'}</td>
+                <tr class="${rowClass}">
+                    <td class="p-2">${reworkIcon}${r.workingDay || '-'}</td>
                     <td class="p-2"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">${r.workingShift || '-'}</span></td>
                     <td class="p-2 text-gray-600 font-mono text-xs">${formatTime(r.startDatetime)}</td>
                     <td class="p-2 text-gray-600 font-mono text-xs">${formatTime(r.endDatetime)}</td>
@@ -5211,32 +5235,69 @@ function renderUtilizationTable(workerRecords, tableBody) {
 function renderEfficiencyTable(workerRecords, tableBody) {
     const outlierThreshold = AppState.outlierThreshold || 1000;
     
+    // Time formatting function (same as Utilization)
+    const formatTime = (datetime) => {
+        if (!datetime) return '-';
+        const date = new Date(datetime);
+        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    };
+    
     tableBody.innerHTML = workerRecords
         .sort((a, b) => (b.workingDay || '').localeCompare(a.workingDay || ''))
         .map(r => {
             // Use individual record fields
             const st = r['Worker S/T'] || 0;
             const rate = r['Worker Rate(%)'] || 0;
-            const assigned = (st * rate / 100) || 0;  // Adjusted S/T = S/T � Rate ÷ 100
-            const actual = r['Worker Act'] || 0;
+            
+            // Calculate original time (End - Start) for overlap ratio
+            const originalTime = r.startDatetime && r.endDatetime 
+                ? Math.round((new Date(r.endDatetime) - new Date(r.startDatetime)) / 60000) 
+                : 0;
+            const adjustedTime = r.workerActMins || 0; // After overlap removal
+            const overlapRatio = originalTime > 0 ? adjustedTime / originalTime : 1;
+            
+            // Adjusted S/T with overlap removal applied
+            const assignedBase = (st * rate / 100) || 0;
+            const assigned = Math.round(assignedBase * overlapRatio);
+            const actual = adjustedTime;
             
             // Calculate efficiency for this individual record
             const efficiency = assigned > 0 && actual > 0 ? (assigned / actual) * 100 : 0;
             
             // Check if outlier
             const isOutlier = efficiency > outlierThreshold;
-            const rowClass = isOutlier ? 'modal-outlier-row' : 'hover:bg-gray-50';
+            
+            // Rework indicator
+            const isRework = r.rework === true;
+            const reworkIcon = isRework ? '<i class="fas fa-redo text-blue-500 text-xs mr-1" title="Rework"></i>' : '';
+            
+            // Row class priority: Outlier > Rework > Normal
+            let rowClass = 'hover:bg-gray-50';
+            if (isOutlier) {
+                rowClass = 'modal-outlier-row';
+            } else if (isRework) {
+                rowClass = 'modal-rework-row';
+            }
+            
             const outlierIcon = isOutlier ? `<i class="fas fa-ban text-red-500 mr-1" title="Outlier: Efficiency ${efficiency.toFixed(1)}% (>${outlierThreshold}%)"></i>` : '';
+            
+            // Highlight Adjusted S/T if overlap was removed
+            const assignedClass = overlapRatio < 1 ? 'text-orange-600 font-semibold' : 'text-gray-900';
+            const overlapTooltip = overlapRatio < 1 
+                ? `Overlap adjusted: ${Math.round(assignedBase)}min → ${assigned}min (ratio: ${(overlapRatio * 100).toFixed(0)}%)` 
+                : '';
             
             return `
                 <tr class="${rowClass}">
-                    <td class="p-2">${outlierIcon}${r.workingDay || '-'}</td>
-                    <td class="p-2"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">${r.workingShift || '-'} ${r.actualShift || ''}</span></td>
+                    <td class="p-2">${reworkIcon}${outlierIcon}${r.workingDay || '-'}</td>
+                    <td class="p-2"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">${r.workingShift || '-'}</span></td>
+                    <td class="p-2 text-gray-600 font-mono text-xs">${formatTime(r.startDatetime)}</td>
+                    <td class="p-2 text-gray-600 font-mono text-xs">${formatTime(r.endDatetime)}</td>
                     <td class="p-2 text-gray-700 font-medium">${r.sectionId || '-'}</td>
                     <td class="p-2 font-medium">${r.foDesc3 || '-'}</td>
                     <td class="p-2 text-right text-gray-600">${Math.round(st)}</td>
                     <td class="p-2 text-right text-gray-600">${rate.toFixed(0)}%</td>
-                    <td class="p-2 text-right text-gray-900">${Math.round(assigned)}</td>
+                    <td class="p-2 text-right ${assignedClass}" title="${overlapTooltip}">${Math.round(assigned)}</td>
                     <td class="p-2 text-right text-gray-900">${Math.round(actual)}</td>
                 </tr>
             `;

@@ -7,8 +7,8 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis.pages.dev
 - **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
-- **최신 버전**: v4.3.4 (2026-03-12)
-- **최근 수정**: Rework 제외 표시 추가 및 Efficiency Rate에 Overlap 조정 적용
+- **최신 버전**: v4.3.5 (2026-03-12)
+- **최근 수정**: Rework 시각적 표시 강화 및 Worker Detail Modal 개선
 
 ---
 
@@ -559,6 +559,23 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 
 ## 📝 개발 히스토리
 
+### v4.3.5 (2026-03-12) ✅ **Rework 시각적 표시 강화 및 Worker Detail Modal 개선**
+- ✅ **Rework Visual Enhancement**
+  - Worker Detail Modal에서 Rework 레코드를 파란색 배경으로 강조 표시
+  - 🔄 Rework 아이콘 추가 (Date 컬럼 왼쪽에 표시)
+  - CSS `!important` 플래그 추가로 배경색 우선순위 보장
+  - Total Records 카드 하단에 Rework 카운트 표시 (회색 텍스트)
+  - Utilization/Efficiency Rate 하단에 Rework 제외 비율 표시
+- ✅ **Worker Detail Modal - Efficiency Mode Enhancement**
+  - Start Time, End Time 컬럼 추가 (Utilization Mode와 동일한 위치)
+  - Adjusted S/T에 overlap 제거 비율 적용 (동시 작업 시간 조정)
+  - Overlap 제거 시 Adjusted S/T를 주황색으로 강조 표시
+  - 툴팁에 overlap 조정 상세 정보 표시 (예: "50min → 25min (ratio: 50%)")
+- ✅ **Glossary Update**
+  - Work Efficiency 및 Time Utilization Glossary에 🔄 Rework 정의 추가
+  - Glossary 용어가 테이블 헤더 이름과 정확히 일치하도록 수정
+  - Overlap 제거가 Assigned 및 Actual 모두에 적용됨을 명시
+
 ### v4.3.4 (2026-03-12) ✅ **Rework 제외 표시 및 Efficiency Overlap 조정**
 - ✅ **Rework Exclusion Display**
   - Report 탭 KPI 카드에 Rework 제외 통계 표시 추가
@@ -750,7 +767,7 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 **제작자**: twokomi  
-**최종 업데이트**: 2026-03-12 (v4.3.4)  
+**최종 업데이트**: 2026-03-12 (v4.3.5)  
 **라이선스**: MIT
 
 ---
