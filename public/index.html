@@ -1629,14 +1629,14 @@
                                     <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>
                                     <div>
                                         <strong class="text-amber-800">Upload Size Limit:</strong>
-                                        <p class="mt-1">Maximum <strong>~80,000 records</strong> can be uploaded to the database due to Cloudflare Workers 30-second CPU timeout limit.</p>
+                                        <p class="mt-1">Maximum <strong>~50,000 records</strong> can be uploaded to the database due to Cloudflare Workers 30-second CPU timeout limit.</p>
                                         <p class="mt-1 text-xs">After uploading Excel, check <strong>"Processed Records"</strong> count in the green success box:</p>
                                         <ul class="ml-4 mt-1 space-y-0.5 text-xs">
-                                            <li>✅ <strong>Up to 80,000 records</strong>: Safe to upload</li>
-                                            <li>⚠️ <strong>80,000 - 100,000 records</strong>: May timeout (risky)</li>
-                                            <li>❌ <strong>Over 100,000 records</strong>: Will fail (use Excel processing only)</li>
+                                            <li>✅ <strong>Up to 50,000 records</strong>: Safe to upload</li>
+                                            <li>⚠️ <strong>50,000 - 70,000 records</strong>: May timeout (risky)</li>
+                                            <li>❌ <strong>Over 70,000 records</strong>: Will fail (use Excel processing only)</li>
                                         </ul>
-                                        <p class="mt-2 text-xs text-gray-600">💡 <strong>Tip:</strong> For files over 80,000 records, skip "Save to Database" and use the browser-based Excel processing instead. All Dashboard and Report features work without database storage.</p>
+                                        <p class="mt-2 text-xs text-gray-600">💡 <strong>Tip:</strong> For files over 50,000 records, skip "Save to Database" and use the browser-based Excel processing instead. All Dashboard and Report features work without database storage.</p>
                                     </div>
                                 </div>
                             </div>

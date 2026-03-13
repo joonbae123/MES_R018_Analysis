@@ -559,6 +559,32 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 
 ## 📝 개발 히스토리
 
+### v4.3.5 (2026-03-12) ✅ **DB Save/Load 기능 재활성화 & 백그라운드 업로드**
+- ✅ **DB Save/Load 기능 복원 (사용자 요청)**
+  - 테스트 환경(localhost, sandbox)에서 "Save to Database" 버튼 재활성화
+  - "Saved Uploads" 리스트 기능 복원 및 로드/삭제 버튼 작동
+  - 환경 감지: `hostname.includes('sandbox') || hostname.includes('localhost') || port === 3000`
+  - 프로덕션(.pages.dev)에서는 계속 비활성화 유지
+- ✅ **백그라운드 업로드 구현**
+  - 상단 미니바로 업로드 상태 표시 (전체 화면 로딩 오버레이 제거)
+  - "Save Database" 버튼 클릭 즉시 미니바 표시 (fetch 응답 전)
+  - 파란색 → 초록색/빨간색 상태 표시 (진행중/성공/실패)
+  - 업로드 중 다른 탭 이동 가능 (non-blocking UI)
+  - 3초 후 자동 숨김, X 버튼으로 수동 닫기 지원
+- ✅ **배치 크기 최적화**
+  - D1 삽입 배치 크기: 50 → 200 레코드로 증가
+  - 42,000 레코드 기준: ~50초 → ~13초로 단축 (30초 타임아웃 내 처리)
+  - 최대 안전 업로드: ~50,000 레코드 (버퍼 포함)
+- ✅ **User Guide 업데이트**
+  - "3. Background Upload & File Size Limits" 섹션 추가
+  - 업로드 제한 안내: 최대 50,000 레코드 (Cloudflare Workers 30초 타임아웃)
+  - "Processed Records" 숫자 확인 방법 안내
+  - 50,000+ 레코드 파일은 브라우저 처리만 사용 권장
+- ✅ **로컬 D1 데이터베이스 마이그레이션**
+  - `--local` 플래그로 로컬 SQLite 자동 생성 (.wrangler/state/v3/d1/)
+  - 3개 마이그레이션 적용: initial_schema, add_efficiency_fields, add_upload_progress
+  - 4개 테이블: excel_uploads, raw_data, process_mapping, shift_calendar
+
 ### v4.3.5 (2026-03-12) ✅ **Rework 시각적 표시 강화 및 Worker Detail Modal 개선**
 - ✅ **Rework Visual Enhancement**
   - Worker Detail Modal에서 Rework 레코드를 파란색 배경으로 강조 표시
