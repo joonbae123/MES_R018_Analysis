@@ -75,8 +75,9 @@ app.post('/api/upload', async (c) => {
       try {
         // Raw 데이터 저장 (processedData 사용)
         if (processedData && processedData.length > 0) {
-          // D1 Batch API를 사용하여 효율적으로 저장 (최대 50개씩)
-          const batchSize = 50
+          // D1 Batch API를 사용하여 효율적으로 저장 (최대 200개씩)
+          // Batch 크기 증가: 50 → 200 (성능 개선, 30초 제한 대응)
+          const batchSize = 200
           
           console.log(`💾 Background insert started: ${processedData.length} records, ${Math.ceil(processedData.length / batchSize)} batches`)
           
