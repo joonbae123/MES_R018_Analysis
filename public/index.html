@@ -1567,32 +1567,54 @@
                                 <li>Drag & drop file or click 'Select File' button</li>
                                 <li>System automatically detects data and processes it</li>
                                 <li>Review the processed data and reports</li>
-                                <li class="text-gray-400 line-through"><strong>Click "Save to Database"</strong> to store data in Cloudflare D1 (temporarily disabled)</li>
+                                <li><strong>Click "Save to Database"</strong> to store data in Cloudflare D1</li>
+                                <li><strong>Background Upload</strong>: Upload continues in background with progress bar at top</li>
+                                <li>Navigate to other tabs while upload is in progress</li>
                             </ul>
-                            <div class="mt-2 p-3 bg-orange-50 border-l-4 border-orange-400 text-sm text-gray-700">
-                                <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
-                                <strong>Note:</strong> Server storage features are temporarily disabled. All data processing happens in your browser.
-                            </div>
-                        </section>
-
-                        <section class="opacity-50">
-                            <h3 class="text-lg font-semibold text-gray-400 mb-2">
-                                <s>2. Load Saved Data</s> (Temporarily Disabled)
-                            </h3>
-                            <ul class="list-disc list-inside text-gray-400 space-y-1 ml-4">
-                                <li class="line-through">View <strong>Saved Uploads</strong> list in Upload tab</li>
-                                <li class="line-through"><strong>Click any card</strong> to load saved data</li>
-                                <li class="line-through">Automatically switches to Report tab after loading</li>
-                                <li class="line-through">Delete uploads using the <strong>Delete button</strong> on each card</li>
-                            </ul>
-                            <div class="mt-2 p-3 bg-gray-50 border-l-4 border-gray-300 text-sm text-gray-500">
-                                <i class="fas fa-ban mr-2"></i>
-                                This feature is temporarily disabled due to Cloudflare Workers limitations. Use Excel upload instead.
+                            <div class="mt-2 p-3 bg-blue-50 border-l-4 border-blue-400 text-sm text-gray-700">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                <strong>New!</strong> Background upload allows you to continue working while data is being saved. Check progress at the top of the page.
                             </div>
                         </section>
 
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">3. View KPI Cards & Switch Metric Mode</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                                2. Load Saved Data
+                            </h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                <li>View <strong>Saved Uploads</strong> list in Upload tab</li>
+                                <li><strong>Click any card</strong> to load saved data from database</li>
+                                <li>Automatically switches to Report tab after loading</li>
+                                <li>Delete uploads using the <strong>Delete button</strong> on each card</li>
+                                <li><strong>Refresh button</strong> to manually update the uploads list</li>
+                            </ul>
+                            <div class="mt-2 p-3 bg-green-50 border-l-4 border-green-400 text-sm text-gray-700">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <strong>Available in Test Environment:</strong> This feature is enabled on localhost and sandbox URLs for testing.
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">3. Background Upload Progress</h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                <li><strong>Progress Bar</strong>: Appears at the top when upload starts</li>
+                                <li><strong>Real-time Updates</strong>: Shows current progress (e.g., "12,345 / 32,000 records")</li>
+                                <li><strong>Percentage Display</strong>: Visual progress bar with percentage</li>
+                                <li><strong>Non-blocking</strong>: Continue working on other tabs while uploading</li>
+                                <li><strong>Color Indicators</strong>:
+                                    <ul class="ml-6 mt-1 space-y-1">
+                                        <li><span class="inline-block w-3 h-3 bg-blue-500 rounded mr-1"></span> Blue: Upload in progress</li>
+                                        <li><span class="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span> Green: Upload completed</li>
+                                        <li><span class="inline-block w-3 h-3 bg-red-500 rounded mr-1"></span> Red: Upload failed</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Auto-hide</strong>: Progress bar automatically hides 3 seconds after completion</li>
+                                <li><strong>Close Button</strong>: Manually hide progress bar with X button</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">4. View KPI Cards & Switch Metric Mode</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>4 KPI Cards</strong>: View key metrics at a glance</li>
                                 <li><strong>Utilization Mode</strong>: Total Workers, Total Shift Time, Total Work Time, Avg Utilization Rate</li>
@@ -1618,7 +1640,7 @@
                         </section>
 
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">4. Apply Filters</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">5. Apply Filters</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>Shift Filter</strong>: A Shift / B Shift / C Shift</li>
                                 <li><strong>Date Filter</strong>: Select by individual dates, weeks (WK#), or months</li>
@@ -1634,7 +1656,7 @@
                         <section>
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">
                                 <i class="fas fa-filter text-purple-600 mr-2"></i>
-                                5. Outlier Threshold (Efficiency Mode Only)
+                                6. Outlier Threshold (Efficiency Mode Only)
                             </h3>
                             <div class="bg-purple-50 border-l-4 border-purple-500 p-4 mb-3">
                                 <p class="text-gray-800 font-semibold mb-2">
@@ -1719,7 +1741,7 @@
                         <section>
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">
                                 <i class="fas fa-file-excel text-green-600 mr-2"></i>
-                                8. Export to Excel
+                                9. Export to Excel
                             </h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4">
                                 <li>
@@ -1759,7 +1781,7 @@
                         <section>
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">
                                 <i class="fas fa-tachometer-alt text-blue-600 mr-2"></i>
-                                9. Dashboard Tab (NEW in v4.0+)
+                                10. Dashboard Tab (NEW in v4.0+)
                             </h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4">
                                 <li>
@@ -2063,28 +2085,31 @@
                         
                         <div class="space-y-4">
                             <div>
-                                <h4 class="font-semibold text-orange-700 mb-2">
-                                    <i class="fas fa-exclamation-triangle mr-2"></i>Server Storage Features Temporarily Disabled
+                                <h4 class="font-semibold text-green-700 mb-2">
+                                    <i class="fas fa-check-circle mr-2"></i>Server Storage Features Re-enabled (Test Environment)
                                 </h4>
                                 <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                                    <li><strong>Disabled</strong>: "Save to Database" button (grayed out with tooltip)</li>
-                                    <li><strong>Disabled</strong>: "Saved Uploads" section (grayed out, click-blocked)</li>
-                                    <li><strong>Reason</strong>: Cloudflare Workers execution time limits prevent reliable storage of large datasets (32k+ records)</li>
-                                    <li><strong>Issue</strong>: Background tasks timeout after ~10k records, resulting in incomplete data saves</li>
-                                    <li><strong>Workaround</strong>: Use Excel upload feature (works perfectly in browser without server storage)</li>
-                                    <li><strong>Status</strong>: Temporary measure until alternative solution is implemented</li>
+                                    <li><strong>Enabled</strong>: "Save to Database" button with background upload</li>
+                                    <li><strong>Enabled</strong>: "Saved Uploads" section with load/delete functionality</li>
+                                    <li><strong>New</strong>: Non-blocking progress bar at top of page</li>
+                                    <li><strong>New</strong>: Real-time progress updates (records count & percentage)</li>
+                                    <li><strong>Feature</strong>: Continue working on other tabs while upload progresses</li>
+                                    <li><strong>Availability</strong>: Test environment only (localhost, sandbox URLs)</li>
+                                    <li><strong>Production</strong>: Still disabled on public deployment (mes-r018-analysis.pages.dev)</li>
                                 </ul>
                             </div>
                             
                             <div>
-                                <h4 class="font-semibold text-orange-700 mb-2">
-                                    <i class="fas fa-info-circle mr-2"></i>Recommended Workflow
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-rocket mr-2"></i>Background Upload Workflow
                                 </h4>
                                 <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                                    <li><strong>Step 1</strong>: Upload Excel file from MES R018</li>
-                                    <li><strong>Step 2</strong>: Review Dashboard and Report tabs</li>
-                                    <li><strong>Step 3</strong>: Apply filters as needed</li>
-                                    <li><strong>Note</strong>: All data processing happens in your browser (fast and reliable)</li>
+                                    <li><strong>Step 1</strong>: Upload Excel file and click "Save to Database"</li>
+                                    <li><strong>Step 2</strong>: Progress bar appears at top (non-blocking)</li>
+                                    <li><strong>Step 3</strong>: Navigate to Dashboard, Report, or other tabs freely</li>
+                                    <li><strong>Step 4</strong>: Upload completes in background (3-5 minutes for 32k records)</li>
+                                    <li><strong>Step 5</strong>: Progress bar turns green and auto-hides after completion</li>
+                                    <li><strong>Note</strong>: Multiple tabs can be used simultaneously during upload</li>
                                 </ul>
                             </div>
                         </div>
