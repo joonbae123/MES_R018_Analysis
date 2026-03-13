@@ -3727,26 +3727,76 @@ function updateMappingSortIcons() {
 
 // Database button handlers
 function initDatabaseButtons() {
+    // Check if running on localhost or test URL
+    const isTestEnvironment = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1' || 
+                             window.location.hostname.includes('sandbox') ||
+                             window.location.port === '3000';
+    
+    console.log('🔍 Environment check:', {
+        hostname: window.location.hostname,
+        port: window.location.port,
+        isTestEnvironment: isTestEnvironment
+    });
+    
     // Load last upload button
     document.getElementById('loadLastUploadBtn')?.addEventListener('click', loadLastUpload);
     
-    // Save to database button
-    // Save to Database button - DISABLED (Cloudflare Workers limitations)
-    document.getElementById('saveToDatabaseBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        alert('Server storage is temporarily disabled due to Cloudflare Workers time limitations.\n\nPlease use the Excel upload feature instead.\n\nYour data will be processed in the browser without server storage.');
-        return false;
-    });
-    
-    // Refresh uploads list button - DISABLED
-    document.getElementById('refreshUploadsBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        alert('Server storage is temporarily disabled.\n\nPlease use Excel upload feature instead.');
-        return false;
-    });
-    
-    // Load uploads list on page load - DISABLED
-    // loadUploadsList();
+    // Save to database button - Enable in test environment
+    if (isTestEnvironment) {
+        console.log('✅ Test environment detected - DB features ENABLED');
+        document.getElementById('saveToDatabaseBtn')?.addEventListener('click', saveToDatabase);
+        document.getElementById('refreshUploadsBtn')?.addEventListener('click', loadUploadsList);
+        
+        // Enable buttons visually
+        const saveBtn = document.getElementById('saveToDatabaseBtn');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            saveBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'cursor-pointer');
+            saveBtn.innerHTML = '<i class="fas fa-database mr-2"></i>Save to Database';
+            saveBtn.title = 'Save data to Cloudflare D1 database';
+        }
+        
+        const refreshBtn = document.getElementById('refreshUploadsBtn');
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            refreshBtn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700', 'cursor-pointer');
+        }
+        
+        // Enable Saved Uploads section
+        const uploadsSection = document.querySelector('.card.mb-6.opacity-50');
+        if (uploadsSection) {
+            uploadsSection.classList.remove('opacity-50', 'pointer-events-none');
+            uploadsSection.title = 'Click to load saved data';
+            
+            const heading = uploadsSection.querySelector('h2');
+            if (heading) {
+                heading.classList.remove('text-gray-400');
+                heading.classList.add('text-gray-800');
+                heading.innerHTML = '<i class="fas fa-database text-blue-600 mr-2"></i>Saved Uploads';
+            }
+        }
+        
+        // Load uploads list on page load
+        loadUploadsList();
+    } else {
+        console.log('⚠️ Production environment - DB features DISABLED');
+        // Save to Database button - DISABLED (Cloudflare Workers limitations)
+        document.getElementById('saveToDatabaseBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Server storage is temporarily disabled due to Cloudflare Workers time limitations.\n\nPlease use the Excel upload feature instead.\n\nYour data will be processed in the browser without server storage.');
+            return false;
+        });
+        
+        // Refresh uploads list button - DISABLED
+        document.getElementById('refreshUploadsBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Server storage is temporarily disabled.\n\nPlease use Excel upload feature instead.');
+            return false;
+        });
+    }
 }
 
 
