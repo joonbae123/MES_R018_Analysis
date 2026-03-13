@@ -799,7 +799,7 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 
 ---
 
-**제작자**: twokomi  
+**제작자**: JB Park (jbpark@cswind.com)  
 **최종 업데이트**: 2026-03-12 (v4.3.5)  
 **라이선스**: MIT
 
@@ -808,4 +808,4 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ## 📞 문의
 
 - GitHub Issues: https://github.com/joonbae123/MES_R018_Analysis/issues
-- Deployment: https://mes-r018-analysis.pages.dev
+- Deployment: https://mes-r018-analysis-5bz.pages.dev
