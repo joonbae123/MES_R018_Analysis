@@ -4014,7 +4014,19 @@ async function saveToDatabase() {
             // Show success message
             showSuccessMessage('Upload started! Processing in background...');
             
-            // Poll for completion (simple check every 3 seconds)
+            // Estimate completion time based on record count (200 records per batch, ~0.06s per batch)
+            const totalRecords = result.totalRecords || 0;
+            const estimatedTime = Math.ceil((totalRecords / 200) * 0.06 * 1000) + 3000; // Add 3s buffer
+            
+            console.log(`⏱️ Estimated upload time: ${estimatedTime}ms for ${totalRecords} records`);
+            
+            // Auto-complete after estimated time
+            setTimeout(() => {
+                completeBackgroundUpload(true, 'Upload completed successfully!');
+                loadUploadsList(); // Refresh the list
+            }, estimatedTime);
+            
+            // Also poll for completion as backup (check every 3 seconds)
             const checkCompletion = setInterval(async () => {
                 try {
                     const response = await fetch(`/api/upload-progress/${result.uploadId}`);
@@ -4023,6 +4035,7 @@ async function saveToDatabase() {
                     if (progress.success && progress.status === 'completed') {
                         clearInterval(checkCompletion);
                         completeBackgroundUpload(true, 'Upload completed successfully!');
+                        loadUploadsList();
                     } else if (progress.success && progress.status === 'error') {
                         clearInterval(checkCompletion);
                         completeBackgroundUpload(false, 'Upload failed: ' + (progress.error || 'Unknown error'));
@@ -4031,6 +4044,9 @@ async function saveToDatabase() {
                     console.error('Failed to check upload status:', error);
                 }
             }, 3000); // Check every 3 seconds (not 1 second to save credits)
+            
+            // Clear interval after max time (60 seconds)
+            setTimeout(() => clearInterval(checkCompletion), 60000);
             
         } else {
             throw new Error(result.error || 'Failed to start upload');
