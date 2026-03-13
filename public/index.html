@@ -653,6 +653,19 @@
     </style>
 </head>
 <body class="bg-gray-50">
+    <!-- Background Upload Status Bar (Top Mini Bar) -->
+    <div id="backgroundUploadProgress" class="hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i id="uploadStatusIcon" class="fas fa-cloud-upload-alt text-xl animate-bounce"></i>
+                <span id="uploadStatusText" class="font-medium">Uploading to database...</span>
+            </div>
+            <button onclick="hideBackgroundUpload()" class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <div class="container mx-auto px-4 py-6 max-w-7xl">
         <!-- Logo -->
         <div class="mb-4">
