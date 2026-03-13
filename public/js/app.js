@@ -3969,15 +3969,12 @@ async function saveToDatabase() {
     }
     
     try {
-        // Show loading overlay
-        showLoadingOverlay('Starting upload...');
-        
-        // Disable button and show loading
+        // Disable button temporarily
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting...';
         saveStatus.classList.add('hidden');
         
-        console.log('� Saving data to database...');
+        console.log('📤 Starting background upload to database...');
         
         const payload = {
             filename: AppState.currentFileName || 'Unknown',
@@ -4004,35 +4001,29 @@ async function saveToDatabase() {
         const result = await response.json();
         
         if (result.success) {
-            console.log(' Upload started in background!', result);
+            console.log('✅ Upload started in background!', result);
             
-            // Hide loading overlay
-            hideLoadingOverlay();
+            // Show background progress bar
+            showBackgroundUpload(result.uploadId, result.totalRecords || AppState.processedData.length);
             
-            // Show simple success message
-            showSuccessMessage('Data uploaded successfully! Processing in background...');
-            
-            // Refresh uploads list after 3 seconds
-            setTimeout(() => {
-                loadUploadsList();
-            }, 3000);
-            
-            // Re-enable button
+            // Re-enable button immediately
             saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save to Database';
+            saveBtn.innerHTML = '<i class="fas fa-database mr-2"></i>Save to Database';
+            
+            // Show success message
+            showSuccessMessage('Upload started! Check progress at the top.');
             
         } else {
             throw new Error(result.error || 'Failed to start upload');
         }
         
     } catch (error) {
-        console.error(' Failed to save to database:', error);
-        hideLoadingOverlay();
+        console.error('❌ Failed to save to database:', error);
         alert('Failed to save to database:\n' + error.message);
         
         // Reset button
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save to Database';
+        saveBtn.innerHTML = '<i class="fas fa-database mr-2"></i>Save to Database';
     }
 }
 
@@ -5413,6 +5404,125 @@ function showSuccessMessage(message) {
             successDiv.remove();
         }, 500);
     }, 3000);
+}
+
+// Background upload progress functions
+function showBackgroundUpload(uploadId, totalRecords) {
+    const progressBar = document.getElementById('backgroundUploadProgress');
+    const progressText = document.getElementById('uploadProgressText');
+    const progressDetail = document.getElementById('uploadProgressDetail');
+    const progressBarFill = document.getElementById('uploadProgressBar');
+    const progressPercent = document.getElementById('uploadProgressPercent');
+    
+    if (progressBar) {
+        progressBar.classList.remove('hidden');
+        progressText.textContent = 'Uploading to database...';
+        progressDetail.textContent = `0 / ${totalRecords.toLocaleString()} records`;
+        progressBarFill.style.width = '0%';
+        progressPercent.textContent = '0%';
+        
+        // Store upload ID for polling
+        progressBar.dataset.uploadId = uploadId;
+        
+        // Start polling for progress
+        pollUploadProgress(uploadId, totalRecords);
+    }
+}
+
+function hideBackgroundUpload() {
+    const progressBar = document.getElementById('backgroundUploadProgress');
+    if (progressBar) {
+        progressBar.classList.add('hidden');
+        // Clear polling interval if exists
+        if (window.uploadProgressInterval) {
+            clearInterval(window.uploadProgressInterval);
+            window.uploadProgressInterval = null;
+        }
+    }
+}
+
+function updateBackgroundUploadProgress(current, total) {
+    const progressDetail = document.getElementById('uploadProgressDetail');
+    const progressBarFill = document.getElementById('uploadProgressBar');
+    const progressPercent = document.getElementById('uploadProgressPercent');
+    
+    const percentage = Math.round((current / total) * 100);
+    
+    if (progressDetail) {
+        progressDetail.textContent = `${current.toLocaleString()} / ${total.toLocaleString()} records`;
+    }
+    if (progressBarFill) {
+        progressBarFill.style.width = `${percentage}%`;
+    }
+    if (progressPercent) {
+        progressPercent.textContent = `${percentage}%`;
+    }
+}
+
+function completeBackgroundUpload(success = true, message = 'Upload completed!') {
+    const progressText = document.getElementById('uploadProgressText');
+    const progressBarFill = document.getElementById('uploadProgressBar');
+    const progressPercent = document.getElementById('uploadProgressPercent');
+    
+    if (success) {
+        progressText.textContent = message;
+        progressBarFill.classList.remove('from-blue-500', 'to-indigo-600');
+        progressBarFill.classList.add('from-green-500', 'to-emerald-600');
+        progressBarFill.style.width = '100%';
+        progressPercent.textContent = '100%';
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            hideBackgroundUpload();
+            // Refresh uploads list
+            loadUploadsList();
+        }, 3000);
+    } else {
+        progressText.textContent = message || 'Upload failed!';
+        progressBarFill.classList.remove('from-blue-500', 'to-indigo-600');
+        progressBarFill.classList.add('from-red-500', 'to-rose-600');
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            hideBackgroundUpload();
+        }, 5000);
+    }
+    
+    // Clear polling interval
+    if (window.uploadProgressInterval) {
+        clearInterval(window.uploadProgressInterval);
+        window.uploadProgressInterval = null;
+    }
+}
+
+// Poll upload progress from server
+async function pollUploadProgress(uploadId, totalRecords) {
+    // Clear existing interval if any
+    if (window.uploadProgressInterval) {
+        clearInterval(window.uploadProgressInterval);
+    }
+    
+    window.uploadProgressInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/upload-progress/${uploadId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const { status, current, total, percentage } = result;
+                
+                if (status === 'completed') {
+                    completeBackgroundUpload(true, 'Upload completed successfully!');
+                } else if (status === 'error') {
+                    completeBackgroundUpload(false, `Upload failed: ${result.error || 'Unknown error'}`);
+                } else if (status === 'processing') {
+                    updateBackgroundUploadProgress(current, total);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to poll upload progress:', error);
+            // Continue polling even on error (might be temporary network issue)
+        }
+    }, 1000); // Poll every 1 second
 }
 
 // Toggle between Time Utilization and Work Efficiency metrics
