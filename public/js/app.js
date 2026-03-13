@@ -3969,6 +3969,9 @@ async function saveToDatabase() {
     }
     
     try {
+        // Show mini bar IMMEDIATELY when button is clicked
+        showBackgroundUpload();
+        
         // Disable button temporarily
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting...';
@@ -4002,9 +4005,6 @@ async function saveToDatabase() {
         
         if (result.success) {
             console.log('✅ Upload started in background!', result);
-            
-            // Show simple background status bar
-            showBackgroundUpload();
             
             // Re-enable button immediately
             saveBtn.disabled = false;
