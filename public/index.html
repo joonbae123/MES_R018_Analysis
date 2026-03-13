@@ -1608,22 +1608,38 @@
                         </section>
 
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">3. Background Upload Progress</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">3. Background Upload & File Size Limits</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                                <li><strong>Progress Bar</strong>: Appears at the top when upload starts</li>
-                                <li><strong>Real-time Updates</strong>: Shows current progress (e.g., "12,345 / 32,000 records")</li>
-                                <li><strong>Percentage Display</strong>: Visual progress bar with percentage</li>
+                                <li><strong>Status Bar</strong>: Appears at the top immediately when "Save to Database" is clicked</li>
+                                <li><strong>Upload Status</strong>: Shows "🚀 Uploading to database..." during processing</li>
                                 <li><strong>Non-blocking</strong>: Continue working on other tabs while uploading</li>
                                 <li><strong>Color Indicators</strong>:
                                     <ul class="ml-6 mt-1 space-y-1">
                                         <li><span class="inline-block w-3 h-3 bg-blue-500 rounded mr-1"></span> Blue: Upload in progress</li>
-                                        <li><span class="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span> Green: Upload completed</li>
+                                        <li><span class="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span> Green: Upload completed successfully</li>
                                         <li><span class="inline-block w-3 h-3 bg-red-500 rounded mr-1"></span> Red: Upload failed</li>
                                     </ul>
                                 </li>
-                                <li><strong>Auto-hide</strong>: Progress bar automatically hides 3 seconds after completion</li>
-                                <li><strong>Close Button</strong>: Manually hide progress bar with X button</li>
+                                <li><strong>Auto-hide</strong>: Status bar automatically hides 3 seconds after completion</li>
+                                <li><strong>Close Button</strong>: Manually hide status bar with X button</li>
                             </ul>
+                            
+                            <div class="mt-3 p-3 bg-amber-50 border-l-4 border-amber-400 text-sm text-gray-700">
+                                <div class="flex items-start gap-2">
+                                    <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>
+                                    <div>
+                                        <strong class="text-amber-800">Upload Size Limit:</strong>
+                                        <p class="mt-1">Maximum <strong>~80,000 records</strong> can be uploaded to the database due to Cloudflare Workers 30-second CPU timeout limit.</p>
+                                        <p class="mt-1 text-xs">After uploading Excel, check <strong>"Processed Records"</strong> count in the green success box:</p>
+                                        <ul class="ml-4 mt-1 space-y-0.5 text-xs">
+                                            <li>✅ <strong>Up to 80,000 records</strong>: Safe to upload</li>
+                                            <li>⚠️ <strong>80,000 - 100,000 records</strong>: May timeout (risky)</li>
+                                            <li>❌ <strong>Over 100,000 records</strong>: Will fail (use Excel processing only)</li>
+                                        </ul>
+                                        <p class="mt-2 text-xs text-gray-600">💡 <strong>Tip:</strong> For files over 80,000 records, skip "Save to Database" and use the browser-based Excel processing instead. All Dashboard and Report features work without database storage.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </section>
 
                         <section>
