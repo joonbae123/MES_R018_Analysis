@@ -3727,10 +3727,11 @@ function updateMappingSortIcons() {
 
 // Database button handlers
 function initDatabaseButtons() {
-    // Check if running on localhost or test URL
+    // Enable DB features in all environments (production included)
     const isTestEnvironment = window.location.hostname === 'localhost' || 
                              window.location.hostname === '127.0.0.1' || 
                              window.location.hostname.includes('sandbox') ||
+                             window.location.hostname.includes('pages.dev') ||
                              window.location.port === '3000';
     
     console.log('🔍 Environment check:', {
