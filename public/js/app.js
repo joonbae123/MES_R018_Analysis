@@ -4264,7 +4264,10 @@ async function loadUploadById(uploadId) {
             workingDay: d.working_day,
             workingShift: d.working_shift,
             actualShift: d.actual_shift,
-            workRate: d.work_rate
+            workRate: d.work_rate,
+            sectionId: d.section_id || '',  // 🔥 FIX: Map section_id from DB
+            rework: d.rework === 1 || d.rework === true,  // 🔥 FIX: Map rework from DB (convert 1/0 to boolean)
+            'WO#': d.wo_number || ''  // 🔥 FIX: Map wo_number from DB
         }));
         
         AppState.processMapping = (dataResult.processMapping || []).map(m => ({
@@ -4489,7 +4492,12 @@ async function loadLastUpload() {
             workingDay: d.working_day,
             workingShift: d.working_shift,
             actualShift: d.actual_shift,
-            workRate: d.work_rate
+            workRate: d.work_rate,
+            'Worker S/T': d.worker_st || 0,  //  Restore Worker S/T
+            'Worker Rate(%)': d.worker_rate_pct || 0,  //  Restore Worker Rate(%)
+            sectionId: d.section_id || '',  // 🔥 FIX: Map section_id from DB
+            rework: d.rework === 1 || d.rework === true,  // 🔥 FIX: Map rework from DB
+            'WO#': d.wo_number || ''  // 🔥 FIX: Map wo_number from DB
         }));
         
         AppState.processMapping = (dataResult.processMapping || []).map(m => ({
