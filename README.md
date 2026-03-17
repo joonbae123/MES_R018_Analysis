@@ -7,8 +7,8 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis-5bz.pages.dev
 - **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
-- **최신 버전**: v4.3.5 (2026-03-12)
-- **최근 수정**: DB Save/Load 기능 복원 및 백그라운드 업로드 구현
+- **최신 버전**: v4.3.6 (2026-03-17)
+- **최근 수정**: Rework Count 및 Section ID 표시 버그 수정, 데이터베이스 마이그레이션 적용
 
 ---
 
@@ -565,6 +565,20 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 ## 📝 개발 히스토리
+
+### v4.3.6 (2026-03-17) 🐛 **Rework Count 및 Section ID 표시 버그 수정**
+- ✅ **데이터베이스 마이그레이션 적용**
+  - 프로덕션 D1 데이터베이스에 0003_add_section_and_rework.sql 마이그레이션 적용
+  - raw_data 테이블에 section_id, rework, wo_number 컬럼 추가
+  - 인덱스 생성으로 조회 성능 최적화
+- ✅ **Worker Detail Modal 데이터 표시 수정**
+  - Section ID가 모두 '-'로 표시되던 문제 해결
+  - Rework 레코드 파란색 배경 표시 정상 작동
+  - 데이터베이스 로드 시 sectionId, rework, woNumber 필드 매핑 검증
+- ✅ **프로덕션 배포**
+  - Cloudflare Pages에 직접 배포
+  - 데이터베이스 스키마 업데이트 완료
+  - 기존 업로드 데이터와 새 업로드 데이터 모두 정상 표시
 
 ### v4.3.5 (2026-03-12) ✅ **DB Save/Load 기능 재활성화 & 백그라운드 업로드**
 - ✅ **DB Save/Load 기능 복원 (사용자 요청)**
