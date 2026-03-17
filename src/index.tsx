@@ -89,10 +89,13 @@ app.post('/api/upload', async (c) => {
               const foDescValue = record.foDesc2 || record.foDesc || ''
               const workerST = record['Worker S/T'] || 0
               const workerRatePct = record['Worker Rate(%)'] || 0
+              const sectionId = record.sectionId || ''
+              const rework = record.rework ? 1 : 0
+              const woNumber = record['WO#'] || ''
               
               return env.DB.prepare(`
-                INSERT INTO raw_data (upload_id, worker_name, fo_desc, fd_desc, start_datetime, end_datetime, worker_act, result_cnt, working_day, working_shift, actual_shift, work_rate, worker_st, worker_rate_pct)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO raw_data (upload_id, worker_name, fo_desc, fd_desc, start_datetime, end_datetime, worker_act, result_cnt, working_day, working_shift, actual_shift, work_rate, worker_st, worker_rate_pct, section_id, rework, wo_number)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               `).bind(
                 uploadId,
                 record.workerName || '',
@@ -107,7 +110,10 @@ app.post('/api/upload', async (c) => {
                 record.actualShift || '',
                 record.workRate || 0,
                 workerST,
-                workerRatePct
+                workerRatePct,
+                sectionId,
+                rework,
+                woNumber
               )
             })
             
