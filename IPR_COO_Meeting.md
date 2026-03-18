@@ -35,25 +35,46 @@ paginate: true
 - 작업자별 생산성을 측정하고 분석하는 웹 애플리케이션
 - MES R018 데이터 기반 성과 분석
 
-**주요 기능**
-- ⏱️ **Time Utilization Rate**: 시간 활용도 (작업시간 ÷ 시프트시간)
-- ⚡ **Work Efficiency Rate**: 작업 효율 (표준시간 ÷ 실제시간)
-- 📊 **Dashboard**: AI Insights, KPI Trend, Process Ranking
-- 📄 **Worker Detail**: 작업자별 상세 성과 분석
-
----
-
-## 🌐 현재 베타 버전
+**현재 방식**: Excel 파일 업로드 → 자동 분석 → 리포트 생성
 
 **프로덕션 URL**: https://mes-r018-analysis-5bz.pages.dev
 
-**주요 화면**
-1. **Dashboard**: 전체 성과 요약, 경고, 트렌드
-2. **Report**: 필터링, Pivot 테이블, 작업자 검색
-3. **Worker Detail Modal**: 개인별 상세 이력 및 통계
-4. **Process Mapping**: 공정 매핑 관리
+---
 
-**현재 방식**: Excel 파일 업로드 → 분석
+## 📊 두 가지 핵심 지표
+
+### ⏱️ Time Utilization Rate (시간 활용도)
+- **정의**: 실제 작업 시간이 총 시프트 시간 중 몇 %인지 측정
+- **계산식**: (총 작업 시간 ÷ 총 시프트 시간) × 100
+- **목적**: 작업자가 할당된 시간을 얼마나 활용했는지 평가
+
+### ⚡ Work Efficiency Rate (작업 효율)
+- **정의**: 표준 시간(S/T) 대비 실제 소요 시간 비율
+- **계산식**: (총 표준 시간 ÷ 총 실제 시간) × 100
+- **목적**: 작업 속도 및 숙련도 평가
+
+---
+
+## 📈 주요 기능: Dashboard
+
+**전체 성과 한눈에 보기**
+- 🚨 **AI Insights & Warnings**: 6가지 자동 경고 (저효율, 저가동, 공정 편중 등)
+- 📊 **KPI Trend Overview**: Daily/Weekly 성과 추이 (차트 클릭 → 상세 모달)
+- 🏆 **Process Performance Ranking**: Top 5 / Bottom 5 공정 비교
+- 📉 **Shift Performance Comparison**: Day/Night, BT/WT/IM 그룹별 비교
+- 📊 **Distribution & Outliers**: 가동률/효율 분포 히스토그램
+
+---
+
+## 📋 주요 기능: Report
+
+**상세 데이터 분석 및 필터링**
+- 🔍 **고급 필터링**: 날짜, 시프트, 공정, 작업자 다중 선택
+- 🔄 **두 지표 전환**: Utilization ⇄ Efficiency 실시간 전환
+- 📊 **4개 KPI 카드**: 작업자 수, 시프트 시간, 작업 시간, 평균 Rate
+- 🍩 **Performance Band**: 5단계 등급별 분포 (Excellent/Normal/Poor/Critical)
+- 📈 **Process Performance**: 공정별 성과 비교 (상위 30개)
+- 👤 **Worker Detail Modal**: 작업자 클릭 → 상세 이력 및 통계
 
 ---
 
@@ -117,39 +138,11 @@ paginate: true
 
 ---
 
-## 🔄 향후 계획 (풀 오픈 이후)
+## Q&A
 
-**Phase 2 (5~6월)**:
-- MES API 직접 연동 (Excel 업로드 방식 탈피)
-- 실시간 데이터 자동 업데이트
-- SSO (Azure AD) 로그인
-
-**Phase 3 (7~9월)**:
-- Work Order Agent AI 연동
-- AI 기반 작업 할당 추천 API 제공
-- 작업자 Skill Matrix
-
-**Phase 4 (10~12월)**:
-- 다국가 법인 지원 (한국, 베트남 등)
-
----
-
-## 📞 Contact & Next Steps
+**질문 환영합니다!** 🙋‍♂️
 
 **개발 담당**: JB Park (jbpark@cswind.com)
 **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
 **Production**: https://mes-r018-analysis-5bz.pages.dev
-
-**Next Steps**:
-1. 오늘 접수된 요구사항 정리 (개발팀)
-2. 요구사항별 우선순위 협의 (COO 조직)
-3. 3/19 개발 착수
-4. 주간 진행 상황 공유 (이메일)
-5. 4/1 1차 오픈 전 UAT (User Acceptance Test)
-
----
-
-## Q&A
-
-**질문 환영합니다!** 🙋‍♂️
 

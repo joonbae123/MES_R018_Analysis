@@ -49,27 +49,48 @@
 <li>작업자별 생산성을 측정하고 분석하는 웹 애플리케이션</li>
 <li>MES R018 데이터 기반 성과 분석</li>
 </ul>
-<p><strong>주요 기능</strong></p>
-<ul>
-<li><img class="emoji" draggable="false" alt="⏱️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/23f1.svg" data-marp-twemoji=""/> <strong>Time Utilization Rate</strong>: 시간 활용도 (작업시간 ÷ 시프트시간)</li>
-<li><img class="emoji" draggable="false" alt="⚡" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/26a1.svg" data-marp-twemoji=""/> <strong>Work Efficiency Rate</strong>: 작업 효율 (표준시간 ÷ 실제시간)</li>
-<li><img class="emoji" draggable="false" alt="📊" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4ca.svg" data-marp-twemoji=""/> <strong>Dashboard</strong>: AI Insights, KPI Trend, Process Ranking</li>
-<li><img class="emoji" draggable="false" alt="📄" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4c4.svg" data-marp-twemoji=""/> <strong>Worker Detail</strong>: 작업자별 상세 성과 분석</li>
-</ul>
+<p><strong>현재 방식</strong>: Excel 파일 업로드 → 자동 분석 → 리포트 생성</p>
+<p><strong>프로덕션 URL</strong>: <a href="https://mes-r018-analysis-5bz.pages.dev">https://mes-r018-analysis-5bz.pages.dev</a></p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="4" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="4" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
-<h2 id="%F0%9F%8C%90-%ED%98%84%EC%9E%AC-%EB%B2%A0%ED%83%80-%EB%B2%84%EC%A0%84"><img class="emoji" draggable="false" alt="🌐" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f310.svg" data-marp-twemoji=""/> 현재 베타 버전</h2>
-<p><strong>프로덕션 URL</strong>: <a href="https://mes-r018-analysis-5bz.pages.dev">https://mes-r018-analysis-5bz.pages.dev</a></p>
-<p><strong>주요 화면</strong></p>
-<ol>
-<li><strong>Dashboard</strong>: 전체 성과 요약, 경고, 트렌드</li>
-<li><strong>Report</strong>: 필터링, Pivot 테이블, 작업자 검색</li>
-<li><strong>Worker Detail Modal</strong>: 개인별 상세 이력 및 통계</li>
-<li><strong>Process Mapping</strong>: 공정 매핑 관리</li>
-</ol>
-<p><strong>현재 방식</strong>: Excel 파일 업로드 → 분석</p>
+<h2 id="%F0%9F%93%8A-%EB%91%90-%EA%B0%80%EC%A7%80-%ED%95%B5%EC%8B%AC-%EC%A7%80%ED%91%9C"><img class="emoji" draggable="false" alt="📊" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4ca.svg" data-marp-twemoji=""/> 두 가지 핵심 지표</h2>
+<h3 id="%E2%8F%B1%EF%B8%8F-time-utilization-rate-%EC%8B%9C%EA%B0%84-%ED%99%9C%EC%9A%A9%EB%8F%84"><img class="emoji" draggable="false" alt="⏱️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/23f1.svg" data-marp-twemoji=""/> Time Utilization Rate (시간 활용도)</h3>
+<ul>
+<li><strong>정의</strong>: 실제 작업 시간이 총 시프트 시간 중 몇 %인지 측정</li>
+<li><strong>계산식</strong>: (총 작업 시간 ÷ 총 시프트 시간) × 100</li>
+<li><strong>목적</strong>: 작업자가 할당된 시간을 얼마나 활용했는지 평가</li>
+</ul>
+<h3 id="%E2%9A%A1-work-efficiency-rate-%EC%9E%91%EC%97%85-%ED%9A%A8%EC%9C%A8"><img class="emoji" draggable="false" alt="⚡" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/26a1.svg" data-marp-twemoji=""/> Work Efficiency Rate (작업 효율)</h3>
+<ul>
+<li><strong>정의</strong>: 표준 시간(S/T) 대비 실제 소요 시간 비율</li>
+<li><strong>계산식</strong>: (총 표준 시간 ÷ 총 실제 시간) × 100</li>
+<li><strong>목적</strong>: 작업 속도 및 숙련도 평가</li>
+</ul>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="5" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="5" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
+<h2 id="%F0%9F%93%88-%EC%A3%BC%EC%9A%94-%EA%B8%B0%EB%8A%A5-dashboard"><img class="emoji" draggable="false" alt="📈" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4c8.svg" data-marp-twemoji=""/> 주요 기능: Dashboard</h2>
+<p><strong>전체 성과 한눈에 보기</strong></p>
+<ul>
+<li><img class="emoji" draggable="false" alt="🚨" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f6a8.svg" data-marp-twemoji=""/> <strong>AI Insights &amp; Warnings</strong>: 6가지 자동 경고 (저효율, 저가동, 공정 편중 등)</li>
+<li><img class="emoji" draggable="false" alt="📊" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4ca.svg" data-marp-twemoji=""/> <strong>KPI Trend Overview</strong>: Daily/Weekly 성과 추이 (차트 클릭 → 상세 모달)</li>
+<li><img class="emoji" draggable="false" alt="🏆" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f3c6.svg" data-marp-twemoji=""/> <strong>Process Performance Ranking</strong>: Top 5 / Bottom 5 공정 비교</li>
+<li><img class="emoji" draggable="false" alt="📉" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4c9.svg" data-marp-twemoji=""/> <strong>Shift Performance Comparison</strong>: Day/Night, BT/WT/IM 그룹별 비교</li>
+<li><img class="emoji" draggable="false" alt="📊" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4ca.svg" data-marp-twemoji=""/> <strong>Distribution &amp; Outliers</strong>: 가동률/효율 분포 히스토그램</li>
+</ul>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="6" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="6" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
+<h2 id="%F0%9F%93%8B-%EC%A3%BC%EC%9A%94-%EA%B8%B0%EB%8A%A5-report"><img class="emoji" draggable="false" alt="📋" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4cb.svg" data-marp-twemoji=""/> 주요 기능: Report</h2>
+<p><strong>상세 데이터 분석 및 필터링</strong></p>
+<ul>
+<li><img class="emoji" draggable="false" alt="🔍" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f50d.svg" data-marp-twemoji=""/> <strong>고급 필터링</strong>: 날짜, 시프트, 공정, 작업자 다중 선택</li>
+<li><img class="emoji" draggable="false" alt="🔄" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f504.svg" data-marp-twemoji=""/> <strong>두 지표 전환</strong>: Utilization ⇄ Efficiency 실시간 전환</li>
+<li><img class="emoji" draggable="false" alt="📊" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4ca.svg" data-marp-twemoji=""/> <strong>4개 KPI 카드</strong>: 작업자 수, 시프트 시간, 작업 시간, 평균 Rate</li>
+<li><img class="emoji" draggable="false" alt="🍩" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f369.svg" data-marp-twemoji=""/> <strong>Performance Band</strong>: 5단계 등급별 분포 (Excellent/Normal/Poor/Critical)</li>
+<li><img class="emoji" draggable="false" alt="📈" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4c8.svg" data-marp-twemoji=""/> <strong>Process Performance</strong>: 공정별 성과 비교 (상위 30개)</li>
+<li><img class="emoji" draggable="false" alt="👤" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f464.svg" data-marp-twemoji=""/> <strong>Worker Detail Modal</strong>: 작업자 클릭 → 상세 이력 및 통계</li>
+</ul>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="7" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="7" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
 <h2 id="%F0%9F%93%85-%EC%A0%95%EC%8B%9D-%EA%B0%9C%EB%B0%9C-%EC%9D%BC%EC%A0%95"><img class="emoji" draggable="false" alt="📅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4c5.svg" data-marp-twemoji=""/> 정식 개발 일정</h2>
 <table>
 <thead>
@@ -101,7 +122,7 @@
 <p><strong>1차 오픈 (4/1)</strong>: 기본 기능 + 긴급 요구사항<br />
 <strong>풀 오픈 (4/8)</strong>: 전체 요구사항 + 안정화</p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="6" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="6" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="8" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="8" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
 <h2 id="%E2%9C%85-%EC%A0%91%EC%88%98%EB%90%9C-%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD-2%EA%B1%B4"><img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/> 접수된 요구사항 (2건)</h2>
 <h3 id="1-%EC%9E%91%EC%97%85%EC%9E%90%EB%B3%84-%EC%84%B1%EC%A0%81%ED%91%9C-%EA%B8%B0%EB%8A%A5">1. 작업자별 성적표 기능</h3>
 <p><strong>요구사항</strong>: 두 지표(Time Utilization + Work Efficiency)를 결합한 작업자별 성적표 생성 및 추출</p>
@@ -114,7 +135,7 @@
 </ul>
 <p><strong>예상 개발 기간</strong>: 3~5일</p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="7" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="7" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="9" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="9" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
 <h2 id="%E2%9C%85-%EC%A0%91%EC%88%98%EB%90%9C-%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD-2%EA%B1%B4-1"><img class="emoji" draggable="false" alt="✅" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/2705.svg" data-marp-twemoji=""/> 접수된 요구사항 (2건)</h2>
 <h3 id="2-%EB%AA%A8%EB%93%9C%EB%B3%84-%ED%95%84%ED%84%B0%EB%A7%81-%EA%B8%B0%EB%8A%A5">2. 모드별 필터링 기능</h3>
 <p><strong>요구사항</strong>: 다양한 모드로 데이터를 필터링하고 분석</p>
@@ -128,7 +149,7 @@
 </ul>
 <p><strong>예상 개발 기간</strong>: 2~3일</p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="8" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="8" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="10" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="10" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
 <h2 id="%F0%9F%92%A1-%EC%B6%94%EA%B0%80-%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD-%EC%A0%91%EC%88%98"><img class="emoji" draggable="false" alt="💡" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4a1.svg" data-marp-twemoji=""/> 추가 요구사항 접수</h2>
 <p><strong>오픈 질문</strong>:</p>
 <ol>
@@ -141,42 +162,12 @@
 </ol>
 <p><strong>접수 방법</strong>: 오늘 미팅 중 구두 또는 이메일로 추가 접수 가능</p>
 </section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="9" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="9" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
-<h2 id="%F0%9F%94%84-%ED%96%A5%ED%9B%84-%EA%B3%84%ED%9A%8D-%ED%92%80-%EC%98%A4%ED%94%88-%EC%9D%B4%ED%9B%84"><img class="emoji" draggable="false" alt="🔄" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f504.svg" data-marp-twemoji=""/> 향후 계획 (풀 오픈 이후)</h2>
-<p><strong>Phase 2 (5~6월)</strong>:</p>
-<ul>
-<li>MES API 직접 연동 (Excel 업로드 방식 탈피)</li>
-<li>실시간 데이터 자동 업데이트</li>
-<li>SSO (Azure AD) 로그인</li>
-</ul>
-<p><strong>Phase 3 (7~9월)</strong>:</p>
-<ul>
-<li>Work Order Agent AI 연동</li>
-<li>AI 기반 작업 할당 추천 API 제공</li>
-<li>작업자 Skill Matrix</li>
-</ul>
-<p><strong>Phase 4 (10~12월)</strong>:</p>
-<ul>
-<li>다국가 법인 지원 (한국, 베트남 등)</li>
-</ul>
-</section>
-</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="10" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="10" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
-<h2 id="%F0%9F%93%9E-contact--next-steps"><img class="emoji" draggable="false" alt="📞" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f4de.svg" data-marp-twemoji=""/> Contact &amp; Next Steps</h2>
-<p><strong>개발 담당</strong>: JB Park (<a href="mailto:jbpark@cswind.com">jbpark@cswind.com</a>)<br />
-<strong>GitHub</strong>: <a href="https://github.com/joonbae123/MES_R018_Analysis">https://github.com/joonbae123/MES_R018_Analysis</a><br />
-<strong>Production</strong>: <a href="https://mes-r018-analysis-5bz.pages.dev">https://mes-r018-analysis-5bz.pages.dev</a></p>
-<p><strong>Next Steps</strong>:</p>
-<ol>
-<li>오늘 접수된 요구사항 정리 (개발팀)</li>
-<li>요구사항별 우선순위 협의 (COO 조직)</li>
-<li>3/19 개발 착수</li>
-<li>주간 진행 상황 공유 (이메일)</li>
-<li>4/1 1차 오픈 전 UAT (User Acceptance Test)</li>
-</ol>
-</section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="11" data-paginate="true" data-theme="default" lang="POSIX" data-marpit-pagination="11" style="--paginate:true;--theme:default;" data-marpit-pagination-total="11">
 <h2 id="qa">Q&amp;A</h2>
 <p><strong>질문 환영합니다!</strong> <img class="emoji" draggable="false" alt="🙋‍♂️" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/1f64b-200d-2642-fe0f.svg" data-marp-twemoji=""/></p>
+<p><strong>개발 담당</strong>: JB Park (<a href="mailto:jbpark@cswind.com">jbpark@cswind.com</a>)<br />
+<strong>GitHub</strong>: <a href="https://github.com/joonbae123/MES_R018_Analysis">https://github.com/joonbae123/MES_R018_Analysis</a><br />
+<strong>Production</strong>: <a href="https://mes-r018-analysis-5bz.pages.dev">https://mes-r018-analysis-5bz.pages.dev</a></p>
 </section>
 <script>!function(){"use strict";const t={h1:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"1"},style:"display: block; font-size: 2em; margin-block-start: 0.67em; margin-block-end: 0.67em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h2:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"2"},style:"display: block; font-size: 1.5em; margin-block-start: 0.83em; margin-block-end: 0.83em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h3:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"3"},style:"display: block; font-size: 1.17em; margin-block-start: 1em; margin-block-end: 1em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h4:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"4"},style:"display: block; margin-block-start: 1.33em; margin-block-end: 1.33em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h5:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"5"},style:"display: block; font-size: 0.83em; margin-block-start: 1.67em; margin-block-end: 1.67em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},h6:{proto:()=>HTMLHeadingElement,attrs:{role:"heading","aria-level":"6"},style:"display: block; font-size: 0.67em; margin-block-start: 2.33em; margin-block-end: 2.33em; margin-inline-start: 0px; margin-inline-end: 0px; font-weight: bold;"},span:{proto:()=>HTMLSpanElement},pre:{proto:()=>HTMLElement,style:"display: block; font-family: monospace; white-space: pre; margin: 1em 0; --marp-auto-scaling-white-space: pre;"}},e="data-marp-auto-scaling-wrapper",i="data-marp-auto-scaling-svg",n="data-marp-auto-scaling-container";class s extends HTMLElement{container;containerSize;containerObserver;svg;svgComputedStyle;svgPreserveAspectRatio="xMinYMid meet";wrapper;wrapperSize;wrapperObserver;constructor(){super();const t=t=>([e])=>{const{width:i,height:n}=e.contentRect;this[t]={width:i,height:n},this.updateSVGRect()};this.attachShadow({mode:"open"}),this.containerObserver=new ResizeObserver(t("containerSize")),this.wrapperObserver=new ResizeObserver((...e)=>{t("wrapperSize")(...e),this.flushSvgDisplay()})}static get observedAttributes(){return["data-downscale-only"]}connectedCallback(){this.shadowRoot.innerHTML=`\n<style>\n  svg[${i}] { display: block; width: 100%; height: auto; vertical-align: top; }\n  span[${n}] { display: table; white-space: var(--marp-auto-scaling-white-space, nowrap); width: max-content; }\n</style>\n<div ${e}>\n  <svg part="svg" ${i}>\n    <foreignObject><span ${n}><slot></slot></span></foreignObject>\n  </svg>\n</div>\n    `.split(/\n\s*/).join(""),this.wrapper=this.shadowRoot.querySelector(`div[${e}]`)??void 0;const t=this.svg;this.svg=this.wrapper?.querySelector(`svg[${i}]`)??void 0,this.svg!==t&&(this.svgComputedStyle=this.svg?window.getComputedStyle(this.svg):void 0),this.container=this.svg?.querySelector(`span[${n}]`)??void 0,this.observe()}disconnectedCallback(){this.svg=void 0,this.svgComputedStyle=void 0,this.wrapper=void 0,this.container=void 0,this.observe()}attributeChangedCallback(){this.observe()}flushSvgDisplay(){const{svg:t}=this;t&&(t.style.display="inline",requestAnimationFrame(()=>{t.style.display=""}))}observe(){this.containerObserver.disconnect(),this.wrapperObserver.disconnect(),this.wrapper&&this.wrapperObserver.observe(this.wrapper),this.container&&this.containerObserver.observe(this.container),this.svgComputedStyle&&this.observeSVGStyle(this.svgComputedStyle)}observeSVGStyle(t){const e=()=>{const i=(()=>{const e=t.getPropertyValue("--preserve-aspect-ratio");if(e)return e.trim();return`x${(({textAlign:t,direction:e})=>{if(t.endsWith("left"))return"Min";if(t.endsWith("right"))return"Max";if("start"===t||"end"===t){let i="rtl"===e;return"end"===t&&(i=!i),i?"Max":"Min"}return"Mid"})(t)}YMid meet`})();i!==this.svgPreserveAspectRatio&&(this.svgPreserveAspectRatio=i,this.updateSVGRect()),t===this.svgComputedStyle&&requestAnimationFrame(e)};e()}updateSVGRect(){let t=Math.ceil(this.containerSize?.width??0);const e=Math.ceil(this.containerSize?.height??0);void 0!==this.dataset.downscaleOnly&&(t=Math.max(t,this.wrapperSize?.width??0));const i=this.svg?.querySelector(":scope > foreignObject");if(i?.setAttribute("width",`${t}`),i?.setAttribute("height",`${e}`),this.svg&&(this.svg.setAttribute("viewBox",`0 0 ${t} ${e}`),this.svg.setAttribute("preserveAspectRatio",this.svgPreserveAspectRatio),this.svg.style.height=t<=0||e<=0?"0":""),this.container){const t=this.svgPreserveAspectRatio.toLowerCase();this.container.style.marginLeft=t.startsWith("xmid")||t.startsWith("xmax")?"auto":"0",this.container.style.marginRight=t.startsWith("xmi")?"auto":"0"}}}const r=(t,{attrs:e={},style:i})=>class extends t{constructor(...t){super(...t);for(const[t,i]of Object.entries(e))this.hasAttribute(t)||this.setAttribute(t,i);this._shadow()}static get observedAttributes(){return["data-auto-scaling"]}connectedCallback(){this._update()}attributeChangedCallback(){this._update()}_shadow(){if(!this.shadowRoot)try{this.attachShadow({mode:"open"})}catch(t){if(!(t instanceof Error&&"NotSupportedError"===t.name))throw t}return this.shadowRoot}_update(){const t=this._shadow();if(t){const e=i?`<style>:host { ${i} }</style>`:"";let n="<slot></slot>";const{autoScaling:s}=this.dataset;if(void 0!==s){n=`<marp-auto-scaling exportparts="svg:auto-scaling" ${"downscale-only"===s?"data-downscale-only":""}>${n}</marp-auto-scaling>`}t.innerHTML=e+n}}};let o;const a=Symbol(),l=()=>o??(o=!!document.createElement("div",{is:"marp-auto-scaling"}).outerHTML.startsWith("<div is"),o);let c;const d="marpitSVGPolyfill:setZoomFactor,",h=Symbol(),g=Symbol();const p=()=>{const t="Apple Computer, Inc."===navigator.vendor,e=t?[v]:[],i={then:e=>(t?(async()=>{if(void 0===c){const t=document.createElement("canvas");t.width=10,t.height=10;const e=t.getContext("2d"),i=new Image(10,10),n=new Promise(t=>{i.addEventListener("load",()=>t())});i.crossOrigin="anonymous",i.src="data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%20viewBox%3D%220%200%201%201%22%3E%3CforeignObject%20width%3D%221%22%20height%3D%221%22%20requiredExtensions%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%3E%3Cdiv%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20style%3D%22width%3A%201px%3B%20height%3A%201px%3B%20background%3A%20red%3B%20position%3A%20relative%22%3E%3C%2Fdiv%3E%3C%2FforeignObject%3E%3C%2Fsvg%3E",await n,e.drawImage(i,0,0),c=e.getImageData(5,5,1,1).data[3]<128}return c})().then(t=>{null==e||e(t?[v]:[])}):null==e||e([]),i)};return Object.assign(e,i)};let m,u;function v(t){const e="object"==typeof t&&t.target||document,i="object"==typeof t?t.zoom:t;window[g]||(Object.defineProperty(window,g,{configurable:!0,value:!0}),document.body.style.zoom=1.0001,document.body.offsetHeight,document.body.style.zoom=1,window.addEventListener("message",({data:t,origin:e})=>{if(e===window.origin)try{if(t&&"string"==typeof t&&t.startsWith(d)){const[,e]=t.split(","),i=Number.parseFloat(e);Number.isNaN(i)||(u=i)}}catch(t){console.error(t)}}));let n=!1;Array.from(e.querySelectorAll("svg[data-marpit-svg]"),t=>{var e,s,r,o;t.style.transform||(t.style.transform="translateZ(0)");const a=i||u||t.currentScale||1;m!==a&&(m=a,n=a);const l=t.getBoundingClientRect(),{length:c}=t.children;for(let i=0;i<c;i+=1){const n=t.children[i];if(n.getScreenCTM){const t=n.getScreenCTM();if(t){const i=null!==(s=null===(e=n.x)||void 0===e?void 0:e.baseVal.value)&&void 0!==s?s:0,c=null!==(o=null===(r=n.y)||void 0===r?void 0:r.baseVal.value)&&void 0!==o?o:0,d=n.children.length;for(let e=0;e<d;e+=1){const s=n.children[e];if("SECTION"===s.tagName){const{style:e}=s;e.transformOrigin||(e.transformOrigin=`${-i}px ${-c}px`),e.transform=`scale(${a}) matrix(${t.a}, ${t.b}, ${t.c}, ${t.d}, ${t.e-l.left}, ${t.f-l.top}) translateZ(0.0001px)`;break}}}}}}),!1!==n&&Array.from(e.querySelectorAll("iframe"),({contentWindow:t})=>{null==t||t.postMessage(`${d}${n}`,"null"===window.origin?"*":window.origin)})}function w({once:t=!1,target:e=document}={}){const i=function(t=document){if(t[h])return t[h];let e=!0;const i=()=>{e=!1,delete t[h]};Object.defineProperty(t,h,{configurable:!0,value:i});let n=[],s=!1;(async()=>{try{n=await p()}finally{s=!0}})();const r=()=>{for(const e of n)e({target:t});s&&0===n.length||e&&window.requestAnimationFrame(r)};return r(),i}(e);return t?(i(),()=>{}):i}m=1,u=void 0;const b=Symbol(),y=(e=document)=>{if("undefined"==typeof window)throw new Error("Marp Core's browser script is valid only in browser context.");if(((e=document)=>{const i=window[a];i||customElements.define("marp-auto-scaling",s);for(const n of Object.keys(t)){const s=`marp-${n}`,o=t[n].proto();l()&&o!==HTMLElement?i||customElements.define(s,r(o,{style:t[n].style}),{extends:n}):(i||customElements.define(s,r(HTMLElement,t[n])),e.querySelectorAll(`${n}[is="${s}"]`).forEach(t=>{t.outerHTML=t.outerHTML.replace(new RegExp(`^<${n}`,"i"),`<${s}`).replace(new RegExp(`</${n}>$`,"i"),`</${s}>`)}))}window[a]=!0})(e),e[b])return e[b];const i=w({target:e}),n=()=>{i(),delete e[b]},o=Object.assign(n,{cleanup:n,update:()=>y(e)});return Object.defineProperty(e,b,{configurable:!0,value:o}),o},f=document.currentScript;y(f?f.getRootNode():document)}();
 </script></foreignObject></svg></div><script>/*!! License: https://unpkg.com/@marp-team/marp-cli@4.3.1/lib/bespoke.js.LICENSE.txt */
