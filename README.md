@@ -892,6 +892,246 @@ IPR의 **작업자 성과 데이터**와 MES의 **Work Order 기술 사양**을 
   - 두께별/소재별 효율 차트 표시
   - 재작업 리스크 점수 표시
 
+##### Stage 2.5: 🎯 Decision Support System (과도기적 AI) - **빠른 구현 가능** ⚡
+**개념**: ML 모델 없이 **규칙 기반 + 통계**로 Supervisor에게 작업 할당 정보 제공
+
+**장점**:
+- ✅ 빠른 구현 (2~3주)
+- ✅ 설명 가능한 로직 (Why? 질문에 명확한 답변)
+- ✅ 데이터 부족 시에도 작동
+- ✅ Stage 3 ML 모델로 자연스럽게 전환 가능
+
+#### 📋 기능 1: Worker Candidate List API
+**목적**: 새로운 Work Order에 대해 후보 작업자 목록을 점수와 함께 제공
+
+**API 설계**:
+```typescript
+POST /api/work-order/candidates
+Request: {
+  "process": "Bevel",
+  "thickness": 60.0,        // Optional
+  "material": "SS400",      // Optional
+  "complexity": "Moderate", // Optional
+  "urgent": false
+}
+
+Response: {
+  "process": "Bevel",
+  "candidates": [
+    {
+      "worker_name": "RIVERA",
+      "current_workload": 2,           // 현재 진행 중인 WO 개수
+      "avg_efficiency": 85.0,          // Bevel 공정 평균 효율
+      "recent_efficiency": 88.0,       // 최근 7일 효율
+      "total_experience": 145,         // Bevel 공정 총 작업 건수
+      "rework_rate": 1.5,              // 재작업률 (%)
+      "estimated_time_hrs": 2.5,       // 예상 소요 시간
+      "score": 92.5,                   // 종합 점수 (0~100)
+      "strengths": ["Thick plates ≥50mm", "High efficiency", "Low rework"],
+      "warnings": []
+    },
+    {
+      "worker_name": "SMITH",
+      "current_workload": 4,
+      "avg_efficiency": 72.0,
+      "recent_efficiency": 70.0,
+      "total_experience": 89,
+      "rework_rate": 5.8,
+      "estimated_time_hrs": 3.2,
+      "score": 68.5,
+      "strengths": ["Consistent performer"],
+      "warnings": ["High workload (4 WOs)", "Below 75% efficiency"]
+    },
+    {
+      "worker_name": "BROWN",
+      "current_workload": 1,
+      "avg_efficiency": 55.0,
+      "recent_efficiency": 52.0,
+      "total_experience": 34,
+      "rework_rate": 12.3,
+      "estimated_time_hrs": 4.0,
+      "score": 45.2,
+      "strengths": ["Low workload"],
+      "warnings": ["Low experience (<50 jobs)", "High rework rate (>10%)"]
+    }
+  ],
+  "filters_applied": {
+    "min_experience": 10,      // 최소 경험 건수
+    "max_workload": 5          // 최대 동시 작업
+  }
+}
+```
+
+#### 🧮 점수 계산 로직 (Scoring System)
+**4가지 기준의 가중 평균**:
+
+```javascript
+// 1. 효율 점수 (40% 가중치)
+efficiencyScore = (avg_efficiency / 100) * 40
+
+// 2. 워크로드 점수 (30% 가중치) - 낮을수록 좋음
+workloadScore = Math.max(0, (5 - current_workload) / 5) * 30
+
+// 3. 안정성 점수 (20% 가중치) - 재작업률 낮고 변동성 낮을수록 좋음
+stabilityScore = Math.max(0, (1 - rework_rate / 20)) * 20
+
+// 4. 경험 점수 (10% 가중치)
+experienceScore = Math.min(total_experience / 100, 1.0) * 10
+
+// 최종 점수
+totalScore = efficiencyScore + workloadScore + stabilityScore + experienceScore
+
+// 보너스: 최근 성과 상승 중이면 +5점
+if (recent_efficiency > avg_efficiency + 5) {
+  totalScore += 5
+}
+
+// 패널티: 긴급 작업인데 워크로드 높으면 -10점
+if (urgent && current_workload >= 4) {
+  totalScore -= 10
+}
+```
+
+#### 🔍 기능 2: Skill Matrix (작업자 × 공정 능력 매트릭스)
+**목적**: 작업자별 공정 숙련도를 한눈에 파악
+
+**API 설계**:
+```typescript
+GET /api/skill-matrix
+
+Response: {
+  "matrix": [
+    {
+      "worker_name": "RIVERA",
+      "skills": {
+        "Bevel": { "efficiency": 85, "experience": 145, "grade": "⭐⭐⭐" },
+        "Cut": { "efficiency": 82, "experience": 123, "grade": "⭐⭐⭐" },
+        "Bend": { "efficiency": 78, "experience": 67, "grade": "⭐⭐" },
+        "FU": { "efficiency": 65, "experience": 23, "grade": "⭐" }
+      },
+      "specializations": ["Bevel", "Cut"],  // 효율 ≥80% 공정
+      "training_needed": ["FU"]              // 효율 <70% 공정
+    },
+    {
+      "worker_name": "SMITH",
+      "skills": {
+        "Bevel": { "efficiency": 72, "experience": 89, "grade": "⭐⭐" },
+        "Cut": { "efficiency": 75, "experience": 102, "grade": "⭐⭐" },
+        "Paint": { "efficiency": 88, "experience": 156, "grade": "⭐⭐⭐" }
+      },
+      "specializations": ["Paint"],
+      "training_needed": []
+    }
+  ],
+  "legend": {
+    "⭐⭐⭐": "Expert (≥80% efficiency, ≥50 jobs)",
+    "⭐⭐": "Proficient (70-79% efficiency, ≥30 jobs)",
+    "⭐": "Learning (<70% efficiency or <30 jobs)"
+  }
+}
+```
+
+#### ⚠️ 기능 3: Bottleneck Detection (병목 예측)
+**목적**: 특정 공정에 작업이 몰릴 때 미리 경고
+
+**로직**:
+```javascript
+// 공정별 현재 대기 중인 WO 개수
+const queuedWOs = {
+  "Bevel": 8,
+  "Cut": 3,
+  "Paint": 12
+}
+
+// 공정별 가용 작업자 평균 처리 속도 (시간당 WO 처리 개수)
+const avgThroughput = {
+  "Bevel": 0.6,  // 1.67시간/WO
+  "Cut": 0.8,    // 1.25시간/WO
+  "Paint": 0.4   // 2.5시간/WO
+}
+
+// 예상 처리 시간 = 대기 WO / 처리 속도
+const estimatedHours = {
+  "Bevel": 8 / 0.6 = 13.3 hours,
+  "Cut": 3 / 0.8 = 3.75 hours,
+  "Paint": 12 / 0.4 = 30 hours  // ⚠️ 병목!
+}
+
+// 경고 발생 기준: 예상 처리 시간 > 16시간 (2 shifts)
+if (estimatedHours["Paint"] > 16) {
+  alert("Paint 공정 병목 예상: 30시간 소요, 추가 인력 배치 권장")
+}
+```
+
+#### 🎨 UI 구현 (간단한 추가)
+**1. Dashboard 탭에 "Work Order Allocation" 섹션 추가**
+```html
+<div class="allocation-section">
+  <h3>🎯 Work Order Allocation Support</h3>
+  
+  <!-- 입력 폼 -->
+  <form id="allocation-form">
+    <select name="process">
+      <option>Bevel</option>
+      <option>Cut</option>
+      <option>Paint</option>
+    </select>
+    <input type="number" name="thickness" placeholder="두께 (mm)">
+    <select name="material">
+      <option>SS400</option>
+      <option>SUS304</option>
+    </select>
+    <input type="checkbox" name="urgent"> Urgent
+    <button type="submit">Find Workers</button>
+  </form>
+  
+  <!-- 결과 테이블 -->
+  <table id="candidates-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Worker</th>
+        <th>Score</th>
+        <th>Efficiency</th>
+        <th>Workload</th>
+        <th>Est. Time</th>
+        <th>Strengths/Warnings</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 동적 생성 -->
+    </tbody>
+  </table>
+</div>
+```
+
+**2. 색상 코드**
+- 🟢 Score ≥80: 초록색 (Recommended)
+- 🟡 Score 60-79: 노란색 (Acceptable)
+- 🔴 Score <60: 빨간색 (Not Recommended)
+
+#### 📈 구현 순서 (2~3주)
+**Week 1: 백엔드 API**
+- [ ] `/api/work-order/candidates` 엔드포인트 구현
+- [ ] 점수 계산 로직 구현
+- [ ] 통계 계산 (avg_efficiency, rework_rate, 현재 워크로드)
+
+**Week 2: 프론트엔드 UI**
+- [ ] Dashboard에 "Work Order Allocation" 섹션 추가
+- [ ] 입력 폼 및 결과 테이블 구현
+- [ ] 색상 코드 및 정렬 기능
+
+**Week 3: 추가 기능**
+- [ ] Skill Matrix API 및 UI
+- [ ] Bottleneck Detection 로직
+- [ ] 필터 옵션 (최소 경험, 최대 워크로드 등)
+
+#### 🔄 Stage 3로의 자연스러운 전환
+Stage 2.5의 규칙 기반 시스템은 Stage 3 ML 모델의 **기준선(Baseline)**이 됩니다:
+- 규칙 기반 점수를 "Ground Truth"로 사용
+- ML 모델이 규칙보다 더 정확한지 A/B 테스트
+- 설명 가능한 AI (Explainable AI)를 위한 비교 기준
+
 ##### Stage 3: ML 모델 및 추천 시스템 (6~12개월)
 - [ ] **성과 예측 모델**
   - 입력: Worker Profile + WO 기술 사양 (두께, 소재, 복잡도)
