@@ -1063,68 +1063,48 @@ if (estimatedHours["Paint"] > 16) {
 }
 ```
 
-#### 🎨 UI 구현 (간단한 추가)
-**1. Dashboard 탭에 "Work Order Allocation" 섹션 추가**
-```html
-<div class="allocation-section">
-  <h3>🎯 Work Order Allocation Support</h3>
-  
-  <!-- 입력 폼 -->
-  <form id="allocation-form">
-    <select name="process">
-      <option>Bevel</option>
-      <option>Cut</option>
-      <option>Paint</option>
-    </select>
-    <input type="number" name="thickness" placeholder="두께 (mm)">
-    <select name="material">
-      <option>SS400</option>
-      <option>SUS304</option>
-    </select>
-    <input type="checkbox" name="urgent"> Urgent
-    <button type="submit">Find Workers</button>
-  </form>
-  
-  <!-- 결과 테이블 -->
-  <table id="candidates-table">
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Worker</th>
-        <th>Score</th>
-        <th>Efficiency</th>
-        <th>Workload</th>
-        <th>Est. Time</th>
-        <th>Strengths/Warnings</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- 동적 생성 -->
-    </tbody>
-  </table>
-</div>
+#### 🔗 외부 플랫폼 연동 (Work Order Agent AI)
+**개념**: IPR은 UI를 직접 제공하지 않고, **API를 통해 외부 Work Order Agent AI 플랫폼에 데이터를 제공**
+
+**아키텍처**:
+```
+┌─────────────────────────────────────┐
+│  Work Order Agent AI Platform      │  ← 기존 플랫폼 (W/O 생성 및 Worker Allocation)
+│  - W/O 생성                         │
+│  - Worker Allocation 의사결정       │
+│  - Supervisor Dashboard             │
+└──────────────┬──────────────────────┘
+               │ HTTP API 호출
+               ↓
+┌─────────────────────────────────────┐
+│  IPR (Individual Performance Report)│  ← 이 프로젝트
+│  - 작업자 성과 데이터 제공          │
+│  - Candidate List API               │
+│  - Skill Matrix API                 │
+│  - Bottleneck Detection API         │
+└─────────────────────────────────────┘
 ```
 
-**2. 색상 코드**
-- 🟢 Score ≥80: 초록색 (Recommended)
-- 🟡 Score 60-79: 노란색 (Acceptable)
-- 🔴 Score <60: 빨간색 (Not Recommended)
-
 #### 📈 구현 순서 (2~3주)
-**Week 1: 백엔드 API**
+**Week 1: 백엔드 API 개발**
 - [ ] `/api/work-order/candidates` 엔드포인트 구현
+- [ ] `/api/skill-matrix` 엔드포인트 구현
+- [ ] `/api/bottleneck-detection` 엔드포인트 구현
 - [ ] 점수 계산 로직 구현
 - [ ] 통계 계산 (avg_efficiency, rework_rate, 현재 워크로드)
+- [ ] CORS 설정 (외부 플랫폼 접근 허용)
 
-**Week 2: 프론트엔드 UI**
-- [ ] Dashboard에 "Work Order Allocation" 섹션 추가
-- [ ] 입력 폼 및 결과 테이블 구현
-- [ ] 색상 코드 및 정렬 기능
+**Week 2: API 문서화 및 테스트**
+- [ ] OpenAPI (Swagger) 문서 자동 생성
+- [ ] API 테스트 케이스 작성
+- [ ] Postman Collection 제공
+- [ ] 응답 시간 최적화 (< 500ms 목표)
 
-**Week 3: 추가 기능**
-- [ ] Skill Matrix API 및 UI
-- [ ] Bottleneck Detection 로직
-- [ ] 필터 옵션 (최소 경험, 최대 워크로드 등)
+**Week 3: 외부 플랫폼 연동 지원**
+- [ ] JWT 기반 API 인증 구현
+- [ ] Rate Limiting (초당 요청 제한)
+- [ ] API 사용 로그 및 모니터링
+- [ ] Work Order Agent AI 플랫폼 팀과 통합 테스트
 
 #### 🔄 Stage 3로의 자연스러운 전환
 Stage 2.5의 규칙 기반 시스템은 Stage 3 ML 모델의 **기준선(Baseline)**이 됩니다:
@@ -1215,18 +1195,37 @@ Stage 2.5의 규칙 기반 시스템은 Stage 3 ML 모델의 **기준선(Baselin
   - 신규 장비 자동 감지 및 알림
   - 작업자별 MOD Override 지원
 
-#### 통합 플랫폼 연동
+#### 통합 플랫폼 연동 (Work Order Agent AI)
+**목표**: IPR을 Work Order Agent AI 플랫폼과 연동하여 작업자 성과 데이터 제공
+
 - [ ] **Microservice Architecture**
-  - IPR을 독립 서비스로 배포
+  - IPR을 독립 서비스로 배포 (Cloudflare Workers 유지)
   - API Gateway를 통한 외부 접근
-  - JWT 기반 인증/인가
-- [ ] **REST API 제공**
+  - JWT 기반 인증/인가 (Work Order Agent AI 플랫폼 전용 토큰)
+  
+- [ ] **REST API 제공 (Work Order Agent AI용)**
   - `/api/v1/workers` - 작업자 목록 및 성과 조회
+  - `/api/v1/workers/{name}` - 특정 작업자 상세 프로필
+  - `/api/v1/work-order/candidates` - Work Order 후보 작업자 추천
+  - `/api/v1/skill-matrix` - 작업자 × 공정 능력 매트릭스
+  - `/api/v1/bottleneck-detection` - 공정별 병목 예측
   - `/api/v1/kpi` - KPI 데이터 조회
-  - `/api/v1/dashboard` - 대시보드 데이터 조회
-  - `/api/v1/work-order/recommend` - AI 기반 작업 할당 추천
-- [ ] **Iframe Embedding 지원**
+  - `/api/v1/dashboard` - 대시보드 집계 데이터 조회
+  
+- [ ] **Webhook 지원 (Real-time Sync)**
+  - Work Order Agent AI → IPR: 새로운 W/O 할당 시 IPR에 알림
+  - IPR → Work Order Agent AI: 작업 완료/성과 업데이트 시 알림
+  - 양방향 데이터 동기화
+  
+- [ ] **API 문서화 및 개발자 지원**
+  - OpenAPI (Swagger) 문서 자동 생성
+  - Postman Collection 제공
+  - API 사용 예시 및 통합 가이드
+  - Rate Limiting 정책 (초당 100 requests)
+  
+- [ ] **Iframe Embedding 지원 (Optional)**
   - `?embed=true` 파라미터로 UI Chrome 제거
+  - Work Order Agent AI 플랫폼에서 IPR Dashboard를 iframe으로 임베딩
   - `postMessage` API로 부모 페이지와 통신
   - Single Sign-On (SSO) 토큰 전달
 
