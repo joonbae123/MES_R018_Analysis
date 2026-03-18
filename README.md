@@ -802,25 +802,204 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 
 ## 🚧 향후 계획
 
-### MES API 직접 연동 (v5.0.0)
-- [ ] MES R018 시스템 API 직접 연동
-- [ ] 실시간 데이터 조회 및 자동 업데이트
-- [ ] Excel 업로드 방식에서 API 기반 자동 동기화로 전환
-- [ ] 작업자 실시간 모니터링 기능
+### 🎯 Phase 1: MES API 직접 연동 (v5.0.0)
+**목표**: Excel 업로드 방식에서 실시간 MES API 연동으로 전환
 
-### Dashboard 추가 기능 (v4.4.0)
+#### 필수 기능
+- [ ] **MES R018 API 직접 연동**
+  - DB 직접 접근 또는 REST API 호출 방식 확정
+  - 방화벽 오픈 요청 (사내 MES 서버 → Cloudflare Pages)
+  - 데이터 필드 매핑 확정 (FD Desc, FO Desc, Worker Name, Shift, etc.)
+- [ ] **실시간 데이터 조회 및 자동 업데이트**
+  - 배치 스케줄러 구현 (예: 매 1시간마다 자동 동기화)
+  - 증분 업데이트 로직 (신규 레코드만 가져오기)
+  - 데이터 충돌 해결 로직 (중복 제거, 시간 겹침 처리)
+- [ ] **작업자 실시간 모니터링 기능**
+  - 현재 진행 중인 작업 표시
+  - 실시간 KPI 업데이트 (30초~1분 단위)
+  - 이상 감지 알림 (효율 급감, 작업 중단 등)
+
+#### 기술 요구사항
+- [ ] **MES 데이터베이스 정보 확보**
+  - DB 연결 정보 (호스트, 포트, 인증 방식)
+  - 테이블 스키마 및 쿼리 권한
+  - 데이터 샘플 및 필드 정의서
+- [ ] **SSO 통합 (Azure AD)**
+  - Tenant ID, Client ID, Client Secret, Redirect URI
+  - Role-based access control (RBAC) 구현
+  - 개발 2~3일 예상
+- [ ] **다국가 법인 대응 (Multi-site Support)**
+  - FO Desc 표준화 테이블 (한국어/영어/베트남어 매핑)
+  - Shift 정보 관리 (작업자별/법인별 캘린더)
+  - MOD 매핑 (Machine Code → MOD 1/2/3)
+
+---
+
+### 🚀 Phase 2: AI 통합 및 Work Order Allocation (v6.0.0)
+**목표**: 성과 데이터와 기술 사양을 결합하여 AI 기반 작업 할당 최적화
+
+#### 핵심 컨셉
+IPR의 **작업자 성과 데이터**와 MES의 **Work Order 기술 사양**을 결합하여, 작업 할당 시 최적의 작업자를 추천하는 Decision Support System 구축.
+
+#### 필수 데이터 확장
+현재 IPR는 작업자 성과만 추적하지만, AI 기반 최적화를 위해서는 **Work Order의 기술적 특성**이 필요합니다:
+
+| 필드명 | 설명 | 예시 값 | 중요도 |
+|--------|------|---------|--------|
+| `thickness` | 강판 두께 (mm) | 50.0, 30.0, 80.0 | ⭐⭐⭐ |
+| `material` | 소재 종류 | SS400, SUS304, SM490 | ⭐⭐⭐ |
+| `complexity` | 작업 난이도 | Simple, Moderate, Complex | ⭐⭐ |
+| `tolerance` | 공차 요구사항 (mm) | ±0.5, ±1.0, ±2.0 | ⭐⭐ |
+| `quality_grade` | 품질 등급 | A, B, C | ⭐⭐ |
+| `defect_count` | 불량 개수 | 0, 1, 2 | ⭐ |
+| `rework_required` | 재작업 필요 여부 | 0 (정상), 1 (재작업) | ⭐ |
+
+**데이터 소스**: MES Work Order 테이블 또는 생산 관리 시스템
+
+#### 실제 분석 사례
+**목표**: "RIVERA 작업자는 왜 효율이 85%로 높고 재작업률이 0%인가?"
+
+현재 IPR 데이터만으로는 알 수 없지만, 기술 사양 데이터를 결합하면:
+- **두께별 숙련도**: ≥50mm 강판에서 85% 효율, <30mm에서 72% 효율
+- **소재별 적합성**: SS400 두꺼운 강판에 강점, SUS304 얇은 강판에 약점
+- **재작업 리스크**: 두꺼운 강판 1~2%, 복잡한 작업+야간 시프트에서 최대 18%
+- **시프트 × 복잡도 상관관계**: 야간 + Complex → 효율 10~15% 하락
+
+#### 구현 로드맵
+
+##### Stage 1: 데이터 수집 및 확장 (1~2개월)
+- [ ] MES API에 기술 사양 필드 추가 요청
+  - `thickness`, `material`, `complexity`, `tolerance`, `quality_grade`
+- [ ] IPR 데이터베이스 스키마 확장
+  - `raw_data` 테이블에 컬럼 추가
+  - 인덱스 생성 (thickness, material, complexity)
+- [ ] 데이터 수집 시작
+  - 최소 3개월간 데이터 축적 필요 (통계적 유의성)
+  - 목표: 작업자별 최소 50건 이상의 다양한 작업 기록
+
+##### Stage 2: 통계 기반 Worker Profile 구축 (3~4개월)
+- [ ] **기본 통계 분석**
+  - 두께별 평균 효율 (예: 50mm 이상, 30~50mm, 30mm 이하)
+  - 소재별 평균 효율 (SS400, SUS304, SM490 등)
+  - 복잡도별 평균 효율 (Simple, Moderate, Complex)
+  - 재작업률 계산 (전체, 소재별, 복잡도별)
+- [ ] **Worker Profile 생성**
+  - 작업자별 강점/약점 태그 (예: "두꺼운 강판 전문", "SUS304 약점")
+  - 숙련도 점수 (0~100점)
+  - 신뢰도 지표 (데이터 샘플 수, 표준편차)
+- [ ] **UI에 Profile 표시**
+  - Worker Detail Modal에 "Strengths" / "Weaknesses" 섹션 추가
+  - 두께별/소재별 효율 차트 표시
+  - 재작업 리스크 점수 표시
+
+##### Stage 3: ML 모델 및 추천 시스템 (6~12개월)
+- [ ] **성과 예측 모델**
+  - 입력: Worker Profile + WO 기술 사양 (두께, 소재, 복잡도)
+  - 출력: 예상 효율 (%), 예상 소요 시간 (분), 재작업 확률 (%)
+  - 모델: Random Forest, XGBoost, 또는 Neural Network
+- [ ] **Work Order 추천 API**
+  ```typescript
+  POST /api/work-order/recommend
+  Request: {
+    "wo_number": "WO-2024-001",
+    "thickness": 60.0,
+    "material": "SS400",
+    "complexity": "Moderate",
+    "urgent": false
+  }
+  Response: {
+    "recommendations": [
+      {
+        "worker_name": "RIVERA",
+        "predicted_efficiency": 85.2,
+        "predicted_time_mins": 120,
+        "rework_risk": 2.1,
+        "score": 92.5,
+        "reason": "Strong track record on thick SS400 plates (85% avg efficiency)"
+      },
+      {
+        "worker_name": "BROWN",
+        "predicted_efficiency": 78.0,
+        "predicted_time_mins": 135,
+        "rework_risk": 5.3,
+        "score": 84.2,
+        "reason": "Moderate efficiency on similar tasks, slightly higher rework risk"
+      }
+    ]
+  }
+  ```
+- [ ] **Supervisor Dashboard**
+  - 실시간 WO 할당 추천 화면
+  - 작업자별 현재 워크로드 표시
+  - "Best Match" 하이라이트 및 이유 설명
+  - 수동 오버라이드 기능 (Supervisor 최종 결정권 유지)
+
+#### 핵심 숫자 (반드시 보존)
+- **RIVERA 효율**: 85% (≥50mm 두께), 72% (<30mm 두께)
+- **재작업률**: 평균 5%, 두꺼운 강판 1~2%, 복잡한 작업 최대 18%
+- **두께 기준선**: 50mm
+- **공차 예시**: ±0.5mm
+- **품질 등급**: A/B/C
+- **불량 개수**: 평균 0개 (RIVERA), 최대 2개 (일부 작업자)
+- **효율 범위**: 72~88%
+
+---
+
+### 📊 Phase 3: Dashboard 고도화 (v4.4.0)
 - [ ] Weekly aggregation 구현 (현재는 Daily만)
 - [ ] WoW/DoD 변화율 표시
 - [ ] Process hierarchy 드릴다운 (L1 → L2 → L3)
 - [ ] 시간대별 분포 차트
 - [ ] Dashboard → PDF/Excel Export 기능
+- [ ] AI Insights 고도화
+  - 이상 탐지 알고리즘 (Prophet, LSTM)
+  - 자동 프로세스 매핑 (NLP)
+  - 성과 최적화 제안
 
-### 성능 및 UX 개선 (v4.5.0)
-- [ ] Chart 렌더링 최적화
+---
+
+### 🌍 Phase 4: 다국가 확장 및 통합 플랫폼 (v7.0.0)
+**목표**: 미국, 한국, 베트남, 중국 등 다국가 법인 대응 및 통합 플랫폼 연동
+
+#### Multi-site Support
+- [ ] **FO Desc 표준화**
+  - 다국어 매핑 테이블 (한국어/영어/베트남어/중국어)
+  - 사이트별 공정명 차이 흡수
+  - 자동 번역 및 검증 로직
+- [ ] **Shift Calendar 다국가 대응**
+  - 법인별 시프트 시스템 (2교대/3교대/4교대)
+  - 시간대(Timezone) 관리
+  - 휴일 캘린더 연동
+- [ ] **MOD Mapping**
+  - Machine Code → MOD 1/2/3 자동 매핑
+  - 신규 장비 자동 감지 및 알림
+  - 작업자별 MOD Override 지원
+
+#### 통합 플랫폼 연동
+- [ ] **Microservice Architecture**
+  - IPR을 독립 서비스로 배포
+  - API Gateway를 통한 외부 접근
+  - JWT 기반 인증/인가
+- [ ] **REST API 제공**
+  - `/api/v1/workers` - 작업자 목록 및 성과 조회
+  - `/api/v1/kpi` - KPI 데이터 조회
+  - `/api/v1/dashboard` - 대시보드 데이터 조회
+  - `/api/v1/work-order/recommend` - AI 기반 작업 할당 추천
+- [ ] **Iframe Embedding 지원**
+  - `?embed=true` 파라미터로 UI Chrome 제거
+  - `postMessage` API로 부모 페이지와 통신
+  - Single Sign-On (SSO) 토큰 전달
+
+---
+
+### 🛠️ Phase 5: 성능 및 UX 개선 (v4.5.0)
+- [ ] Chart 렌더링 최적화 (Virtual Scrolling)
 - [ ] 모달 lazy loading
-- [ ] 대용량 데이터 가상 스크롤링
-- [ ] 모바일 반응형 레이아웃 개선
-- [ ] 다국어 지원 (한국어/영어)
+- [ ] 대용량 데이터 가상 스크롤링 (50,000+ 레코드)
+- [ ] 모바일 반응형 레이아웃 개선 (태블릿 최적화)
+- [ ] 다국어 지원 (한국어/영어/베트남어/중국어)
+- [ ] Progressive Web App (PWA) 지원
+- [ ] 오프라인 모드 (Service Worker)
 
 ---
 
