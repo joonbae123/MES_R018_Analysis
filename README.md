@@ -7,8 +7,8 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis-5bz.pages.dev
 - **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
-- **최신 버전**: v4.3.6 (2026-03-17)
-- **최근 수정**: Rework Count 및 Section ID 표시 버그 수정, 데이터베이스 마이그레이션 적용
+- **최신 버전**: v4.3.6 (2026-03-18)
+- **최근 수정**: Rework Count 및 Section ID 표시 버그 수정, 프로덕션 데이터베이스 마이그레이션 적용 완료
 
 ---
 
@@ -195,6 +195,9 @@ CREATE TABLE raw_data (
   work_rate REAL,
   worker_st INTEGER,      -- Worker Standard Time
   worker_rate_pct REAL,   -- Worker Rate (%)
+  section_id TEXT DEFAULT '',     -- Section ID (Skirt/Section 번호)
+  rework INTEGER DEFAULT 0,       -- Rework 플래그 (0: 정상, 1: 재작업)
+  wo_number TEXT DEFAULT '',      -- Work Order 번호
   FOREIGN KEY (upload_id) REFERENCES excel_uploads(id)
 );
 ```
@@ -415,7 +418,7 @@ Process Mapping 삭제
 
 ### 1. 저장소 클론
 ```bash
-git clone https://github.com/twokomi/MES_R018_Analysis.git
+git clone https://github.com/joonbae123/MES_R018_Analysis.git
 cd MES_R018_Analysis
 ```
 
@@ -799,22 +802,30 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 
 ## 🚧 향후 계획
 
-### Dashboard 고도화 (v4.1.0)
+### MES API 직접 연동 (v5.0.0)
+- [ ] MES R018 시스템 API 직접 연동
+- [ ] 실시간 데이터 조회 및 자동 업데이트
+- [ ] Excel 업로드 방식에서 API 기반 자동 동기화로 전환
+- [ ] 작업자 실시간 모니터링 기능
+
+### Dashboard 추가 기능 (v4.4.0)
 - [ ] Weekly aggregation 구현 (현재는 Daily만)
 - [ ] WoW/DoD 변화율 표시
 - [ ] Process hierarchy 드릴다운 (L1 → L2 → L3)
-- [ ] 시간대별 분포 (현재는 일별만)
-- [ ] Export 기능 (Dashboard → PDF/Excel)
+- [ ] 시간대별 분포 차트
+- [ ] Dashboard → PDF/Excel Export 기능
 
-### 성능 최적화 (v4.2.0)
+### 성능 및 UX 개선 (v4.5.0)
 - [ ] Chart 렌더링 최적화
 - [ ] 모달 lazy loading
 - [ ] 대용량 데이터 가상 스크롤링
+- [ ] 모바일 반응형 레이아웃 개선
+- [ ] 다국어 지원 (한국어/영어)
 
 ---
 
 **제작자**: JB Park (jbpark@cswind.com)  
-**최종 업데이트**: 2026-03-12 (v4.3.5)  
+**최종 업데이트**: 2026-03-18 (v4.3.6)  
 **라이선스**: MIT
 
 ---
