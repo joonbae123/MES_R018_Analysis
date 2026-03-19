@@ -7863,6 +7863,13 @@ console.log(' Executive Dashboard functions loaded');
         initExecutiveDashboard();
       }, 100);
     }
+    
+    // Initialize Scorecard Tab
+    if (tabName === 'scorecard' && AppState.currentUploadId) {
+      setTimeout(() => {
+        initScorecardTab(AppState.currentUploadId);
+      }, 100);
+    }
   };
 })();
 

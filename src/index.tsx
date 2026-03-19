@@ -538,4 +538,305 @@ app.delete('/api/process-mapping/:id', async (c) => {
   }
 })
 
+// ==========================================
+// Scorecard APIs
+// ==========================================
+
+// Helper: Calculate grade from score
+function getGrade(score: number): string {
+  if (score >= 90) return 'S'
+  if (score >= 80) return 'A'
+  if (score >= 70) return 'B'
+  if (score >= 60) return 'C'
+  return 'D'
+}
+
+// API: 작업자 리스트 조회
+app.get('/api/scorecard/workers', async (c) => {
+  try {
+    const { env } = c
+    const uploadId = c.req.query('uploadId')
+    const processFilter = c.req.query('process') || ''
+    const gradeFilter = c.req.query('grade') || ''
+    
+    if (!uploadId) {
+      return c.json({ success: false, error: 'uploadId is required' }, 400)
+    }
+    
+    // 작업자별 집계 (주 공정, 작업 건수, 점수)
+    let query = `
+      SELECT 
+        worker_name as name,
+        fo_desc as main_process,
+        COUNT(*) as work_count,
+        ROUND((SUM(worker_act) * 100.0 / SUM(CASE 
+          WHEN working_shift = 'Day' THEN 660
+          WHEN working_shift = 'Night' THEN 600
+          ELSE 660
+        END) * 0.5) + 
+        (SUM(worker_st) * 100.0 / SUM(worker_act) * 0.5), 1) as score,
+        ROUND(SUM(worker_act) * 100.0 / SUM(CASE 
+          WHEN working_shift = 'Day' THEN 660
+          WHEN working_shift = 'Night' THEN 600
+          ELSE 660
+        END), 1) as utilization,
+        ROUND(SUM(worker_st) * 100.0 / SUM(worker_act), 1) as efficiency
+      FROM raw_data
+      WHERE upload_id = ?
+    `
+    
+    const params: any[] = [uploadId]
+    
+    if (processFilter) {
+      query += ` AND fo_desc = ?`
+      params.push(processFilter)
+    }
+    
+    query += `
+      GROUP BY worker_name, fo_desc
+      HAVING work_count >= 5
+      ORDER BY score DESC
+    `
+    
+    const { results: workers } = await env.DB.prepare(query).bind(...params).all()
+    
+    // 등급 추가 및 필터링
+    let workersWithGrade = workers.map((w: any) => ({
+      ...w,
+      grade: getGrade(w.score)
+    }))
+    
+    if (gradeFilter) {
+      workersWithGrade = workersWithGrade.filter((w: any) => w.grade === gradeFilter)
+    }
+    
+    return c.json({
+      success: true,
+      workers: workersWithGrade
+    })
+  } catch (error: any) {
+    console.error('Workers list error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// API: 작업자 개별 성적표
+app.get('/api/scorecard/worker/:name', async (c) => {
+  try {
+    const { env } = c
+    const name = c.req.param('name')
+    const uploadId = c.req.query('uploadId')
+    const days = parseInt(c.req.query('days') || '30')
+    
+    if (!uploadId) {
+      return c.json({ success: false, error: 'uploadId is required' }, 400)
+    }
+    
+    // 1. 기본 통계
+    const stats = await env.DB.prepare(`
+      SELECT 
+        COUNT(DISTINCT working_day) as work_days,
+        COUNT(*) as total_records,
+        SUM(worker_act) as total_work_time,
+        SUM(CASE 
+          WHEN working_shift = 'Day' THEN 660
+          WHEN working_shift = 'Night' THEN 600
+          ELSE 660
+        END) as total_shift_time,
+        SUM(worker_st) as total_st,
+        SUM(worker_act) as total_actual_time,
+        MIN(working_day) as start_date,
+        MAX(working_day) as end_date
+      FROM raw_data
+      WHERE upload_id = ? AND worker_name = ?
+        AND working_day >= date('now', '-' || ? || ' days')
+    `).bind(uploadId, name, days).first()
+    
+    if (!stats || stats.total_records === 0) {
+      return c.json({ success: false, error: 'No data found for this worker' }, 404)
+    }
+    
+    const utilization = parseFloat(((stats.total_work_time / stats.total_shift_time) * 100).toFixed(1))
+    const efficiency = parseFloat(((stats.total_st / stats.total_actual_time) * 100).toFixed(1))
+    const score = parseFloat(((utilization * 0.5) + (efficiency * 0.5)).toFixed(1))
+    const grade = getGrade(score)
+    
+    // 2. 일별 트렌드
+    const { results: trend } = await env.DB.prepare(`
+      SELECT 
+        working_day as date,
+        ROUND(SUM(worker_act) * 100.0 / SUM(CASE 
+          WHEN working_shift = 'Day' THEN 660
+          WHEN working_shift = 'Night' THEN 600
+          ELSE 660
+        END), 1) as utilization,
+        ROUND(SUM(worker_st) * 100.0 / SUM(worker_act), 1) as efficiency
+      FROM raw_data
+      WHERE upload_id = ? AND worker_name = ?
+        AND working_day >= date('now', '-' || ? || ' days')
+      GROUP BY working_day
+      ORDER BY working_day
+    `).bind(uploadId, name, days).all()
+    
+    // 3. 시프트 분포
+    const { results: shiftDist } = await env.DB.prepare(`
+      SELECT 
+        working_shift as shift, 
+        COUNT(*) as count
+      FROM raw_data
+      WHERE upload_id = ? AND worker_name = ?
+      GROUP BY working_shift
+    `).bind(uploadId, name).all()
+    
+    // 4. 공정 분포
+    const { results: processDist } = await env.DB.prepare(`
+      SELECT 
+        fo_desc, 
+        COUNT(*) as count
+      FROM raw_data
+      WHERE upload_id = ? AND worker_name = ?
+      GROUP BY fo_desc
+      ORDER BY count DESC
+      LIMIT 5
+    `).bind(uploadId, name).all()
+    
+    // 5. 최근 작업 기록
+    const { results: recentWorks } = await env.DB.prepare(`
+      SELECT 
+        working_day as date,
+        fo_desc,
+        working_shift as shift,
+        worker_act as work_time,
+        CASE 
+          WHEN working_shift = 'Day' THEN 660
+          WHEN working_shift = 'Night' THEN 600
+          ELSE 660
+        END as shift_time,
+        worker_st as st,
+        ROUND(worker_act * 100.0 / CASE 
+          WHEN working_shift = 'Day' THEN 660
+          WHEN working_shift = 'Night' THEN 600
+          ELSE 660
+        END, 1) as util_rate,
+        ROUND(worker_st * 100.0 / worker_act, 1) as eff_rate,
+        section_id,
+        rework
+      FROM raw_data
+      WHERE upload_id = ? AND worker_name = ?
+      ORDER BY working_day DESC
+      LIMIT 20
+    `).bind(uploadId, name).all()
+    
+    // 6. 전체 순위 계산
+    const ranking = await env.DB.prepare(`
+      WITH worker_scores AS (
+        SELECT 
+          worker_name,
+          ROUND((SUM(worker_act) * 100.0 / SUM(CASE 
+            WHEN working_shift = 'Day' THEN 660
+            WHEN working_shift = 'Night' THEN 600
+            ELSE 660
+          END) * 0.5) + 
+          (SUM(worker_st) * 100.0 / SUM(worker_act) * 0.5), 1) as score
+        FROM raw_data
+        WHERE upload_id = ?
+        GROUP BY worker_name
+      )
+      SELECT 
+        COUNT(*) as total_workers,
+        SUM(CASE WHEN score > ? THEN 1 ELSE 0 END) as better_count
+      FROM worker_scores
+    `).bind(uploadId, score).first()
+    
+    const rank = (ranking?.better_count || 0) + 1
+    const percentile = parseFloat((((ranking?.better_count || 0) / (ranking?.total_workers || 1)) * 100).toFixed(1))
+    
+    // 7. 주 작업 공정
+    const mainProcess = processDist[0]?.fo_desc || 'N/A'
+    
+    // 8. 간단한 인사이트 생성
+    const insights = generateSimpleInsights(trend, shiftDist, recentWorks)
+    
+    return c.json({
+      success: true,
+      name,
+      uploadId,
+      period: {
+        days,
+        start: stats.start_date,
+        end: stats.end_date
+      },
+      header: {
+        mainProcess,
+        totalWorks: stats.total_records,
+        score,
+        grade,
+        utilization,
+        efficiency,
+        ranking: {
+          rank,
+          total: ranking?.total_workers || 0,
+          percentile
+        }
+      },
+      trend,
+      distribution: {
+        shift: shiftDist,
+        process: processDist
+      },
+      recentWorks,
+      insights
+    })
+  } catch (error: any) {
+    console.error('Worker card error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Helper: 인사이트 생성
+function generateSimpleInsights(trend: any[], shiftDist: any[], recentWorks: any[]) {
+  const insights = {
+    strengths: [] as string[],
+    warnings: [] as string[],
+    improvements: [] as string[],
+    recommendations: [] as string[]
+  }
+  
+  // 트렌드 분석 (최근 7일 vs 이전 7일)
+  if (trend.length >= 14) {
+    const recent7 = trend.slice(-7)
+    const prev7 = trend.slice(-14, -7)
+    const recentAvg = recent7.reduce((sum: number, d: any) => sum + d.efficiency, 0) / 7
+    const prevAvg = prev7.reduce((sum: number, d: any) => sum + d.efficiency, 0) / 7
+    
+    if (recentAvg > prevAvg * 1.05) {
+      insights.improvements.push(`지난 주 대비 효율 ${((recentAvg - prevAvg) / prevAvg * 100).toFixed(1)}% 상승`)
+    }
+  }
+  
+  // 시프트별 패턴
+  const dayWorks = recentWorks.filter((w: any) => w.shift === 'Day')
+  const nightWorks = recentWorks.filter((w: any) => w.shift === 'Night')
+  
+  if (dayWorks.length > 0 && nightWorks.length > 0) {
+    const dayAvg = dayWorks.reduce((sum: number, w: any) => sum + w.eff_rate, 0) / dayWorks.length
+    const nightAvg = nightWorks.reduce((sum: number, w: any) => sum + w.eff_rate, 0) / nightWorks.length
+    
+    if (dayAvg > nightAvg * 1.1) {
+      insights.warnings.push(`Night 시프트 시 효율 ${((dayAvg - nightAvg) / nightAvg * 100).toFixed(0)}% 하락`)
+      insights.recommendations.push('Night 시프트 효율 개선 교육 고려')
+    } else if (dayAvg > 85) {
+      insights.strengths.push(`Day 시프트 평균 대비 높은 효율 (${dayAvg.toFixed(1)}%)`)
+    }
+  }
+  
+  // 재작업 체크
+  const reworkCount = recentWorks.filter((w: any) => w.rework === 1).length
+  if (reworkCount > 0) {
+    insights.warnings.push(`최근 20건 중 재작업 ${reworkCount}회 발생`)
+  }
+  
+  return insights
+}
+
 export default app

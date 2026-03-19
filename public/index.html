@@ -711,6 +711,9 @@
                 <button class="tab-btn px-6 py-3 font-medium" data-tab="report">
                     <i class="fas fa-chart-bar mr-2"></i>Report
                 </button>
+                <button class="tab-btn px-6 py-3 font-medium" data-tab="scorecard">
+                    <i class="fas fa-trophy mr-2"></i>Scorecard
+                </button>
                 <button class="tab-btn px-6 py-3 font-medium" data-tab="mapping">
                     <i class="fas fa-sitemap mr-2"></i>Process Mapping
                 </button>
@@ -1559,6 +1562,108 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scorecard Tab -->
+        <div id="scorecardTab" class="tab-content hidden">
+            <div class="grid grid-cols-4 gap-6">
+                
+                <!-- Left Sidebar: Worker List (25%) -->
+                <div class="bg-white shadow rounded-lg p-4">
+                    <h3 class="text-lg font-bold mb-4">
+                        <i class="fas fa-users text-purple-600 mr-2"></i>
+                        작업자 목록
+                    </h3>
+                    
+                    <!-- Search -->
+                    <input type="text" id="scorecardWorkerSearch" 
+                           placeholder="이름 검색..." 
+                           class="w-full px-3 py-2 border rounded mb-3 text-sm">
+                    
+                    <!-- Process Filter -->
+                    <select id="scorecardProcessFilter" class="w-full px-3 py-2 border rounded mb-3 text-sm">
+                        <option value="">전체 공정</option>
+                        <option value="Bevel">Bevel</option>
+                        <option value="Cut">Cut</option>
+                        <option value="Paint">Paint</option>
+                        <option value="FU">FU</option>
+                        <option value="Bend">Bend</option>
+                    </select>
+                    
+                    <!-- Grade Filter -->
+                    <select id="scorecardGradeFilter" class="w-full px-3 py-2 border rounded mb-4 text-sm">
+                        <option value="">전체 등급</option>
+                        <option value="S">S등급</option>
+                        <option value="A">A등급</option>
+                        <option value="B">B등급</option>
+                        <option value="C">C등급</option>
+                        <option value="D">D등급</option>
+                    </select>
+                    
+                    <!-- Worker List -->
+                    <div id="scorecardWorkerList" class="space-y-2 overflow-y-auto" style="max-height: 600px;">
+                        <p class="text-gray-500 text-center py-8 text-sm">데이터를 업로드해주세요</p>
+                    </div>
+                </div>
+                
+                <!-- Right Main Area: Worker Card or Overview (75%) -->
+                <div class="col-span-3" id="scorecardMainContainer">
+                    <!-- Overview Screen (default) -->
+                    <div id="scorecardOverview">
+                        <div class="bg-white shadow rounded-lg p-6 mb-6">
+                            <h2 class="text-2xl font-bold mb-4">
+                                <i class="fas fa-trophy text-purple-600 mr-2"></i>
+                                Performance Scorecard
+                            </h2>
+                            <p class="text-gray-600 mb-6">
+                                작업자별 종합 성적표 및 성과 분석
+                            </p>
+                            
+                            <!-- Grade Distribution -->
+                            <div class="card">
+                                <h3 class="text-lg font-bold mb-4">
+                                    <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
+                                    등급 분포
+                                </h3>
+                                <canvas id="gradeDistChart" height="100"></canvas>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-6 mt-6">
+                                <!-- Top 10 -->
+                                <div class="card">
+                                    <h3 class="text-lg font-bold mb-4">
+                                        <i class="fas fa-medal text-yellow-600 mr-2"></i>
+                                        Top 10 작업자
+                                    </h3>
+                                    <div id="top10List" class="space-y-2">
+                                        <!-- Dynamic content -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Needs Improvement -->
+                                <div class="card">
+                                    <h3 class="text-lg font-bold mb-4">
+                                        <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                                        개선 필요 (D등급)
+                                    </h3>
+                                    <div id="needsImprovementList" class="space-y-2">
+                                        <!-- Dynamic content -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center text-gray-400 mt-8">
+                            <p class="text-lg">👈 좌측에서 작업자를 선택하여 상세 성적표를 확인하세요</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Worker Card Screen (when worker selected) -->
+                    <div id="scorecardWorkerCard" class="hidden">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -3599,5 +3704,6 @@
     </div>
 
     <script src="js/app.js?v=1773730634440"></script>
+    <script src="/static/scorecard.js"></script>
 </body>
 </html>
