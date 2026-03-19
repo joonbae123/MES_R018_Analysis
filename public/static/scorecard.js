@@ -588,7 +588,12 @@ function renderScorecardTable() {
     tbody.innerHTML = sorted.map((worker, index) => `
         <tr class="border-b border-gray-200 hover:bg-gray-50">
             <td class="px-4 py-3 text-sm text-gray-500">#${index + 1}</td>
-            <td class="px-4 py-3 text-sm">${worker.name}</td>
+            <td class="px-4 py-3 text-sm">
+                <button onclick="window.showWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
+                        class="text-blue-600 hover:text-blue-800 hover:underline font-semibold transition">
+                    ${worker.name}
+                </button>
+            </td>
             <td class="px-4 py-3 text-sm">${worker.main_process}</td>
             <td class="px-4 py-3 text-sm text-right font-semibold">${worker.score.toFixed(1)}</td>
             <td class="px-4 py-3 text-center">
@@ -600,9 +605,9 @@ function renderScorecardTable() {
             <td class="px-4 py-3 text-sm text-right">${worker.efficiency.toFixed(1)}%</td>
             <td class="px-4 py-3 text-sm text-right">${worker.work_count}</td>
             <td class="px-4 py-3 text-center">
-                <button onclick="alert('Detail view coming soon!')" 
-                        class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
-                    View
+                <button onclick="window.showWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
+                        class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition">
+                    <i class="fas fa-chart-line mr-1"></i>View
                 </button>
             </td>
         </tr>
@@ -630,4 +635,11 @@ document.addEventListener('click', function(e) {
     }
 });
 
-console.log('✅ Scorecard module loaded with advanced filters');
+// ============================================================================
+// Worker Detail Modal
+// ============================================================================
+// NOTE: Scorecard uses Report's worker detail modal (window.showWorkerDetail)
+// No separate modal implementation needed for Scorecard.
+// When worker name is clicked, it opens the same modal from Report tab.
+
+console.log('✅ Scorecard module loaded with advanced filters and worker detail modal');
