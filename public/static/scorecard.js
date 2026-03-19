@@ -227,25 +227,21 @@ function renderScorecardTable() {
         return ScorecardState.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     });
     
-    // Render rows
-    tbody.innerHTML = sorted.map(worker => `
+    // Render rows with rank
+    tbody.innerHTML = sorted.map((worker, index) => `
         <tr class="border-b border-gray-200 hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm text-gray-500">#${index + 1}</td>
             <td class="px-4 py-3 text-sm">${worker.name}</td>
             <td class="px-4 py-3 text-sm">${worker.main_process}</td>
-            <td class="px-4 py-3 text-sm text-center">${worker.work_count}</td>
-            <td class="px-4 py-3 text-sm text-center font-semibold">${worker.score.toFixed(1)}</td>
+            <td class="px-4 py-3 text-sm text-right font-semibold">${worker.score.toFixed(1)}</td>
             <td class="px-4 py-3 text-center">
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold grade-${worker.grade}">
                     ${worker.grade}
                 </span>
             </td>
-            <td class="px-4 py-3 text-sm text-center">${worker.utilization.toFixed(1)}%</td>
-            <td class="px-4 py-3 text-sm text-center">${worker.efficiency.toFixed(1)}%</td>
-            <td class="px-4 py-3 text-sm text-center">
-                <span class="inline-block px-2 py-1 rounded text-xs ${getBandColor(worker.utilization_band)}">
-                    ${worker.utilization_band}
-                </span>
-            </td>
+            <td class="px-4 py-3 text-sm text-right">${worker.utilization.toFixed(1)}%</td>
+            <td class="px-4 py-3 text-sm text-right">${worker.efficiency.toFixed(1)}%</td>
+            <td class="px-4 py-3 text-sm text-right">${worker.work_count}</td>
             <td class="px-4 py-3 text-center">
                 <button onclick="alert('Detail view coming soon!')" 
                         class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
