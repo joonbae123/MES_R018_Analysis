@@ -764,6 +764,17 @@ function handleFileUpload(file) {
                 }, 500);
             }
             
+            // Refresh Scorecard if data exists
+            if (typeof initScorecardTab === 'function' && AppState.processedData && AppState.processedData.length > 0) {
+                setTimeout(() => {
+                    // Check if Scorecard tab is currently active
+                    const scorecardTab = document.getElementById('scorecardTab');
+                    if (scorecardTab && !scorecardTab.classList.contains('hidden')) {
+                        initScorecardTab();
+                    }
+                }, 500);
+            }
+            
             // Store filename and size for later database save
             AppState.currentFileName = file.name;
             AppState.currentFileSize = file.size;
@@ -4382,6 +4393,16 @@ async function loadUploadById(uploadId) {
             }, 500);
         }
         
+        // Refresh Scorecard if data exists
+        if (typeof initScorecardTab === 'function' && AppState.processedData && AppState.processedData.length > 0) {
+            setTimeout(() => {
+                const scorecardTab = document.getElementById('scorecardTab');
+                if (scorecardTab && !scorecardTab.classList.contains('hidden')) {
+                    initScorecardTab();
+                }
+            }, 500);
+        }
+        
         // Switch to Dashboard tab (user wants to see dashboard after load)
         setTimeout(() => {
             switchTab('dashboard');
@@ -4571,6 +4592,16 @@ async function loadLastUpload() {
                 refreshExecutiveDashboard();
                 if (typeof initExecutiveDashboard === 'function') {
                     initExecutiveDashboard();
+                }
+            }, 500);
+        }
+        
+        // Refresh Scorecard if data exists
+        if (typeof initScorecardTab === 'function' && AppState.processedData && AppState.processedData.length > 0) {
+            setTimeout(() => {
+                const scorecardTab = document.getElementById('scorecardTab');
+                if (scorecardTab && !scorecardTab.classList.contains('hidden')) {
+                    initScorecardTab();
                 }
             }, 500);
         }
