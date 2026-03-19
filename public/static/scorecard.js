@@ -359,7 +359,6 @@ function loadScorecardData() {
             if (!workerMap[name]) {
                 workerMap[name] = {
                     name: name,
-                    totalShiftTime: 0,
                     totalActualTime: 0,
                     totalAssignedST: 0,
                     workCount: 0,
@@ -369,7 +368,6 @@ function loadScorecardData() {
                 };
             }
             
-            const shiftMinutes = (record.shiftCount || 0) * 660;
             const actualMinutes = record.workerActMins || 0;
             const st = record['Worker S/T'] || 0;
             const rate = record['Worker Rate(%)'] || 0;
@@ -377,7 +375,6 @@ function loadScorecardData() {
             const adjustmentRatio = record.overlapAdjustmentRatio || 1;
             const adjustedAssigned = assigned * adjustmentRatio;
             
-            workerMap[name].totalShiftTime += shiftMinutes;
             workerMap[name].totalActualTime += actualMinutes;
             workerMap[name].totalAssignedST += adjustedAssigned;
             workerMap[name].workCount++;
@@ -386,13 +383,16 @@ function loadScorecardData() {
             workerMap[name].shifts.add(shiftKey);
         });
         
-        // Calculate metrics
+        // Calculate metrics (using shift count * 660 for totalShiftTime)
         ScorecardState.allWorkers = Object.values(workerMap).map(worker => {
-            const utilization = worker.totalShiftTime > 0 
-                ? (worker.totalActualTime / worker.totalShiftTime) * 100 
+            const shiftCount = worker.shifts.size;
+            const totalShiftTime = shiftCount * 660; // 660 minutes per shift
+            
+            const utilization = totalShiftTime > 0 
+                ? (worker.totalActualTime / totalShiftTime) * 100 
                 : 0;
-            const efficiency = worker.totalShiftTime > 0 
-                ? (worker.totalAssignedST / worker.totalShiftTime) * 100 
+            const efficiency = totalShiftTime > 0 
+                ? (worker.totalAssignedST / totalShiftTime) * 100 
                 : 0;
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
@@ -401,7 +401,7 @@ function loadScorecardData() {
                 main_process: worker.main_process || 'Unknown',
                 category: worker.category || '',
                 work_count: worker.workCount,
-                shift_count: worker.shifts.size,
+                shift_count: shiftCount,
                 utilization: utilization,
                 efficiency: efficiency,
                 score: score,
