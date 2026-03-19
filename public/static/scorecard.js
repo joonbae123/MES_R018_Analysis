@@ -1,5 +1,5 @@
 // Scorecard Tab JavaScript
-// Uses EXACTLY the same logic as Report tab
+// Uses AppState.workerSummary directly from Report tab (already calculated)
 
 // Make ScorecardState globally accessible for debugging
 window.ScorecardState = {
@@ -7,22 +7,19 @@ window.ScorecardState = {
     filteredWorkers: [],
     selectedWorker: null,
     sortColumn: 'score',
-    sortDirection: 'desc',
-    charts: {}
+    sortDirection: 'desc'
 };
 
 // Local reference
 const ScorecardState = window.ScorecardState;
 
-// Use CATEGORY_ORDER from app.js (already declared globally)
-// const CATEGORY_ORDER is in app.js
-
 // Initialize Scorecard Tab (make globally accessible)
 window.initScorecardTab = function() {
     console.log('🎯 Initializing Scorecard Tab');
     
-    if (!window.AppState || !window.AppState.processedData || window.AppState.processedData.length === 0) {
-        console.log('❌ No data in AppState');
+    // Use workerSummary from Report tab (already calculated!)
+    if (!window.AppState || !window.AppState.workerSummary || window.AppState.workerSummary.length === 0) {
+        console.log('❌ No workerSummary in AppState');
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-gray-500">
@@ -34,268 +31,238 @@ window.initScorecardTab = function() {
         return;
     }
     
-    console.log(`✅ Found ${window.AppState.processedData.length} records in AppState`);
+    console.log(`✅ Found ${window.AppState.workerSummary.length} workers in AppState.workerSummary`);
     loadScorecardData();
 };
 
-// Load and Aggregate Scorecard Data
+// Load Scorecard Data from AppState.workerSummary
 function loadScorecardData() {
     try {
-        document.getElementById('scorecardTableBody').innerHTML = `
-            <tr>
-                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
-                    <i class="fas fa-spinner fa-spin mr-2"></i>
-                    Calculating worker scores...
-                </td>
-            </tr>
-        `;
+        // Use workerSummary directly (already calculated in Report tab!)
+        const workerSummary = window.AppState.workerSummary;
         
-        // Group by worker + date + shift + process (same as Report aggregation)
-        const aggregated = {};
-        
-        window.AppState.processedData.forEach(record => {
-            const key = `${record.workerName}|${record.workingDay}|${record.workingShift}|${record.actualShift}|${record.foDesc3}`;
-            
-            if (!aggregated[key]) {
-                aggregated[key] = {
-                    workerName: record.workerName,
-                    foDesc3: record.foDesc3,
-                    foDesc2: record.foDesc2,
-                    workingDay: record.workingDay,
-                    workingShift: record.workingShift,
-                    actualShift: record.actualShift,
-                    shiftTime: 0,          // Total shift time
-                    actualTime: 0,         // Total actual time
-                    assignedStandardTime: 0,  // Adjusted S/T for efficiency
-                    seq: record.seq,
-                    count: 0
-                };
-            }
-            
-            // Accumulate times (same as Report)
-            const actualMinutes = record.workerActMins || 0;
-            const shiftMinutes = (record.shiftCount || 0) * 660;  // shiftCount × 660 minutes
-            const st = record['Worker S/T'] || 0;
-            const rate = record['Worker Rate(%)'] || 0;
-            const assigned = (st * rate / 100);
-            const adjustmentRatio = record.overlapAdjustmentRatio || 1;
-            const adjustedAssigned = assigned * adjustmentRatio;
-            
-            aggregated[key].shiftTime += shiftMinutes;
-            aggregated[key].actualTime += actualMinutes;
-            aggregated[key].assignedStandardTime += adjustedAssigned;
-            aggregated[key].count++;
-        });
-        
-        // Group by worker
-        const workerMap = {};
-        
-        Object.values(aggregated).forEach(agg => {
-            const name = agg.workerName;
-            if (!name) return;
-            
-            if (!workerMap[name]) {
-                workerMap[name] = {
-                    name: name,
-                    totalShiftTime: 0,
-                    totalActualTime: 0,
-                    totalAssignedStandardTime: 0,
-                    workCount: 0,
-                    processes: {},
-                    shifts: {},
-                    categories: {}
-                };
-            }
-            
-            const worker = workerMap[name];
-            worker.totalShiftTime += agg.shiftTime;
-            worker.totalActualTime += agg.actualTime;
-            worker.totalAssignedStandardTime += agg.assignedStandardTime;
-            worker.workCount++;
-            
-            // Track processes with category info
-            const process = agg.foDesc3 || 'Unknown';
-            if (!worker.processes[process]) {
-                worker.processes[process] = {
-                    count: 0,
-                    category: agg.foDesc2,
-                    seq: agg.seq
-                };
-            }
-            worker.processes[process].count++;
-            
-            // Track shifts
-            const shift = agg.workingShift || 'Unknown';
-            worker.shifts[shift] = (worker.shifts[shift] || 0) + 1;
-            
-            // Track categories
-            const category = agg.foDesc2 || 'Other';
-            worker.categories[category] = (worker.categories[category] || 0) + 1;
-        });
-        
-        // Calculate metrics for each worker
-        const workers = Object.values(workerMap).map(worker => {
-            // Time Utilization = (Actual Time / Shift Time) × 100
-            const utilization = worker.totalShiftTime > 0 
-                ? (worker.totalActualTime / worker.totalShiftTime) * 100 
-                : 0;
-            
-            // Work Efficiency = (Adjusted S/T / Shift Time) × 100
-            const efficiency = worker.totalShiftTime > 0
-                ? (worker.totalAssignedStandardTime / worker.totalShiftTime) * 100
-                : 0;
-            
-            // Composite score: 50% utilization + 50% efficiency
+        // Transform to Scorecard format
+        ScorecardState.allWorkers = workerSummary.map(worker => {
+            const utilization = worker.utilizationRate || 0;
+            const efficiency = worker.efficiencyRate || 0;
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
-            // DEBUG: Log first worker
-            if (Object.keys(workerMap).indexOf(worker.name) === 0) {
-                console.log('🔍 First worker calculation:', {
-                    name: worker.name,
-                    totalShiftTime: worker.totalShiftTime,
-                    totalActualTime: worker.totalActualTime,
-                    totalAssignedStandardTime: worker.totalAssignedStandardTime,
-                    utilization: utilization.toFixed(2) + '%',
-                    efficiency: efficiency.toFixed(2) + '%',
-                    score: score.toFixed(2)
-                });
-            }
-            
-            // Determine main process (sorted by category/seq, then count)
-            const mainProcess = Object.entries(worker.processes)
-                .sort((a, b) => {
-                    // Sort by category order first
-                    const catA = window.CATEGORY_ORDER[a[1].category] || 999;
-                    const catB = window.CATEGORY_ORDER[b[1].category] || 999;
-                    if (catA !== catB) return catA - catB;
-                    
-                    // Then by seq
-                    const seqA = a[1].seq || 999;
-                    const seqB = b[1].seq || 999;
-                    if (seqA !== seqB) return seqA - seqB;
-                    
-                    // Finally by count (highest first)
-                    return b[1].count - a[1].count;
-                })[0]?.[0] || 'Unknown';
-            
             return {
-                name: worker.name,
-                main_process: mainProcess,
-                work_count: worker.workCount,
-                score: score,
+                name: worker.workerName,
+                main_process: worker.foDesc3 || 'Unknown',
+                category: worker.foDesc2 || '',
+                work_count: worker.woCount || 0,
+                shift_count: worker.shiftCount || 0,
                 utilization: utilization,
                 efficiency: efficiency,
-                totalShiftTime: worker.totalShiftTime,
-                totalActualTime: worker.totalActualTime,
-                totalAssignedStandardTime: worker.totalAssignedStandardTime,
-                processes: worker.processes,
-                shifts: worker.shifts,
-                categories: worker.categories
+                score: score,
+                grade: getGrade(score),
+                utilization_band: worker.utilizationBand?.label || '',
+                efficiency_band: worker.efficiencyBand?.label || '',
+                total_minutes: worker.totalMinutes || 0,
+                assigned_st: worker.assignedStandardTime || 0
             };
         });
         
-        console.log(`✅ Calculated scores for ${workers.length} workers`);
-        console.log(`📊 Sample worker:`, workers[0]);
+        console.log(`📊 Scorecard: Transformed ${ScorecardState.allWorkers.length} workers`);
+        console.log('First worker:', ScorecardState.allWorkers[0]);
         
-        ScorecardState.allWorkers = workers;
-        ScorecardState.filteredWorkers = workers;
+        // Update process filter
+        updateProcessFilter();
         
-        // Update process filter options
-        updateProcessFilterOptions();
-        
-        // Apply filters
-        applyAllFilters();
+        // Apply filters and render
+        window.resetScorecardFilters();
         
     } catch (error) {
-        console.error('❌ Failed to load scorecard data:', error);
+        console.error('❌ Error loading scorecard data:', error);
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-red-500">
                     <i class="fas fa-exclamation-triangle mr-2"></i>
-                    Error loading data: ${error.message}
+                    Error: ${error.message}
                 </td>
             </tr>
         `;
     }
 }
 
-// Update Process Filter Options (EXACTLY same order as Report tab)
-function updateProcessFilterOptions() {
-    // Build process map with category/seq info from processedData
-    const processMap = new Map();
-    
-    window.AppState.processedData.forEach(d => {
-        if (d.foDesc3 && !processMap.has(d.foDesc3)) {
-            const categorySeq = window.CATEGORY_ORDER[d.foDesc2] || 999;
-            const processSeq = d.seq !== undefined ? d.seq : 999;
-            processMap.set(d.foDesc3, {
-                category: d.foDesc2,
-                categorySeq: categorySeq,
-                processSeq: processSeq
-            });
-        }
-    });
-    
-    // Sort by category order, then by seq, then alphabetically
-    const processes = Array.from(processMap.entries())
-        .sort((a, b) => {
-            if (a[1].categorySeq !== b[1].categorySeq) {
-                return a[1].categorySeq - b[1].categorySeq;
-            }
-            if (a[1].processSeq !== b[1].processSeq) {
-                return a[1].processSeq - b[1].processSeq;
-            }
-            return a[0].localeCompare(b[0]);
-        })
-        .map(entry => entry[0]);
-    
-    const selectElement = document.getElementById('scorecardProcessFilter');
-    if (!selectElement) return;
-    
-    const currentValue = selectElement.value;
-    
-    selectElement.innerHTML = '<option value="">All Processes</option>' + 
-        processes.map(process => `<option value="${process}">${process}</option>`).join('');
-    
-    if (currentValue && processes.includes(currentValue)) {
-        selectElement.value = currentValue;
-    }
-    
-    console.log(`✅ Process filter updated with ${processes.length} processes in correct order`);
+// Get Grade from Score
+function getGrade(score) {
+    if (score >= 90) return 'S';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B';
+    if (score >= 60) return 'C';
+    return 'D';
 }
 
-// Apply All Filters
-function applyAllFilters() {
-    let filtered = [...ScorecardState.allWorkers];
+// Update Process Filter (sorted by CATEGORY_ORDER)
+function updateProcessFilter() {
+    const processFilter = document.getElementById('scorecardProcessFilter');
+    if (!processFilter) return;
     
-    // Search filter
-    const searchTerm = document.getElementById('scorecardWorkerSearch')?.value.toLowerCase() || '';
-    if (searchTerm) {
-        filtered = filtered.filter(worker => 
-            worker.name.toLowerCase().includes(searchTerm)
-        );
-    }
+    // Get unique processes
+    const processes = [...new Set(ScorecardState.allWorkers.map(w => w.main_process))];
     
-    // Process filter
-    const processFilter = document.getElementById('scorecardProcessFilter')?.value || '';
-    if (processFilter) {
-        filtered = filtered.filter(worker => worker.main_process === processFilter);
-    }
-    
-    // Grade filter
-    const gradeFilter = document.getElementById('scorecardGradeFilter')?.value || '';
-    if (gradeFilter) {
-        filtered = filtered.filter(worker => {
-            const grade = getGradeInfo(worker.score).grade;
-            return grade === gradeFilter;
+    // Sort by CATEGORY_ORDER (same as Report tab)
+    if (window.CATEGORY_ORDER) {
+        processes.sort((a, b) => {
+            const catA = ScorecardState.allWorkers.find(w => w.main_process === a)?.category || '';
+            const catB = ScorecardState.allWorkers.find(w => w.main_process === b)?.category || '';
+            
+            const orderA = window.CATEGORY_ORDER[catA] || 999;
+            const orderB = window.CATEGORY_ORDER[catB] || 999;
+            
+            if (orderA !== orderB) return orderA - orderB;
+            return a.localeCompare(b);
         });
     }
     
-    ScorecardState.filteredWorkers = filtered;
+    // Build options
+    processFilter.innerHTML = '<option value="">All Processes</option>' +
+        processes.map(p => `<option value="${p}">${p}</option>`).join('');
+    
+    console.log(`📋 Process filter updated: ${processes.length} processes`);
+}
+
+// Apply Filters
+window.resetScorecardFilters = function() {
+    document.getElementById('scorecardSearchInput').value = '';
+    document.getElementById('scorecardProcessFilter').value = '';
+    document.getElementById('scorecardGradeFilter').value = '';
+    applyScorecardFilters();
+};
+
+function applyScorecardFilters() {
+    const searchTerm = document.getElementById('scorecardSearchInput').value.toLowerCase();
+    const processFilter = document.getElementById('scorecardProcessFilter').value;
+    const gradeFilter = document.getElementById('scorecardGradeFilter').value;
+    
+    ScorecardState.filteredWorkers = ScorecardState.allWorkers.filter(worker => {
+        // Search filter
+        if (searchTerm && !worker.name.toLowerCase().includes(searchTerm)) {
+            return false;
+        }
+        
+        // Process filter
+        if (processFilter && worker.main_process !== processFilter) {
+            return false;
+        }
+        
+        // Grade filter
+        if (gradeFilter && worker.grade !== gradeFilter) {
+            return false;
+        }
+        
+        return true;
+    });
+    
     renderScorecardTable();
 }
 
-// Sort Table (make globally accessible)
+// Render Scorecard Table
+function renderScorecardTable() {
+    const tbody = document.getElementById('scorecardTableBody');
+    const countSpan = document.getElementById('scorecardWorkerCount');
+    
+    // Update count
+    countSpan.textContent = `${ScorecardState.filteredWorkers.length} workers found`;
+    
+    if (ScorecardState.filteredWorkers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                    <i class="fas fa-search mr-2"></i>
+                    No workers match the selected filters
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Sort by current column
+    const sorted = [...ScorecardState.filteredWorkers];
+    sorted.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch (ScorecardState.sortColumn) {
+            case 'name':
+                aVal = a.name;
+                bVal = b.name;
+                return ScorecardState.sortDirection === 'asc' 
+                    ? aVal.localeCompare(bVal) 
+                    : bVal.localeCompare(aVal);
+            
+            case 'process':
+                aVal = a.main_process;
+                bVal = b.main_process;
+                return ScorecardState.sortDirection === 'asc' 
+                    ? aVal.localeCompare(bVal) 
+                    : bVal.localeCompare(aVal);
+            
+            case 'grade':
+                const gradeOrder = { 'S': 5, 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
+                aVal = gradeOrder[a.grade] || 0;
+                bVal = gradeOrder[b.grade] || 0;
+                break;
+            
+            case 'score':
+            case 'utilization':
+            case 'efficiency':
+            case 'work_count':
+                aVal = a[ScorecardState.sortColumn] || 0;
+                bVal = b[ScorecardState.sortColumn] || 0;
+                break;
+            
+            default:
+                aVal = a.score;
+                bVal = b.score;
+        }
+        
+        return ScorecardState.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    
+    // Render rows
+    tbody.innerHTML = sorted.map(worker => `
+        <tr class="border-b border-gray-200 hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm">${worker.name}</td>
+            <td class="px-4 py-3 text-sm">${worker.main_process}</td>
+            <td class="px-4 py-3 text-sm text-center">${worker.work_count}</td>
+            <td class="px-4 py-3 text-sm text-center font-semibold">${worker.score.toFixed(1)}</td>
+            <td class="px-4 py-3 text-center">
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold grade-${worker.grade}">
+                    ${worker.grade}
+                </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-center">${worker.utilization.toFixed(1)}%</td>
+            <td class="px-4 py-3 text-sm text-center">${worker.efficiency.toFixed(1)}%</td>
+            <td class="px-4 py-3 text-sm text-center">
+                <span class="inline-block px-2 py-1 rounded text-xs ${getBandColor(worker.utilization_band)}">
+                    ${worker.utilization_band}
+                </span>
+            </td>
+            <td class="px-4 py-3 text-center">
+                <button onclick="alert('Detail view coming soon!')" 
+                        class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
+                    View
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Get Band Color
+function getBandColor(band) {
+    switch (band) {
+        case 'Excellent': return 'bg-green-100 text-green-800';
+        case 'Good': return 'bg-blue-100 text-blue-800';
+        case 'Average': return 'bg-yellow-100 text-yellow-800';
+        case 'Below Average': return 'bg-orange-100 text-orange-800';
+        case 'Poor': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+// Sort Table
 window.sortScorecardTable = function(column) {
     if (ScorecardState.sortColumn === column) {
         ScorecardState.sortDirection = ScorecardState.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -303,158 +270,28 @@ window.sortScorecardTable = function(column) {
         ScorecardState.sortColumn = column;
         ScorecardState.sortDirection = 'desc';
     }
-    
-    ScorecardState.filteredWorkers.sort((a, b) => {
-        let aVal, bVal;
-        
-        switch(column) {
-            case 'name':
-                aVal = a.name;
-                bVal = b.name;
-                break;
-            case 'process':
-                aVal = a.main_process;
-                bVal = b.main_process;
-                break;
-            case 'score':
-                aVal = a.score;
-                bVal = b.score;
-                break;
-            case 'utilization':
-                aVal = a.utilization;
-                bVal = b.utilization;
-                break;
-            case 'efficiency':
-                aVal = a.efficiency;
-                bVal = b.efficiency;
-                break;
-            default:
-                return 0;
-        }
-        
-        if (aVal < bVal) return ScorecardState.sortDirection === 'asc' ? -1 : 1;
-        if (aVal > bVal) return ScorecardState.sortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-    
     renderScorecardTable();
 };
 
-// Get Grade Info
-function getGradeInfo(score) {
-    if (score >= 90) return { grade: 'S', color: 'bg-yellow-50 text-yellow-700 border border-yellow-200' };
-    if (score >= 80) return { grade: 'A', color: 'bg-green-50 text-green-700 border border-green-200' };
-    if (score >= 70) return { grade: 'B', color: 'bg-blue-50 text-blue-700 border border-blue-200' };
-    if (score >= 60) return { grade: 'C', color: 'bg-orange-50 text-orange-700 border border-orange-200' };
-    return { grade: 'D', color: 'bg-red-50 text-red-700 border border-red-200' };
-}
-
-// Get Performance Color
-function getPerformanceColor(value, type = 'utilization') {
-    const threshold = type === 'utilization' ? 70 : 80;
-    if (value >= threshold) return 'text-green-600';
-    if (value >= threshold * 0.7) return 'text-yellow-600';
-    return 'text-red-600';
-}
-
-// Render Scorecard Table
-function renderScorecardTable() {
-    const tbody = document.getElementById('scorecardTableBody');
-    const countElement = document.getElementById('scorecardWorkerCount');
-    
-    if (!tbody || !countElement) return;
-    
-    if (!ScorecardState.filteredWorkers || ScorecardState.filteredWorkers.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
-                    <i class="fas fa-search mr-2"></i>
-                    No workers found with current filters
-                </td>
-            </tr>
-        `;
-        countElement.textContent = '0';
-        return;
-    }
-    
-    countElement.textContent = ScorecardState.filteredWorkers.length.toLocaleString();
-    
-    tbody.innerHTML = ScorecardState.filteredWorkers.map((worker, index) => {
-        const gradeInfo = getGradeInfo(worker.score);
-        const utilizationColor = getPerformanceColor(worker.utilization, 'utilization');
-        const efficiencyColor = getPerformanceColor(worker.efficiency, 'efficiency');
-        
-        return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm text-gray-900">
-                    ${index + 1}
-                </td>
-                <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                    ${worker.name}
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-700">
-                    <span class="inline-block px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
-                        ${worker.main_process}
-                    </span>
-                </td>
-                <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900">
-                    ${worker.score.toFixed(1)}
-                </td>
-                <td class="px-4 py-3 text-center">
-                    <span class="inline-block px-3 py-1 rounded-full text-sm font-bold ${gradeInfo.color}">
-                        ${gradeInfo.grade}
-                    </span>
-                </td>
-                <td class="px-4 py-3 text-sm text-right font-medium ${utilizationColor}">
-                    ${worker.utilization.toFixed(1)}%
-                </td>
-                <td class="px-4 py-3 text-sm text-right font-medium ${efficiencyColor}">
-                    ${worker.efficiency.toFixed(1)}%
-                </td>
-                <td class="px-4 py-3 text-sm text-right text-gray-700">
-                    ${worker.work_count.toLocaleString()}
-                </td>
-                <td class="px-4 py-3 text-center">
-                    <button onclick="viewWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
-                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        <i class="fas fa-eye mr-1"></i>View
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-// View Worker Detail (make globally accessible)
-window.viewWorkerDetail = function(workerName) {
-    console.log('📊 View button clicked for:', workerName);
-    alert('Worker detail view coming soon!\n\nThis feature will show:\n- Performance trends\n- Work distribution\n- AI insights\n- Recent work records');
-};
-
-// Reset Filters (make globally accessible)
-window.resetScorecardFilters = function() {
-    document.getElementById('scorecardWorkerSearch').value = '';
-    document.getElementById('scorecardProcessFilter').value = '';
-    document.getElementById('scorecardGradeFilter').value = '';
-    applyAllFilters();
-};
-
 // Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('scorecardWorkerSearch');
+document.addEventListener('DOMContentLoaded', function() {
+    // Search input
+    const searchInput = document.getElementById('scorecardSearchInput');
     if (searchInput) {
-        searchInput.addEventListener('input', () => applyAllFilters());
+        searchInput.addEventListener('input', applyScorecardFilters);
     }
     
+    // Process filter
     const processFilter = document.getElementById('scorecardProcessFilter');
     if (processFilter) {
-        processFilter.addEventListener('change', () => applyAllFilters());
+        processFilter.addEventListener('change', applyScorecardFilters);
     }
     
+    // Grade filter
     const gradeFilter = document.getElementById('scorecardGradeFilter');
     if (gradeFilter) {
-        gradeFilter.addEventListener('change', () => applyAllFilters());
+        gradeFilter.addEventListener('change', applyScorecardFilters);
     }
 });
 
-console.log('✅ Scorecard module loaded (using Report aggregation logic)');
+console.log('✅ Scorecard module loaded (using AppState.workerSummary)');
