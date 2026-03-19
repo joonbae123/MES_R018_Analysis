@@ -3837,6 +3837,126 @@
         </div>
     </div>
 
+    <!-- Scorecard Worker Detail Modal -->
+    <div id="scorecardWorkerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] flex items-center justify-center p-4" onclick="closeScorecardWorkerModal(event)">
+        <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-6 py-4 flex justify-between items-center flex-shrink-0">
+                <div>
+                    <h3 class="text-2xl font-bold" id="scorecardModalWorkerName">
+                        <i class="fas fa-award mr-2"></i>
+                        Worker Performance Scorecard
+                    </h3>
+                    <p class="text-sm mt-1 opacity-90">Comprehensive performance analysis</p>
+                </div>
+                <button onclick="closeScorecardWorkerModal()" class="text-white hover:text-gray-200 transition">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Summary Section - Grade & Score Focus -->
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg p-4 text-white shadow-lg">
+                        <div class="text-xs font-semibold mb-1 opacity-90">Grade</div>
+                        <div class="text-4xl font-bold" id="scorecardModalGrade">-</div>
+                        <div class="text-xs mt-1 opacity-90">rating</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white shadow-lg">
+                        <div class="text-xs font-semibold mb-1 opacity-90">Score</div>
+                        <div class="text-3xl font-bold" id="scorecardModalScore">0</div>
+                        <div class="text-xs mt-1 opacity-90">overall</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="text-gray-600 text-xs font-semibold mb-1">Utilization</div>
+                        <div class="text-xl font-bold text-green-600" id="scorecardModalUtilization">0%</div>
+                        <div class="text-xs text-gray-500 mt-1">time usage</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="text-gray-600 text-xs font-semibold mb-1">Efficiency</div>
+                        <div class="text-xl font-bold text-purple-600" id="scorecardModalEfficiency">0%</div>
+                        <div class="text-xs text-gray-500 mt-1">productivity</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="text-gray-600 text-xs font-semibold mb-1">Total Shifts</div>
+                        <div class="text-xl font-bold text-gray-900" id="scorecardModalShiftCount">0</div>
+                        <div class="text-xs text-gray-500 mt-1">shifts</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="text-gray-600 text-xs font-semibold mb-1">Work Count</div>
+                        <div class="text-xl font-bold text-gray-900" id="scorecardModalWorkCount">0</div>
+                        <div class="text-xs text-gray-500 mt-1">activities</div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Daily Score Trend -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <h4 class="font-bold text-gray-800 mb-3">
+                            <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                            Daily Score Trend
+                        </h4>
+                        <div style="height: 250px;">
+                            <canvas id="scorecardModalScoreChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Utilization vs Efficiency Comparison -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-4">
+                        <h4 class="font-bold text-gray-800 mb-3">
+                            <i class="fas fa-balance-scale mr-2 text-purple-500"></i>
+                            Performance Breakdown
+                        </h4>
+                        <div style="height: 250px;">
+                            <canvas id="scorecardModalComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Records Table -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <h4 class="font-bold text-gray-800 mb-3">
+                        <i class="fas fa-table mr-2"></i>
+                        Daily Performance Records
+                    </h4>
+                    <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100 border-b-2 border-gray-300 sticky top-0">
+                                <tr>
+                                    <th class="text-left p-2 font-semibold text-gray-700">Date</th>
+                                    <th class="text-left p-2 font-semibold text-gray-700">Shift</th>
+                                    <th class="text-center p-2 font-semibold text-gray-700">Work Count</th>
+                                    <th class="text-right p-2 font-semibold text-gray-700">Shift Time<br><span class="text-xs font-normal">(min)</span></th>
+                                    <th class="text-right p-2 font-semibold text-gray-700">Work Time<br><span class="text-xs font-normal">(min)</span></th>
+                                    <th class="text-right p-2 font-semibold text-gray-700">Utilization<br><span class="text-xs font-normal">(%)</span></th>
+                                    <th class="text-right p-2 font-semibold text-gray-700">Efficiency<br><span class="text-xs font-normal">(%)</span></th>
+                                    <th class="text-right p-2 font-semibold text-gray-700 bg-blue-50">Score<br><span class="text-xs font-normal">(pts)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="scorecardModalTableBody" class="divide-y divide-gray-200">
+                                <!-- Records will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Performance Insight -->
+                    <div class="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                            <div class="text-sm text-gray-700">
+                                <strong>Score Calculation:</strong> Score = (Utilization × 50%) + (Efficiency × 50%)
+                                <br>
+                                <strong>Grade Criteria:</strong> S ≥ 80 | A ≥ 70 | B ≥ 60 | C ≥ 50 | D < 50
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Glossary Modal -->
     <div id="glossaryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-2xl w-11/12 max-w-3xl max-h-[90vh] overflow-hidden">

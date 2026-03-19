@@ -589,7 +589,7 @@ function renderScorecardTable() {
         <tr class="border-b border-gray-200 hover:bg-gray-50">
             <td class="px-4 py-3 text-sm text-gray-500">#${index + 1}</td>
             <td class="px-4 py-3 text-sm">
-                <button onclick="window.showWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
+                <button onclick="window.showScorecardWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
                         class="text-blue-600 hover:text-blue-800 hover:underline font-semibold transition">
                     ${worker.name}
                 </button>
@@ -605,7 +605,7 @@ function renderScorecardTable() {
             <td class="px-4 py-3 text-sm text-right">${worker.efficiency.toFixed(1)}%</td>
             <td class="px-4 py-3 text-sm text-right">${worker.work_count}</td>
             <td class="px-4 py-3 text-center">
-                <button onclick="window.showWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
+                <button onclick="window.showScorecardWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
                         class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition">
                     <i class="fas fa-chart-line mr-1"></i>View
                 </button>
@@ -636,10 +636,324 @@ document.addEventListener('click', function(e) {
 });
 
 // ============================================================================
-// Worker Detail Modal
+// Worker Detail Modal (Scorecard-specific)
 // ============================================================================
-// NOTE: Scorecard uses Report's worker detail modal (window.showWorkerDetail)
-// No separate modal implementation needed for Scorecard.
-// When worker name is clicked, it opens the same modal from Report tab.
 
-console.log('✅ Scorecard module loaded with advanced filters and worker detail modal');
+let scorecardScoreChart = null;
+let scorecardComparisonChart = null;
+
+window.showScorecardWorkerDetail = function(workerName) {
+    console.log('🎯 Opening Scorecard worker detail for:', workerName);
+    
+    // Get worker data from allWorkers
+    const worker = ScorecardState.allWorkers.find(w => w.name === workerName);
+    if (!worker) {
+        alert('Worker data not found');
+        return;
+    }
+    
+    // Get raw records for this worker (filtered by current filters)
+    const workerRecords = window.AppState.processedData.filter(r => r.workerName === workerName);
+    
+    // Update modal header
+    document.getElementById('scorecardModalWorkerName').innerHTML = `
+        <i class="fas fa-award mr-2"></i>${workerName}
+    `;
+    
+    // Update summary cards
+    document.getElementById('scorecardModalGrade').textContent = worker.grade;
+    document.getElementById('scorecardModalScore').textContent = worker.score.toFixed(1);
+    document.getElementById('scorecardModalUtilization').textContent = worker.utilization.toFixed(1) + '%';
+    document.getElementById('scorecardModalEfficiency').textContent = worker.efficiency.toFixed(1) + '%';
+    document.getElementById('scorecardModalShiftCount').textContent = worker.shift_count || 0;
+    document.getElementById('scorecardModalWorkCount').textContent = worker.work_count;
+    
+    // Style grade badge
+    const gradeElement = document.getElementById('scorecardModalGrade');
+    gradeElement.className = 'text-4xl font-bold';
+    
+    // Aggregate daily data
+    const dailyData = aggregateDailyData(workerRecords);
+    
+    // Build charts
+    buildScorecardScoreChart(dailyData);
+    buildScorecardComparisonChart(dailyData);
+    
+    // Build table
+    buildScorecardDailyTable(dailyData);
+    
+    // Show modal
+    document.getElementById('scorecardWorkerModal').classList.remove('hidden');
+};
+
+window.closeScorecardWorkerModal = function(event) {
+    // Only close if clicking backdrop or close button
+    if (event && event.target.id !== 'scorecardWorkerModal' && !event.target.closest('button[onclick*="closeScorecardWorkerModal"]')) {
+        return;
+    }
+    
+    // Destroy charts if exists
+    if (scorecardScoreChart) {
+        scorecardScoreChart.destroy();
+        scorecardScoreChart = null;
+    }
+    if (scorecardComparisonChart) {
+        scorecardComparisonChart.destroy();
+        scorecardComparisonChart = null;
+    }
+    
+    document.getElementById('scorecardWorkerModal').classList.add('hidden');
+};
+
+// Aggregate daily data
+function aggregateDailyData(records) {
+    const dailyMap = {};
+    
+    records.forEach(record => {
+        const date = record.workingDay;
+        if (!dailyMap[date]) {
+            dailyMap[date] = {
+                date: date,
+                shifts: new Set(),
+                workCount: 0,
+                totalActualMins: 0,
+                totalAssignedST: 0
+            };
+        }
+        
+        dailyMap[date].shifts.add(record.actualShift);
+        dailyMap[date].workCount++;
+        dailyMap[date].totalActualMins += record.workerActMins || 0;
+        dailyMap[date].totalAssignedST += record['Worker S/T'] || 0;
+    });
+    
+    // Calculate metrics for each day
+    const dailyArray = Object.values(dailyMap).map(day => {
+        const shiftCount = day.shifts.size;
+        const shiftTime = shiftCount * 660;
+        const utilization = shiftTime > 0 ? (day.totalActualMins / shiftTime) * 100 : 0;
+        const efficiency = shiftTime > 0 ? (day.totalAssignedST / shiftTime) * 100 : 0;
+        const score = (utilization * 0.5) + (efficiency * 0.5);
+        
+        return {
+            ...day,
+            shiftCount,
+            shiftTime,
+            utilization,
+            efficiency,
+            score
+        };
+    });
+    
+    // Sort by date
+    dailyArray.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    return dailyArray;
+}
+
+// Build daily score trend chart
+function buildScorecardScoreChart(dailyData) {
+    if (scorecardScoreChart) {
+        scorecardScoreChart.destroy();
+        scorecardScoreChart = null;
+    }
+    
+    const ctx = document.getElementById('scorecardModalScoreChart');
+    if (!ctx || dailyData.length === 0) return;
+    
+    const dates = dailyData.map(d => d.date);
+    const scores = dailyData.map(d => d.score);
+    const utilization = dailyData.map(d => d.utilization);
+    const efficiency = dailyData.map(d => d.efficiency);
+    
+    scorecardScoreChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Score',
+                    data: scores,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    borderWidth: 3,
+                    fill: true
+                },
+                {
+                    label: 'Utilization',
+                    data: utilization,
+                    borderColor: '#10b981',
+                    backgroundColor: 'transparent',
+                    tension: 0.4,
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'Efficiency',
+                    data: efficiency,
+                    borderColor: '#a855f7',
+                    backgroundColor: 'transparent',
+                    tension: 0.4,
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 120,
+                    title: {
+                        display: true,
+                        text: 'Score / Rate (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Build utilization vs efficiency comparison chart
+function buildScorecardComparisonChart(dailyData) {
+    if (scorecardComparisonChart) {
+        scorecardComparisonChart.destroy();
+        scorecardComparisonChart = null;
+    }
+    
+    const ctx = document.getElementById('scorecardModalComparisonChart');
+    if (!ctx || dailyData.length === 0) return;
+    
+    const dates = dailyData.map(d => d.date);
+    const utilization = dailyData.map(d => d.utilization);
+    const efficiency = dailyData.map(d => d.efficiency);
+    
+    scorecardComparisonChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Utilization',
+                    data: utilization,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: '#10b981',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Efficiency',
+                    data: efficiency,
+                    backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                    borderColor: '#a855f7',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 120,
+                    title: {
+                        display: true,
+                        text: 'Rate (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Build daily performance table
+function buildScorecardDailyTable(dailyData) {
+    const tbody = document.getElementById('scorecardModalTableBody');
+    
+    if (dailyData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    No performance data available
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = dailyData.map(day => {
+        const shiftList = Array.from(day.shifts).join(', ');
+        
+        // Score-based row coloring
+        let rowClass = 'hover:bg-gray-50';
+        let scoreBadge = '';
+        if (day.score >= 80) {
+            rowClass = 'bg-green-50 hover:bg-green-100';
+            scoreBadge = 'bg-green-500';
+        } else if (day.score >= 70) {
+            rowClass = 'bg-blue-50 hover:bg-blue-100';
+            scoreBadge = 'bg-blue-500';
+        } else if (day.score >= 60) {
+            rowClass = 'bg-yellow-50 hover:bg-yellow-100';
+            scoreBadge = 'bg-yellow-500';
+        } else {
+            rowClass = 'bg-red-50 hover:bg-red-100';
+            scoreBadge = 'bg-red-500';
+        }
+        
+        return `
+            <tr class="${rowClass}">
+                <td class="px-4 py-3 text-sm">${day.date}</td>
+                <td class="px-4 py-3 text-sm">${shiftList}</td>
+                <td class="px-4 py-3 text-sm text-center">${day.workCount}</td>
+                <td class="px-4 py-3 text-sm text-right">${day.shiftTime.toFixed(0)}</td>
+                <td class="px-4 py-3 text-sm text-right">${day.totalActualMins.toFixed(0)}</td>
+                <td class="px-4 py-3 text-sm text-right">${day.utilization.toFixed(1)}%</td>
+                <td class="px-4 py-3 text-sm text-right">${day.efficiency.toFixed(1)}%</td>
+                <td class="px-4 py-3 text-sm text-right">
+                    <span class="inline-block px-2 py-1 ${scoreBadge} text-white text-xs font-bold rounded">
+                        ${day.score.toFixed(1)}
+                    </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+console.log('✅ Scorecard module loaded with Score-based worker detail modal');
