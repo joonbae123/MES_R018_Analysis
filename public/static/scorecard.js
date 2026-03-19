@@ -74,7 +74,7 @@ function loadScorecardData() {
             
             // Accumulate times (same as Report)
             const actualMinutes = record.workerActMins || 0;
-            const shiftMinutes = record.shiftTime || 0;
+            const shiftMinutes = (record.shiftCount || 0) * 660;  // shiftCount × 660 minutes
             const st = record['Worker S/T'] || 0;
             const rate = record['Worker Rate(%)'] || 0;
             const assigned = (st * rate / 100);
