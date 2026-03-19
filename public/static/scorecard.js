@@ -1,8 +1,7 @@
 // Scorecard Tab JavaScript
-// Consistent design with Dashboard and Report tabs
+// Reuses Report tab's data loading logic from AppState
 
 let ScorecardState = {
-    currentUploadId: null,
     allWorkers: [],
     filteredWorkers: [],
     selectedWorker: null,
@@ -12,11 +11,12 @@ let ScorecardState = {
 };
 
 // Initialize Scorecard Tab
-async function initScorecardTab(uploadId) {
-    console.log('🎯 Initializing Scorecard Tab, uploadId:', uploadId);
+function initScorecardTab() {
+    console.log('🎯 Initializing Scorecard Tab');
     
-    if (!uploadId) {
-        console.log('❌ No upload ID provided');
+    // Check if data exists in AppState
+    if (!window.AppState || !window.AppState.processedData || window.AppState.processedData.length === 0) {
+        console.log('❌ No data in AppState');
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-gray-500">
@@ -28,54 +28,103 @@ async function initScorecardTab(uploadId) {
         return;
     }
     
-    ScorecardState.currentUploadId = uploadId;
-    await loadScorecardData();
+    console.log(`✅ Found ${window.AppState.processedData.length} records in AppState`);
+    loadScorecardData();
 }
 
-// Load Scorecard Data
-async function loadScorecardData() {
+// Load and Aggregate Scorecard Data
+function loadScorecardData() {
     try {
         // Show loading
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                     <i class="fas fa-spinner fa-spin mr-2"></i>
-                    Loading workers data...
+                    Calculating worker scores...
                 </td>
             </tr>
         `;
         
-        // Get current filter values
-        const processFilter = document.getElementById('scorecardProcessFilter')?.value || '';
-        const gradeFilter = document.getElementById('scorecardGradeFilter')?.value || '';
+        // Get processed data from AppState
+        const data = window.AppState.processedData;
         
-        // Build API URL
-        let url = `/api/scorecard/workers?uploadId=${ScorecardState.currentUploadId}`;
-        if (processFilter) url += `&process=${encodeURIComponent(processFilter)}`;
-        if (gradeFilter) url += `&grade=${encodeURIComponent(gradeFilter)}`;
+        // Aggregate by worker
+        const workerMap = new Map();
         
-        console.log('📡 Fetching scorecard data:', url);
+        data.forEach(record => {
+            const name = record.workerName;
+            if (!name) return;
+            
+            if (!workerMap.has(name)) {
+                workerMap.set(name, {
+                    name: name,
+                    works: [],
+                    totalShiftTime: 0,
+                    totalActualTime: 0,
+                    totalStandardTime: 0,
+                    processes: new Set(),
+                    shifts: new Set()
+                });
+            }
+            
+            const worker = workerMap.get(name);
+            worker.works.push(record);
+            worker.totalShiftTime += record.shiftTime || 0;
+            worker.totalActualTime += record.actualTime || 0;
+            worker.totalStandardTime += record.standardTime || 0;
+            
+            if (record.foDesc3) worker.processes.add(record.foDesc3);
+            if (record.workingShift) worker.shifts.add(record.workingShift);
+        });
         
-        const response = await fetch(url);
-        const data = await response.json();
+        // Calculate metrics for each worker
+        const workers = Array.from(workerMap.values()).map(worker => {
+            const utilization = worker.totalShiftTime > 0 
+                ? (worker.totalActualTime / worker.totalShiftTime) * 100 
+                : 0;
+            
+            const efficiency = worker.totalActualTime > 0
+                ? (worker.totalStandardTime / worker.totalActualTime) * 100
+                : 0;
+            
+            // Composite score: 50% utilization + 50% efficiency
+            const score = (utilization * 0.5) + (efficiency * 0.5);
+            
+            // Determine main process (most frequent)
+            const processCounts = {};
+            worker.works.forEach(w => {
+                const proc = w.foDesc3 || 'Unknown';
+                processCounts[proc] = (processCounts[proc] || 0) + 1;
+            });
+            const mainProcess = Object.entries(processCounts)
+                .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+            
+            return {
+                name: worker.name,
+                main_process: mainProcess,
+                work_count: worker.works.length,
+                score: score,
+                utilization: utilization,
+                efficiency: efficiency,
+                totalShiftTime: worker.totalShiftTime,
+                totalActualTime: worker.totalActualTime,
+                totalStandardTime: worker.totalStandardTime,
+                processes: Array.from(worker.processes),
+                shifts: Array.from(worker.shifts),
+                works: worker.works
+            };
+        });
         
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to load workers');
-        }
+        console.log(`✅ Calculated scores for ${workers.length} workers`);
         
-        console.log(`✅ Loaded ${data.workers.length} workers`);
-        
-        ScorecardState.allWorkers = data.workers;
-        ScorecardState.filteredWorkers = data.workers;
+        ScorecardState.allWorkers = workers;
+        ScorecardState.filteredWorkers = workers;
         
         // Update process filter options
-        updateProcessFilterOptions(data.workers);
+        updateProcessFilterOptions(workers);
         
-        // Apply search filter
-        applySearchFilter();
-        
-        // Render table
-        renderScorecardTable();
+        // Apply filters
+        applyAllFilters();
         
     } catch (error) {
         console.error('❌ Failed to load scorecard data:', error);
@@ -92,8 +141,10 @@ async function loadScorecardData() {
 
 // Update Process Filter Options
 function updateProcessFilterOptions(workers) {
-    const processes = [...new Set(workers.map(w => w.main_process))].filter(p => p).sort();
+    const processes = [...new Set(workers.map(w => w.main_process))].filter(p => p && p !== 'Unknown').sort();
     const selectElement = document.getElementById('scorecardProcessFilter');
+    if (!selectElement) return;
+    
     const currentValue = selectElement.value;
     
     selectElement.innerHTML = '<option value="">All Processes</option>';
@@ -101,23 +152,39 @@ function updateProcessFilterOptions(workers) {
         selectElement.innerHTML += `<option value="${process}">${process}</option>`;
     });
     
-    if (currentValue) {
+    if (currentValue && processes.includes(currentValue)) {
         selectElement.value = currentValue;
     }
 }
 
-// Apply Search Filter
-function applySearchFilter() {
-    const searchTerm = document.getElementById('scorecardWorkerSearch')?.value.toLowerCase() || '';
+// Apply All Filters
+function applyAllFilters() {
+    let filtered = [...ScorecardState.allWorkers];
     
+    // Search filter
+    const searchTerm = document.getElementById('scorecardWorkerSearch')?.value.toLowerCase() || '';
     if (searchTerm) {
-        ScorecardState.filteredWorkers = ScorecardState.allWorkers.filter(worker => 
+        filtered = filtered.filter(worker => 
             worker.name.toLowerCase().includes(searchTerm)
         );
-    } else {
-        ScorecardState.filteredWorkers = ScorecardState.allWorkers;
     }
     
+    // Process filter
+    const processFilter = document.getElementById('scorecardProcessFilter')?.value || '';
+    if (processFilter) {
+        filtered = filtered.filter(worker => worker.main_process === processFilter);
+    }
+    
+    // Grade filter
+    const gradeFilter = document.getElementById('scorecardGradeFilter')?.value || '';
+    if (gradeFilter) {
+        filtered = filtered.filter(worker => {
+            const grade = getGradeInfo(worker.score).grade;
+            return grade === gradeFilter;
+        });
+    }
+    
+    ScorecardState.filteredWorkers = filtered;
     renderScorecardTable();
 }
 
@@ -188,12 +255,14 @@ function renderScorecardTable() {
     const tbody = document.getElementById('scorecardTableBody');
     const countElement = document.getElementById('scorecardWorkerCount');
     
+    if (!tbody || !countElement) return;
+    
     if (!ScorecardState.filteredWorkers || ScorecardState.filteredWorkers.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                     <i class="fas fa-search mr-2"></i>
-                    No workers found
+                    No workers found with current filters
                 </td>
             </tr>
         `;
@@ -218,7 +287,7 @@ function renderScorecardTable() {
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700">
                     <span class="inline-block px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
-                        ${worker.main_process || '-'}
+                        ${worker.main_process}
                     </span>
                 </td>
                 <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900">
@@ -239,7 +308,7 @@ function renderScorecardTable() {
                     ${worker.work_count.toLocaleString()}
                 </td>
                 <td class="px-4 py-3 text-center">
-                    <button onclick="viewWorkerDetail('${worker.name}')" 
+                    <button onclick="viewWorkerDetail('${worker.name.replace(/'/g, "\\'")}')" 
                             class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                         <i class="fas fa-eye mr-1"></i>View
                     </button>
@@ -250,36 +319,103 @@ function renderScorecardTable() {
 }
 
 // View Worker Detail
-async function viewWorkerDetail(workerName) {
+function viewWorkerDetail(workerName) {
     console.log('📊 Loading detail for worker:', workerName);
     
-    try {
-        // Show loading in detail view
-        document.getElementById('scorecardListView').classList.add('hidden');
-        document.getElementById('scorecardDetailView').classList.remove('hidden');
-        
-        // Build API URL
-        const url = `/api/scorecard/worker/${encodeURIComponent(workerName)}?uploadId=${ScorecardState.currentUploadId}&days=30`;
-        
-        console.log('📡 Fetching worker detail:', url);
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to load worker detail');
+    const worker = ScorecardState.allWorkers.find(w => w.name === workerName);
+    if (!worker) {
+        alert('Worker not found');
+        return;
+    }
+    
+    // Show detail view
+    document.getElementById('scorecardListView').classList.add('hidden');
+    document.getElementById('scorecardDetailView').classList.remove('hidden');
+    
+    ScorecardState.selectedWorker = worker;
+    
+    // Prepare detailed data
+    const detailedWorker = prepareWorkerDetail(worker);
+    renderWorkerDetail(detailedWorker);
+}
+
+// Prepare Worker Detail Data
+function prepareWorkerDetail(worker) {
+    // Sort works by date (most recent first)
+    const sortedWorks = worker.works.sort((a, b) => {
+        const dateA = new Date(a.workingDay);
+        const dateB = new Date(b.workingDay);
+        return dateB - dateA;
+    });
+    
+    // Calculate trend (group by date)
+    const dailyStats = {};
+    sortedWorks.forEach(work => {
+        const date = work.workingDay;
+        if (!dailyStats[date]) {
+            dailyStats[date] = {
+                date: date,
+                totalShiftTime: 0,
+                totalActualTime: 0,
+                totalStandardTime: 0,
+                count: 0
+            };
         }
         
-        console.log('✅ Worker detail loaded:', data.worker);
-        
-        ScorecardState.selectedWorker = data.worker;
-        renderWorkerDetail(data.worker);
-        
-    } catch (error) {
-        console.error('❌ Failed to load worker detail:', error);
-        alert('Failed to load worker detail: ' + error.message);
-        backToScorecardList();
-    }
+        dailyStats[date].totalShiftTime += work.shiftTime || 0;
+        dailyStats[date].totalActualTime += work.actualTime || 0;
+        dailyStats[date].totalStandardTime += work.standardTime || 0;
+        dailyStats[date].count++;
+    });
+    
+    const trend = Object.values(dailyStats).map(day => ({
+        date: day.date,
+        utilization: day.totalShiftTime > 0 ? (day.totalActualTime / day.totalShiftTime) * 100 : 0,
+        efficiency: day.totalActualTime > 0 ? (day.totalStandardTime / day.totalActualTime) * 100 : 0,
+        workCount: day.count
+    })).sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Shift distribution
+    const shiftCounts = {};
+    sortedWorks.forEach(work => {
+        const shift = work.workingShift || 'Unknown';
+        shiftCounts[shift] = (shiftCounts[shift] || 0) + 1;
+    });
+    
+    const shift_distribution = Object.entries(shiftCounts).map(([shift, count]) => ({
+        shift: shift,
+        count: count
+    }));
+    
+    // Process distribution
+    const processCounts = {};
+    sortedWorks.forEach(work => {
+        const process = work.foDesc3 || 'Unknown';
+        processCounts[process] = (processCounts[process] || 0) + 1;
+    });
+    
+    const process_distribution = Object.entries(processCounts).map(([process, count]) => ({
+        process: process,
+        count: count
+    }));
+    
+    // Recent works (last 20)
+    const recent_works = sortedWorks.slice(0, 20).map(work => ({
+        date: work.workingDay,
+        process: work.foDesc3,
+        shift: work.workingShift,
+        utilization: work.shiftTime > 0 ? (work.actualTime / work.shiftTime) * 100 : 0,
+        efficiency: work.actualTime > 0 ? (work.standardTime / work.actualTime) * 100 : 0,
+        remark: work.remark || ''
+    }));
+    
+    return {
+        ...worker,
+        trend: trend,
+        shift_distribution: shift_distribution,
+        process_distribution: process_distribution,
+        recent_works: recent_works
+    };
 }
 
 // Back to List
@@ -298,7 +434,7 @@ function backToScorecardList() {
 function renderWorkerDetail(worker) {
     const gradeInfo = getGradeInfo(worker.score);
     
-    // Calculate percentile (simple approximation)
+    // Calculate percentile
     const betterCount = ScorecardState.allWorkers.filter(w => w.score > worker.score).length;
     const percentile = ((betterCount / ScorecardState.allWorkers.length) * 100).toFixed(1);
     
@@ -316,7 +452,7 @@ function renderWorkerDetail(worker) {
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
                 <span class="text-gray-500">Main Process</span>
-                <p class="font-semibold text-gray-900 mt-1">${worker.main_process || '-'}</p>
+                <p class="font-semibold text-gray-900 mt-1">${worker.main_process}</p>
             </div>
             <div>
                 <span class="text-gray-500">Total Works</span>
@@ -375,7 +511,6 @@ function renderWorkerDetail(worker) {
 
 // Render Trend Chart
 function renderWorkerTrendChart(trend) {
-    // Destroy existing chart
     if (ScorecardState.charts.trend) {
         ScorecardState.charts.trend.destroy();
     }
@@ -422,7 +557,7 @@ function renderWorkerTrendChart(trend) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    max: 120,
                     ticks: {
                         callback: value => value + '%'
                     }
@@ -434,7 +569,6 @@ function renderWorkerTrendChart(trend) {
 
 // Render Distribution Charts
 function renderWorkerDistributionCharts(shiftDist, processDist) {
-    // Shift Distribution
     if (ScorecardState.charts.shift) {
         ScorecardState.charts.shift.destroy();
     }
@@ -462,7 +596,6 @@ function renderWorkerDistributionCharts(shiftDist, processDist) {
         });
     }
     
-    // Process Distribution
     if (ScorecardState.charts.process) {
         ScorecardState.charts.process.destroy();
     }
@@ -494,6 +627,7 @@ function renderWorkerDistributionCharts(shiftDist, processDist) {
 // Render Work Records
 function renderWorkerWorkRecords(works) {
     const tbody = document.getElementById('workerWorkRecordsBody');
+    if (!tbody) return;
     
     if (!works || works.length === 0) {
         tbody.innerHTML = `
@@ -506,7 +640,7 @@ function renderWorkerWorkRecords(works) {
         return;
     }
     
-    tbody.innerHTML = works.slice(0, 20).map(work => {
+    tbody.innerHTML = works.map(work => {
         const utilizationColor = getPerformanceColor(work.utilization, 'utilization');
         const efficiencyColor = getPerformanceColor(work.efficiency, 'efficiency');
         
@@ -541,7 +675,6 @@ function renderWorkerWorkRecords(works) {
 function renderWorkerInsights(worker) {
     const insights = [];
     
-    // Performance insights
     if (worker.utilization >= 80) {
         insights.push({ type: 'success', icon: 'fa-check-circle', text: `Excellent time utilization (${worker.utilization.toFixed(1)}%)` });
     } else if (worker.utilization < 60) {
@@ -554,19 +687,17 @@ function renderWorkerInsights(worker) {
         insights.push({ type: 'warning', icon: 'fa-flag', text: `Efficiency needs improvement (${worker.efficiency.toFixed(1)}%)` });
     }
     
-    // Grade insights
     if (worker.score >= 85) {
         insights.push({ type: 'info', icon: 'fa-trophy', text: 'Top performer - maintain this excellence' });
     } else if (worker.score < 65) {
         insights.push({ type: 'danger', icon: 'fa-hand-paper', text: 'Performance review recommended' });
     }
     
-    // Trend insights (if available)
     if (worker.trend && worker.trend.length >= 7) {
         const recent = worker.trend.slice(-7);
         const avgRecent = recent.reduce((sum, d) => sum + d.utilization, 0) / recent.length;
         const older = worker.trend.slice(0, 7);
-        const avgOlder = older.reduce((sum, d) => sum + d.utilization, 0) / older.length;
+        const avgOlder = older.length > 0 ? older.reduce((sum, d) => sum + d.utilization, 0) / older.length : avgRecent;
         
         if (avgRecent > avgOlder + 5) {
             insights.push({ type: 'success', icon: 'fa-arrow-up', text: 'Positive performance trend detected' });
@@ -576,6 +707,7 @@ function renderWorkerInsights(worker) {
     }
     
     const container = document.getElementById('workerInsights');
+    if (!container) return;
     
     if (insights.length === 0) {
         container.innerHTML = `
@@ -610,27 +742,25 @@ function resetScorecardFilters() {
     document.getElementById('scorecardWorkerSearch').value = '';
     document.getElementById('scorecardProcessFilter').value = '';
     document.getElementById('scorecardGradeFilter').value = '';
-    loadScorecardData();
+    applyAllFilters();
 }
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Search input
     const searchInput = document.getElementById('scorecardWorkerSearch');
     if (searchInput) {
-        searchInput.addEventListener('input', applySearchFilter);
+        searchInput.addEventListener('input', () => applyAllFilters());
     }
     
-    // Filter selects
     const processFilter = document.getElementById('scorecardProcessFilter');
     if (processFilter) {
-        processFilter.addEventListener('change', loadScorecardData);
+        processFilter.addEventListener('change', () => applyAllFilters());
     }
     
     const gradeFilter = document.getElementById('scorecardGradeFilter');
     if (gradeFilter) {
-        gradeFilter.addEventListener('change', loadScorecardData);
+        gradeFilter.addEventListener('change', () => applyAllFilters());
     }
 });
 
-console.log('✅ Scorecard module loaded');
+console.log('✅ Scorecard module loaded (using AppState)');
