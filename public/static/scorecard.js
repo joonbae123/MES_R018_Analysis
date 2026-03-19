@@ -1,5 +1,5 @@
 // Scorecard Tab JavaScript
-// Reuses Report tab's data aggregation logic
+// Uses EXACTLY the same logic as Report tab
 
 // Make ScorecardState globally accessible for debugging
 window.ScorecardState = {
@@ -11,14 +11,26 @@ window.ScorecardState = {
     charts: {}
 };
 
-// Local reference for easier access
+// Local reference
 const ScorecardState = window.ScorecardState;
+
+// Category order (same as Report)
+const CATEGORY_ORDER = {
+    'BT Process': 1,
+    'DS': 2,
+    'BT Complete': 3,
+    'BT QC': 4,
+    'WT': 5,
+    'WT QC': 6,
+    'IM': 7,
+    'IM QC': 8,
+    'Other': 999
+};
 
 // Initialize Scorecard Tab
 function initScorecardTab() {
     console.log('🎯 Initializing Scorecard Tab');
     
-    // Check if data exists in AppState
     if (!window.AppState || !window.AppState.processedData || window.AppState.processedData.length === 0) {
         console.log('❌ No data in AppState');
         document.getElementById('scorecardTableBody').innerHTML = `
@@ -36,10 +48,9 @@ function initScorecardTab() {
     loadScorecardData();
 }
 
-// Load and Aggregate Scorecard Data (Reuse Report logic)
+// Load and Aggregate Scorecard Data
 function loadScorecardData() {
     try {
-        // Show loading
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-gray-500">
@@ -49,31 +60,29 @@ function loadScorecardData() {
             </tr>
         `;
         
-        // Aggregate by worker using same logic as Report tab
-        const workerMap = {};
+        // Group by worker + date + shift + process (same as Report aggregation)
+        const aggregated = {};
         
         window.AppState.processedData.forEach(record => {
-            const name = record.workerName;
-            if (!name) return;
+            const key = `${record.workerName}|${record.workingDay}|${record.workingShift}|${record.actualShift}|${record.foDesc3}`;
             
-            const key = name;
-            
-            if (!workerMap[key]) {
-                workerMap[key] = {
-                    name: name,
-                    works: [],
-                    totalShiftMinutes: 0,
-                    totalActualMinutes: 0,
-                    totalAssignedStandardTime: 0,
-                    processes: {},
-                    shifts: {}
+            if (!aggregated[key]) {
+                aggregated[key] = {
+                    workerName: record.workerName,
+                    foDesc3: record.foDesc3,
+                    foDesc2: record.foDesc2,
+                    workingDay: record.workingDay,
+                    workingShift: record.workingShift,
+                    actualShift: record.actualShift,
+                    shiftTime: 0,          // Total shift time
+                    actualTime: 0,         // Total actual time
+                    assignedStandardTime: 0,  // Adjusted S/T for efficiency
+                    seq: record.seq,
+                    count: 0
                 };
             }
             
-            const worker = workerMap[key];
-            worker.works.push(record);
-            
-            // Accumulate time data (same as Report tab)
+            // Accumulate times (same as Report)
             const actualMinutes = record.workerActMins || 0;
             const shiftMinutes = record.shiftTime || 0;
             const st = record['Worker S/T'] || 0;
@@ -82,60 +91,114 @@ function loadScorecardData() {
             const adjustmentRatio = record.overlapAdjustmentRatio || 1;
             const adjustedAssigned = assigned * adjustmentRatio;
             
-            worker.totalShiftMinutes += shiftMinutes;
-            worker.totalActualMinutes += actualMinutes;
-            worker.totalAssignedStandardTime += adjustedAssigned;
+            aggregated[key].shiftTime += shiftMinutes;
+            aggregated[key].actualTime += actualMinutes;
+            aggregated[key].assignedStandardTime += adjustedAssigned;
+            aggregated[key].count++;
+        });
+        
+        // Group by worker
+        const workerMap = {};
+        
+        Object.values(aggregated).forEach(agg => {
+            const name = agg.workerName;
+            if (!name) return;
             
-            // Track processes and shifts
-            const process = record.foDesc3 || 'Unknown';
-            const shift = record.workingShift || 'Unknown';
+            if (!workerMap[name]) {
+                workerMap[name] = {
+                    name: name,
+                    totalShiftTime: 0,
+                    totalActualTime: 0,
+                    totalAssignedStandardTime: 0,
+                    workCount: 0,
+                    processes: {},
+                    shifts: {},
+                    categories: {}
+                };
+            }
             
-            worker.processes[process] = (worker.processes[process] || 0) + 1;
+            const worker = workerMap[name];
+            worker.totalShiftTime += agg.shiftTime;
+            worker.totalActualTime += agg.actualTime;
+            worker.totalAssignedStandardTime += agg.assignedStandardTime;
+            worker.workCount++;
+            
+            // Track processes with category info
+            const process = agg.foDesc3 || 'Unknown';
+            if (!worker.processes[process]) {
+                worker.processes[process] = {
+                    count: 0,
+                    category: agg.foDesc2,
+                    seq: agg.seq
+                };
+            }
+            worker.processes[process].count++;
+            
+            // Track shifts
+            const shift = agg.workingShift || 'Unknown';
             worker.shifts[shift] = (worker.shifts[shift] || 0) + 1;
+            
+            // Track categories
+            const category = agg.foDesc2 || 'Other';
+            worker.categories[category] = (worker.categories[category] || 0) + 1;
         });
         
         // Calculate metrics for each worker
         const workers = Object.values(workerMap).map(worker => {
-            // Time Utilization Rate = (Actual Time / Shift Time) × 100
-            const utilization = worker.totalShiftMinutes > 0 
-                ? (worker.totalActualMinutes / worker.totalShiftMinutes) * 100 
+            // Time Utilization = (Actual Time / Shift Time) × 100
+            const utilization = worker.totalShiftTime > 0 
+                ? (worker.totalActualTime / worker.totalShiftTime) * 100 
                 : 0;
             
-            // Work Efficiency Rate = (Assigned S/T / Shift Time) × 100
-            const efficiency = worker.totalShiftMinutes > 0
-                ? (worker.totalAssignedStandardTime / worker.totalShiftMinutes) * 100
+            // Work Efficiency = (Adjusted S/T / Shift Time) × 100
+            const efficiency = worker.totalShiftTime > 0
+                ? (worker.totalAssignedStandardTime / worker.totalShiftTime) * 100
                 : 0;
             
             // Composite score: 50% utilization + 50% efficiency
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
-            // Determine main process (most frequent)
+            // Determine main process (sorted by category/seq, then count)
             const mainProcess = Object.entries(worker.processes)
-                .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+                .sort((a, b) => {
+                    // Sort by category order first
+                    const catA = CATEGORY_ORDER[a[1].category] || 999;
+                    const catB = CATEGORY_ORDER[b[1].category] || 999;
+                    if (catA !== catB) return catA - catB;
+                    
+                    // Then by seq
+                    const seqA = a[1].seq || 999;
+                    const seqB = b[1].seq || 999;
+                    if (seqA !== seqB) return seqA - seqB;
+                    
+                    // Finally by count (highest first)
+                    return b[1].count - a[1].count;
+                })[0]?.[0] || 'Unknown';
             
             return {
                 name: worker.name,
                 main_process: mainProcess,
-                work_count: worker.works.length,
+                work_count: worker.workCount,
                 score: score,
                 utilization: utilization,
                 efficiency: efficiency,
-                totalShiftMinutes: worker.totalShiftMinutes,
-                totalActualMinutes: worker.totalActualMinutes,
+                totalShiftTime: worker.totalShiftTime,
+                totalActualTime: worker.totalActualTime,
                 totalAssignedStandardTime: worker.totalAssignedStandardTime,
                 processes: worker.processes,
                 shifts: worker.shifts,
-                works: worker.works
+                categories: worker.categories
             };
         });
         
         console.log(`✅ Calculated scores for ${workers.length} workers`);
+        console.log(`📊 Sample worker:`, workers[0]);
         
         ScorecardState.allWorkers = workers;
         ScorecardState.filteredWorkers = workers;
         
         // Update process filter options
-        updateProcessFilterOptions(workers);
+        updateProcessFilterOptions();
         
         // Apply filters
         applyAllFilters();
@@ -153,38 +216,49 @@ function loadScorecardData() {
     }
 }
 
-// Update Process Filter Options (same order as Report tab)
-function updateProcessFilterOptions(workers) {
-    const processes = [...new Set(workers.map(w => w.main_process))].filter(p => p && p !== 'Unknown');
+// Update Process Filter Options (EXACTLY same order as Report tab)
+function updateProcessFilterOptions() {
+    // Build process map with category/seq info from processedData
+    const processMap = new Map();
     
-    // Sort by process mapping order (same as Report tab)
-    if (window.AppState && window.AppState.processMapping) {
-        const processOrder = window.AppState.processMapping.map(p => p.foDesc3);
-        processes.sort((a, b) => {
-            const indexA = processOrder.indexOf(a);
-            const indexB = processOrder.indexOf(b);
-            if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
-            return indexA - indexB;
-        });
-    } else {
-        processes.sort();
-    }
+    window.AppState.processedData.forEach(d => {
+        if (d.foDesc3 && !processMap.has(d.foDesc3)) {
+            const categorySeq = CATEGORY_ORDER[d.foDesc2] || 999;
+            const processSeq = d.seq !== undefined ? d.seq : 999;
+            processMap.set(d.foDesc3, {
+                category: d.foDesc2,
+                categorySeq: categorySeq,
+                processSeq: processSeq
+            });
+        }
+    });
+    
+    // Sort by category order, then by seq, then alphabetically
+    const processes = Array.from(processMap.entries())
+        .sort((a, b) => {
+            if (a[1].categorySeq !== b[1].categorySeq) {
+                return a[1].categorySeq - b[1].categorySeq;
+            }
+            if (a[1].processSeq !== b[1].processSeq) {
+                return a[1].processSeq - b[1].processSeq;
+            }
+            return a[0].localeCompare(b[0]);
+        })
+        .map(entry => entry[0]);
     
     const selectElement = document.getElementById('scorecardProcessFilter');
     if (!selectElement) return;
     
     const currentValue = selectElement.value;
     
-    selectElement.innerHTML = '<option value="">All Processes</option>';
-    processes.forEach(process => {
-        selectElement.innerHTML += `<option value="${process}">${process}</option>`;
-    });
+    selectElement.innerHTML = '<option value="">All Processes</option>' + 
+        processes.map(process => `<option value="${process}">${process}</option>`).join('');
     
     if (currentValue && processes.includes(currentValue)) {
         selectElement.value = currentValue;
     }
+    
+    console.log(`✅ Process filter updated with ${processes.length} processes in correct order`);
 }
 
 // Apply All Filters
@@ -350,31 +424,8 @@ function renderScorecardTable() {
 
 // View Worker Detail
 function viewWorkerDetail(workerName) {
-    console.log('📊 View button clicked - feature not yet implemented');
+    console.log('📊 View button clicked for:', workerName);
     alert('Worker detail view coming soon!\n\nThis feature will show:\n- Performance trends\n- Work distribution\n- AI insights\n- Recent work records');
-    
-    // TODO: Implement detail view
-    // const worker = ScorecardState.allWorkers.find(w => w.name === workerName);
-    // if (!worker) {
-    //     alert('Worker not found');
-    //     return;
-    // }
-    // 
-    // document.getElementById('scorecardListView').classList.add('hidden');
-    // document.getElementById('scorecardDetailView').classList.remove('hidden');
-    // renderWorkerDetail(worker);
-}
-
-// Back to List
-function backToScorecardList() {
-    document.getElementById('scorecardDetailView').classList.add('hidden');
-    document.getElementById('scorecardListView').classList.remove('hidden');
-    
-    // Destroy charts
-    Object.values(ScorecardState.charts).forEach(chart => {
-        if (chart) chart.destroy();
-    });
-    ScorecardState.charts = {};
 }
 
 // Reset Filters
