@@ -27,8 +27,8 @@ const CATEGORY_ORDER = {
     'Other': 999
 };
 
-// Initialize Scorecard Tab
-function initScorecardTab() {
+// Initialize Scorecard Tab (make globally accessible)
+window.initScorecardTab = function() {
     console.log('🎯 Initializing Scorecard Tab');
     
     if (!window.AppState || !window.AppState.processedData || window.AppState.processedData.length === 0) {
@@ -46,7 +46,7 @@ function initScorecardTab() {
     
     console.log(`✅ Found ${window.AppState.processedData.length} records in AppState`);
     loadScorecardData();
-}
+};
 
 // Load and Aggregate Scorecard Data
 function loadScorecardData() {
@@ -292,8 +292,8 @@ function applyAllFilters() {
     renderScorecardTable();
 }
 
-// Sort Table
-function sortScorecardTable(column) {
+// Sort Table (make globally accessible)
+window.sortScorecardTable = function(column) {
     if (ScorecardState.sortColumn === column) {
         ScorecardState.sortDirection = ScorecardState.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -335,7 +335,7 @@ function sortScorecardTable(column) {
     });
     
     renderScorecardTable();
-}
+};
 
 // Get Grade Info
 function getGradeInfo(score) {
@@ -422,19 +422,19 @@ function renderScorecardTable() {
     }).join('');
 }
 
-// View Worker Detail
-function viewWorkerDetail(workerName) {
+// View Worker Detail (make globally accessible)
+window.viewWorkerDetail = function(workerName) {
     console.log('📊 View button clicked for:', workerName);
     alert('Worker detail view coming soon!\n\nThis feature will show:\n- Performance trends\n- Work distribution\n- AI insights\n- Recent work records');
-}
+};
 
-// Reset Filters
-function resetScorecardFilters() {
+// Reset Filters (make globally accessible)
+window.resetScorecardFilters = function() {
     document.getElementById('scorecardWorkerSearch').value = '';
     document.getElementById('scorecardProcessFilter').value = '';
     document.getElementById('scorecardGradeFilter').value = '';
     applyAllFilters();
-}
+};
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
