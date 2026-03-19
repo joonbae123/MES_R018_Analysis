@@ -655,17 +655,15 @@ window.showScorecardWorkerDetail = function(workerName) {
     // Get raw records for this worker (filtered by current filters)
     const workerRecords = window.AppState.processedData.filter(r => r.workerName === workerName);
     
-    // Update modal header
-    document.getElementById('scorecardModalWorkerName').innerHTML = `
-        <i class="fas fa-award mr-2"></i>${workerName}
-    `;
+    // Update modal header with worker name
+    document.getElementById('scorecardModalWorkerName').textContent = workerName;
     
     // Update summary cards
     document.getElementById('scorecardModalGrade').textContent = worker.grade;
     document.getElementById('scorecardModalScore').textContent = worker.score.toFixed(1);
     document.getElementById('scorecardModalUtilization').textContent = worker.utilization.toFixed(1) + '%';
     document.getElementById('scorecardModalEfficiency').textContent = worker.efficiency.toFixed(1) + '%';
-    document.getElementById('scorecardModalShiftCount').textContent = worker.shift_count || 0;
+    document.getElementById('scorecardModalShiftCount').textContent = worker.shifts?.size || 0;
     document.getElementById('scorecardModalWorkCount').textContent = worker.work_count;
     
     // Style grade badge
@@ -774,28 +772,28 @@ function buildScorecardScoreChart(dailyData) {
                 {
                     label: 'Score',
                     data: scores,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    borderWidth: 3,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    tension: 0.3,
+                    borderWidth: 2,
                     fill: true
                 },
                 {
                     label: 'Utilization',
                     data: utilization,
-                    borderColor: '#10b981',
+                    borderColor: '#6b7280',
                     backgroundColor: 'transparent',
-                    tension: 0.4,
-                    borderWidth: 2,
+                    tension: 0.3,
+                    borderWidth: 1.5,
                     borderDash: [5, 5]
                 },
                 {
                     label: 'Efficiency',
                     data: efficiency,
-                    borderColor: '#a855f7',
+                    borderColor: '#9ca3af',
                     backgroundColor: 'transparent',
-                    tension: 0.4,
-                    borderWidth: 2,
+                    tension: 0.3,
+                    borderWidth: 1.5,
                     borderDash: [5, 5]
                 }
             ]
@@ -803,6 +801,14 @@ function buildScorecardScoreChart(dailyData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 10
+                }
+            },
             plugins: {
                 legend: {
                     display: true,
@@ -816,16 +822,29 @@ function buildScorecardScoreChart(dailyData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 120,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20
+                    },
                     title: {
                         display: true,
                         text: 'Score / Rate (%)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 },
                 x: {
                     title: {
                         display: true,
                         text: 'Date'
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    grid: {
+                        display: false
                     }
                 }
             }
@@ -855,15 +874,15 @@ function buildScorecardComparisonChart(dailyData) {
                 {
                     label: 'Utilization',
                     data: utilization,
-                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(107, 114, 128, 0.7)',
+                    borderColor: '#6b7280',
                     borderWidth: 1
                 },
                 {
                     label: 'Efficiency',
                     data: efficiency,
-                    backgroundColor: 'rgba(168, 85, 247, 0.7)',
-                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(156, 163, 175, 0.7)',
+                    borderColor: '#9ca3af',
                     borderWidth: 1
                 }
             ]
@@ -871,6 +890,14 @@ function buildScorecardComparisonChart(dailyData) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 10
+                }
+            },
             plugins: {
                 legend: {
                     display: true,
@@ -884,16 +911,29 @@ function buildScorecardComparisonChart(dailyData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 120,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20
+                    },
                     title: {
                         display: true,
                         text: 'Rate (%)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 },
                 x: {
                     title: {
                         display: true,
                         text: 'Date'
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    },
+                    grid: {
+                        display: false
                     }
                 }
             }
@@ -920,21 +960,21 @@ function buildScorecardDailyTable(dailyData) {
     tbody.innerHTML = dailyData.map(day => {
         const shiftList = Array.from(day.shifts).join(', ');
         
-        // Score-based row coloring
+        // Score-based row coloring (subtle)
         let rowClass = 'hover:bg-gray-50';
         let scoreBadge = '';
         if (day.score >= 80) {
-            rowClass = 'bg-green-50 hover:bg-green-100';
-            scoreBadge = 'bg-green-500';
+            rowClass = 'bg-gray-50 hover:bg-gray-100';
+            scoreBadge = 'bg-gray-700';
         } else if (day.score >= 70) {
-            rowClass = 'bg-blue-50 hover:bg-blue-100';
-            scoreBadge = 'bg-blue-500';
+            rowClass = 'bg-gray-50 hover:bg-gray-100';
+            scoreBadge = 'bg-gray-600';
         } else if (day.score >= 60) {
-            rowClass = 'bg-yellow-50 hover:bg-yellow-100';
-            scoreBadge = 'bg-yellow-500';
+            rowClass = 'hover:bg-gray-50';
+            scoreBadge = 'bg-gray-500';
         } else {
-            rowClass = 'bg-red-50 hover:bg-red-100';
-            scoreBadge = 'bg-red-500';
+            rowClass = 'hover:bg-gray-50';
+            scoreBadge = 'bg-gray-400';
         }
         
         return `

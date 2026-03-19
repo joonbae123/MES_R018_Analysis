@@ -3841,7 +3841,7 @@
     <div id="scorecardWorkerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[9999] flex items-center justify-center p-4" onclick="closeScorecardWorkerModal(event)">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-6 py-4 flex justify-between items-center flex-shrink-0">
+            <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center flex-shrink-0">
                 <div>
                     <h3 class="text-2xl font-bold" id="scorecardModalWorkerName">
                         <i class="fas fa-award mr-2"></i>
@@ -3858,32 +3858,32 @@
             <div class="flex-1 overflow-y-auto p-6">
                 <!-- Summary Section - Grade & Score Focus -->
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
-                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg p-4 text-white shadow-lg">
-                        <div class="text-xs font-semibold mb-1 opacity-90">Grade</div>
+                    <div class="bg-yellow-500 rounded-lg p-4 text-white shadow">
+                        <div class="text-xs font-semibold mb-1">Grade</div>
                         <div class="text-4xl font-bold" id="scorecardModalGrade">-</div>
-                        <div class="text-xs mt-1 opacity-90">rating</div>
+                        <div class="text-xs mt-1">rating</div>
                     </div>
-                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white shadow-lg">
-                        <div class="text-xs font-semibold mb-1 opacity-90">Score</div>
+                    <div class="bg-blue-600 rounded-lg p-4 text-white shadow">
+                        <div class="text-xs font-semibold mb-1">Score</div>
                         <div class="text-3xl font-bold" id="scorecardModalScore">0</div>
-                        <div class="text-xs mt-1 opacity-90">overall</div>
+                        <div class="text-xs mt-1">overall</div>
                     </div>
-                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="bg-white rounded-lg p-3 border border-gray-300 shadow-sm">
                         <div class="text-gray-600 text-xs font-semibold mb-1">Utilization</div>
-                        <div class="text-xl font-bold text-green-600" id="scorecardModalUtilization">0%</div>
+                        <div class="text-xl font-bold text-gray-900" id="scorecardModalUtilization">0%</div>
                         <div class="text-xs text-gray-500 mt-1">time usage</div>
                     </div>
-                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="bg-white rounded-lg p-3 border border-gray-300 shadow-sm">
                         <div class="text-gray-600 text-xs font-semibold mb-1">Efficiency</div>
-                        <div class="text-xl font-bold text-purple-600" id="scorecardModalEfficiency">0%</div>
+                        <div class="text-xl font-bold text-gray-900" id="scorecardModalEfficiency">0%</div>
                         <div class="text-xs text-gray-500 mt-1">productivity</div>
                     </div>
-                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="bg-white rounded-lg p-3 border border-gray-300 shadow-sm">
                         <div class="text-gray-600 text-xs font-semibold mb-1">Total Shifts</div>
                         <div class="text-xl font-bold text-gray-900" id="scorecardModalShiftCount">0</div>
                         <div class="text-xs text-gray-500 mt-1">shifts</div>
                     </div>
-                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="bg-white rounded-lg p-3 border border-gray-300 shadow-sm">
                         <div class="text-gray-600 text-xs font-semibold mb-1">Work Count</div>
                         <div class="text-xl font-bold text-gray-900" id="scorecardModalWorkCount">0</div>
                         <div class="text-xs text-gray-500 mt-1">activities</div>
@@ -3895,7 +3895,7 @@
                     <!-- Daily Score Trend -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4">
                         <h4 class="font-bold text-gray-800 mb-3">
-                            <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                            <i class="fas fa-chart-line mr-2 text-gray-600"></i>
                             Daily Score Trend
                         </h4>
                         <div style="height: 250px;">
@@ -3906,7 +3906,7 @@
                     <!-- Utilization vs Efficiency Comparison -->
                     <div class="bg-white rounded-lg border border-gray-200 p-4">
                         <h4 class="font-bold text-gray-800 mb-3">
-                            <i class="fas fa-balance-scale mr-2 text-purple-500"></i>
+                            <i class="fas fa-balance-scale mr-2 text-gray-600"></i>
                             Performance Breakdown
                         </h4>
                         <div style="height: 250px;">
@@ -3942,7 +3942,7 @@
                     </div>
                     
                     <!-- Performance Insight -->
-                    <div class="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-300">
                         <div class="flex items-start gap-2">
                             <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
                             <div class="text-sm text-gray-700">
