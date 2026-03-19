@@ -126,14 +126,20 @@ function updateProcessFilter() {
 
 // Apply Filters
 window.resetScorecardFilters = function() {
-    document.getElementById('scorecardSearchInput').value = '';
-    document.getElementById('scorecardProcessFilter').value = '';
-    document.getElementById('scorecardGradeFilter').value = '';
+    const searchInput = document.getElementById('scorecardWorkerSearch');
+    const processFilter = document.getElementById('scorecardProcessFilter');
+    const gradeFilter = document.getElementById('scorecardGradeFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (processFilter) processFilter.value = '';
+    if (gradeFilter) gradeFilter.value = '';
+    
     applyScorecardFilters();
 };
 
 function applyScorecardFilters() {
-    const searchTerm = document.getElementById('scorecardSearchInput').value.toLowerCase();
+    const searchInput = document.getElementById('scorecardWorkerSearch');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     const processFilter = document.getElementById('scorecardProcessFilter').value;
     const gradeFilter = document.getElementById('scorecardGradeFilter').value;
     
@@ -276,7 +282,7 @@ window.sortScorecardTable = function(column) {
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     // Search input
-    const searchInput = document.getElementById('scorecardSearchInput');
+    const searchInput = document.getElementById('scorecardWorkerSearch');
     if (searchInput) {
         searchInput.addEventListener('input', applyScorecardFilters);
     }
