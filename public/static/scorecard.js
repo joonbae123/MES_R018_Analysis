@@ -1,7 +1,8 @@
 // Scorecard Tab JavaScript
 // Reuses Report tab's data loading logic from AppState
 
-let ScorecardState = {
+// Make ScorecardState globally accessible for debugging
+window.ScorecardState = {
     allWorkers: [],
     filteredWorkers: [],
     selectedWorker: null,
@@ -9,6 +10,9 @@ let ScorecardState = {
     sortDirection: 'desc',
     charts: {}
 };
+
+// Local reference for easier access
+const ScorecardState = window.ScorecardState;
 
 // Initialize Scorecard Tab
 function initScorecardTab() {

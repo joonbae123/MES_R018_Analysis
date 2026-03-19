@@ -107,7 +107,8 @@ const DEFAULT_PROCESS_MAPPING = {
   "Final WT Inspection": { foDesc2: "WT QC", foDesc3: "Final WT Inspection", seq: 5 }
 };
 // Global state
-const AppState = {
+// Make AppState globally accessible for Scorecard tab
+window.AppState = {
     rawData: [],
     processedData: [],
     aggregatedData: [], // NEW: Aggregated data for dashboard
@@ -139,6 +140,9 @@ const AppState = {
     cachedWorkerAgg: null, //  Cache for search/sort
     dataTableSort: { column: null, order: 'desc' } //  Sort state
 };
+
+// Create local reference for easier access within this file
+const AppState = window.AppState;
 
 // Header normalization and synonym dictionary
 const HEADER_SYNONYMS = {
