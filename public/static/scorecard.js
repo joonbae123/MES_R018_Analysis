@@ -312,32 +312,42 @@ function loadScorecardData() {
         // Filter processedData first
         let filteredData = window.AppState.processedData;
         
-        // Apply filters
+        console.log('🔍 loadScorecardData() called');
+        console.log('   Current filters:', JSON.parse(JSON.stringify(ScorecardState.filters)));
+        console.log('📦 Total records before filtering:', filteredData.length);
+        
+        // Apply filters (only if filter has value)
         if (ScorecardState.filters.shift) {
             filteredData = filteredData.filter(r => r.actualShift === ScorecardState.filters.shift);
+            console.log(`  → After shift filter: ${filteredData.length} records`);
         }
         
         if (ScorecardState.filters.workingDays.length > 0) {
             filteredData = filteredData.filter(r => ScorecardState.filters.workingDays.includes(r.workingDay));
+            console.log(`  → After working days filter: ${filteredData.length} records`);
         }
         
         if (ScorecardState.filters.workingShift) {
             filteredData = filteredData.filter(r => r.workingShift === ScorecardState.filters.workingShift);
+            console.log(`  → After working shift filter: ${filteredData.length} records`);
         }
         
         if (ScorecardState.filters.categories.length > 0) {
             filteredData = filteredData.filter(r => ScorecardState.filters.categories.includes(r.foDesc2));
+            console.log(`  → After categories filter: ${filteredData.length} records`);
         }
         
         if (ScorecardState.filters.processes.length > 0) {
             filteredData = filteredData.filter(r => ScorecardState.filters.processes.includes(r.foDesc3));
+            console.log(`  → After processes filter: ${filteredData.length} records`);
         }
         
         if (ScorecardState.filters.workers.length > 0) {
             filteredData = filteredData.filter(r => ScorecardState.filters.workers.includes(r.workerName));
+            console.log(`  → After workers filter: ${filteredData.length} records`);
         }
         
-        console.log(`📊 Filtered data: ${filteredData.length} records (from ${window.AppState.processedData.length})`);
+        console.log(`✅ Final filtered data: ${filteredData.length} records (from ${window.AppState.processedData.length})`);
         
         // Aggregate filtered data by worker (same logic as Report tab)
         const workerMap = {};
@@ -431,6 +441,9 @@ function getGrade(score) {
 
 // Apply Filters (called by Apply button)
 window.applyScorecardFilters = function() {
+    console.log('🔧 Apply Filters button clicked');
+    console.log('   Current filter state:', JSON.parse(JSON.stringify(ScorecardState.filters)));
+    
     // Close all dropdowns
     ['shift', 'workingDay', 'workingShift', 'category', 'process', 'worker'].forEach(type => {
         const dropdown = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Dropdown`);
