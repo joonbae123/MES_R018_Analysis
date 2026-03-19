@@ -454,6 +454,45 @@ function initTabColors() {
 }
 
 // Switch to a specific tab
+// Update metric toggle button state based on tab
+function updateMetricToggleState(tabName) {
+    const utilBtn = document.getElementById('metricUtilBtn');
+    const effBtn = document.getElementById('metricEffBtn');
+    const toggleContainer = utilBtn?.parentElement;
+    
+    if (!utilBtn || !effBtn || !toggleContainer) return;
+    
+    const isReportTab = tabName === 'report';
+    
+    if (isReportTab) {
+        // Enable buttons for Report tab
+        utilBtn.disabled = false;
+        effBtn.disabled = false;
+        toggleContainer.style.opacity = '1';
+        toggleContainer.style.cursor = 'pointer';
+        utilBtn.style.cursor = 'pointer';
+        effBtn.style.cursor = 'pointer';
+        utilBtn.style.pointerEvents = 'auto';
+        effBtn.style.pointerEvents = 'auto';
+        utilBtn.title = '';
+        effBtn.title = '';
+    } else {
+        // Disable buttons for other tabs
+        utilBtn.disabled = true;
+        effBtn.disabled = true;
+        toggleContainer.style.opacity = '0.5';
+        toggleContainer.style.cursor = 'not-allowed';
+        utilBtn.style.cursor = 'not-allowed';
+        effBtn.style.cursor = 'not-allowed';
+        utilBtn.title = 'Only available in Report tab';
+        effBtn.title = 'Only available in Report tab';
+        
+        // Remove onclick temporarily
+        utilBtn.style.pointerEvents = 'none';
+        effBtn.style.pointerEvents = 'none';
+    }
+}
+
 function switchTab(tabName) {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -482,6 +521,9 @@ function switchTab(tabName) {
         content.classList.add('hidden');
     });
     document.getElementById(tabName + 'Tab')?.classList.remove('hidden');
+    
+    // Update metric toggle button states based on active tab
+    updateMetricToggleState(tabName);
     
     // Call global showTab hook for extensions (like Scorecard)
     if (typeof window.showTab === 'function') {
@@ -5538,6 +5580,15 @@ function completeBackgroundUpload(success = true, message = 'Upload completed!')
 
 // Toggle between Time Utilization and Work Efficiency metrics
 function switchToMetric(metricType) {
+    // Check if we're on Report tab
+    const activeTab = document.querySelector('.tab-btn.tab-active');
+    const isReportTab = activeTab && activeTab.getAttribute('data-tab') === 'report';
+    
+    if (!isReportTab) {
+        console.log('⚠️ Metric toggle is only available in Report tab');
+        return; // Don't switch if not on Report tab
+    }
+    
     if (AppState.currentMetricType === metricType) return; // Already in this mode
     
     // Show transition overlay
