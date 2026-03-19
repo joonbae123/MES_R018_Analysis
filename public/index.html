@@ -1568,28 +1568,124 @@
 
         <!-- Scorecard Tab -->
         <div id="scorecardTab" class="tab-content hidden">
-            <!-- Filters -->
+            <!-- Filters (same as Report tab) -->
             <div class="card">
                 <h3 class="text-lg font-bold mb-4">
                     <i class="fas fa-filter text-blue-600 mr-2"></i>
                     Filters
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Worker Name</label>
-                        <input type="text" id="scorecardWorkerSearch" 
-                               placeholder="Search by name..." 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Shift</label>
+                        <div class="relative">
+                            <button id="scorecardFilterShiftDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('shift')">
+                                <span class="text-gray-500">All</span>
+                                <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
+                            </button>
+                            <div id="scorecardFilterShiftDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                <div class="p-2">
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+                                        <input type="radio" name="scorecardShift" value="" class="mr-3 h-4 w-4 text-blue-600" checked onchange="updateScorecardFilter('shift', '')">
+                                        <span class="text-sm text-blue-700">All Shifts</span>
+                                    </label>
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+                                        <input type="radio" name="scorecardShift" value="A" class="mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardFilter('shift', 'A')">
+                                        <span class="text-sm text-gray-700">A Shift</span>
+                                    </label>
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+                                        <input type="radio" name="scorecardShift" value="B" class="mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardFilter('shift', 'B')">
+                                        <span class="text-sm text-gray-700">B Shift</span>
+                                    </label>
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded">
+                                        <input type="radio" name="scorecardShift" value="C" class="mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardFilter('shift', 'C')">
+                                        <span class="text-sm text-gray-700">C Shift</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Process</label>
-                        <select id="scorecardProcessFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">All Processes</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Working Date (Multi)</label>
+                        <div class="relative">
+                            <button id="scorecardFilterWorkingDayDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('workingDay')">
+                                <span class="text-gray-500">Select dates...</span>
+                                <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
+                            </button>
+                            <div id="scorecardFilterWorkingDayDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-y-auto">
+                                <!-- Month group buttons will be added here by JavaScript -->
+                            </div>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Grade</label>
-                        <select id="scorecardGradeFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Working Shift</label>
+                        <div class="relative">
+                            <button id="scorecardFilterWorkingShiftDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('workingShift')">
+                                <span class="text-gray-500">All</span>
+                                <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
+                            </button>
+                            <div id="scorecardFilterWorkingShiftDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                <div class="p-2">
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+                                        <input type="radio" name="scorecardWorkingShift" value="" class="mr-3 h-4 w-4 text-blue-600" checked onchange="updateScorecardFilter('workingShift', '')">
+                                        <span class="text-sm text-blue-700">All Working Shifts</span>
+                                    </label>
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+                                        <input type="radio" name="scorecardWorkingShift" value="Day" class="mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardFilter('workingShift', 'Day')">
+                                        <span class="text-sm text-gray-700">Day</span>
+                                    </label>
+                                    <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded">
+                                        <input type="radio" name="scorecardWorkingShift" value="Night" class="mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardFilter('workingShift', 'Night')">
+                                        <span class="text-sm text-gray-700">Night</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category (FO Desc 2)</label>
+                        <div class="relative">
+                            <button id="scorecardFilterCategoryDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('category')">
+                                <span class="text-gray-500">Select...</span>
+                                <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
+                            </button>
+                            <div id="scorecardFilterCategoryDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process (FO Desc 3)</label>
+                        <div class="relative">
+                            <button id="scorecardFilterProcessDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('process')">
+                                <span class="text-gray-500">Select...</span>
+                                <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
+                            </button>
+                            <div id="scorecardFilterProcessDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Worker</label>
+                        <div class="relative">
+                            <button id="scorecardFilterWorkerDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('worker')">
+                                <span class="text-gray-500">Select...</span>
+                                <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
+                            </button>
+                            <div id="scorecardFilterWorkerDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-2">
+                    <button onclick="applyScorecardFilters()" class="btn btn-primary">
+                        <i class="fas fa-search mr-2"></i>Apply Filters
+                    </button>
+                    <button onclick="resetScorecardFilters()" class="btn btn-secondary">
+                        <i class="fas fa-undo mr-2"></i>Reset
+                    </button>
+                    <div class="flex-1"></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Grade Filter</label>
+                        <select id="scorecardGradeFilter" class="px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="applyScorecardFilters()">
                             <option value="">All Grades</option>
                             <option value="S">S Grade (90+)</option>
                             <option value="A">A Grade (80-89)</option>
@@ -1597,11 +1693,6 @@
                             <option value="C">C Grade (60-69)</option>
                             <option value="D">D Grade (<60)</option>
                         </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button onclick="resetScorecardFilters()" class="btn btn-secondary w-full">
-                            <i class="fas fa-undo mr-2"></i>Reset
-                        </button>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 // Scorecard Tab JavaScript
-// Uses AppState.workerSummary directly from Report tab (already calculated)
+// Uses AppState.workerSummary AND applies filters from processedData
 
 // Make ScorecardState globally accessible for debugging
 window.ScorecardState = {
@@ -7,7 +7,16 @@ window.ScorecardState = {
     filteredWorkers: [],
     selectedWorker: null,
     sortColumn: 'score',
-    sortDirection: 'desc'
+    sortDirection: 'desc',
+    filters: {
+        shift: '',
+        workingDays: [],
+        workingShift: '',
+        categories: [],
+        processes: [],
+        workers: [],
+        grade: ''
+    }
 };
 
 // Local reference
@@ -17,9 +26,9 @@ const ScorecardState = window.ScorecardState;
 window.initScorecardTab = function() {
     console.log('🎯 Initializing Scorecard Tab');
     
-    // Use workerSummary from Report tab (already calculated!)
-    if (!window.AppState || !window.AppState.workerSummary || window.AppState.workerSummary.length === 0) {
-        console.log('❌ No workerSummary in AppState');
+    // Check if data exists
+    if (!window.AppState || !window.AppState.processedData || window.AppState.processedData.length === 0) {
+        console.log('❌ No processedData in AppState');
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-gray-500">
@@ -31,47 +40,376 @@ window.initScorecardTab = function() {
         return;
     }
     
-    console.log(`✅ Found ${window.AppState.workerSummary.length} workers in AppState.workerSummary`);
+    console.log(`✅ Found ${window.AppState.processedData.length} records in AppState`);
+    
+    // Initialize filter dropdowns
+    initializeScorecardFilterDropdowns();
+    
+    // Load data
     loadScorecardData();
 };
 
-// Load Scorecard Data from AppState.workerSummary
+// Initialize Filter Dropdowns (same as Report tab)
+function initializeScorecardFilterDropdowns() {
+    const data = window.AppState.processedData;
+    
+    // Extract unique values
+    const workingDays = [...new Set(data.map(r => r.workingDay).filter(Boolean))].sort();
+    const categories = [...new Set(data.map(r => r.foDesc2).filter(Boolean))].sort();
+    const processes = [...new Set(data.map(r => r.foDesc3).filter(Boolean))];
+    const workers = [...new Set(data.map(r => r.workerName).filter(Boolean))].sort();
+    
+    // Sort processes by CATEGORY_ORDER
+    if (window.CATEGORY_ORDER) {
+        processes.sort((a, b) => {
+            const catA = data.find(r => r.foDesc3 === a)?.foDesc2 || '';
+            const catB = data.find(r => r.foDesc3 === b)?.foDesc2 || '';
+            
+            const orderA = window.CATEGORY_ORDER[catA] || 999;
+            const orderB = window.CATEGORY_ORDER[catB] || 999;
+            
+            if (orderA !== orderB) return orderA - orderB;
+            return a.localeCompare(b);
+        });
+    }
+    
+    // Build Working Day dropdown (with month groups)
+    buildWorkingDayDropdown(workingDays);
+    
+    // Build Category dropdown
+    buildCategoryDropdown(categories);
+    
+    // Build Process dropdown
+    buildProcessDropdown(processes);
+    
+    // Build Worker dropdown
+    buildWorkerDropdown(workers);
+    
+    console.log(`📋 Filters initialized: ${workingDays.length} days, ${categories.length} categories, ${processes.length} processes, ${workers.length} workers`);
+}
+
+// Build Working Day Dropdown with Month Groups
+function buildWorkingDayDropdown(workingDays) {
+    const dropdown = document.getElementById('scorecardFilterWorkingDayDropdown');
+    if (!dropdown) return;
+    
+    // Group by month
+    const byMonth = {};
+    workingDays.forEach(day => {
+        const month = day.substring(0, 7); // YYYY-MM
+        if (!byMonth[month]) byMonth[month] = [];
+        byMonth[month].push(day);
+    });
+    
+    let html = '<div class="p-2">';
+    
+    // All dates option
+    html += `
+        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold mb-2">
+            <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAllDates(this)">
+            <span class="text-sm text-blue-700">Select All Dates</span>
+        </label>
+    `;
+    
+    // Month groups
+    Object.keys(byMonth).sort().reverse().forEach(month => {
+        html += `<div class="mb-3">`;
+        html += `<div class="px-3 py-1 bg-gray-100 text-xs font-bold text-gray-700 mb-1">${month}</div>`;
+        byMonth[month].forEach(day => {
+            html += `
+                <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded">
+                    <input type="checkbox" value="${day}" class="scorecard-workingDay-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('workingDay')">
+                    <span class="text-sm text-gray-700">${day}</span>
+                </label>
+            `;
+        });
+        html += `</div>`;
+    });
+    
+    html += '</div>';
+    dropdown.innerHTML = html;
+}
+
+// Build Category Dropdown
+function buildCategoryDropdown(categories) {
+    const dropdown = document.getElementById('scorecardFilterCategoryDropdown');
+    if (!dropdown) return;
+    
+    let html = '<div class="p-2">';
+    
+    // All categories option
+    html += `
+        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+            <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAll('category', this)">
+            <span class="text-sm text-blue-700">Select All Categories</span>
+        </label>
+    `;
+    
+    categories.forEach(cat => {
+        html += `
+            <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+                <input type="checkbox" value="${cat}" class="scorecard-category-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('category')">
+                <span class="text-sm text-gray-700">${cat}</span>
+            </label>
+        `;
+    });
+    
+    html += '</div>';
+    dropdown.innerHTML = html;
+}
+
+// Build Process Dropdown
+function buildProcessDropdown(processes) {
+    const dropdown = document.getElementById('scorecardFilterProcessDropdown');
+    if (!dropdown) return;
+    
+    let html = '<div class="p-2">';
+    
+    // All processes option
+    html += `
+        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+            <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAll('process', this)">
+            <span class="text-sm text-blue-700">Select All Processes</span>
+        </label>
+    `;
+    
+    processes.forEach(proc => {
+        html += `
+            <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+                <input type="checkbox" value="${proc}" class="scorecard-process-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('process')">
+                <span class="text-sm text-gray-700">${proc}</span>
+            </label>
+        `;
+    });
+    
+    html += '</div>';
+    dropdown.innerHTML = html;
+}
+
+// Build Worker Dropdown
+function buildWorkerDropdown(workers) {
+    const dropdown = document.getElementById('scorecardFilterWorkerDropdown');
+    if (!dropdown) return;
+    
+    let html = '<div class="p-2">';
+    
+    // Search box
+    html += `
+        <input type="text" id="scorecardWorkerSearchBox" placeholder="Search workers..." 
+               class="w-full px-3 py-2 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+               oninput="filterScorecardWorkerList(this.value)">
+    `;
+    
+    // All workers option
+    html += `
+        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+            <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAll('worker', this)">
+            <span class="text-sm text-blue-700">Select All Workers</span>
+        </label>
+    `;
+    
+    html += '<div id="scorecardWorkerList">';
+    workers.forEach(worker => {
+        html += `
+            <label class="scorecard-worker-option flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+                <input type="checkbox" value="${worker}" class="scorecard-worker-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('worker')">
+                <span class="text-sm text-gray-700">${worker}</span>
+            </label>
+        `;
+    });
+    html += '</div>';
+    
+    html += '</div>';
+    dropdown.innerHTML = html;
+}
+
+// Toggle Dropdown
+window.toggleScorecardDropdown = function(type) {
+    const dropdown = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Dropdown`);
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+    
+    // Close other dropdowns
+    ['shift', 'workingDay', 'workingShift', 'category', 'process', 'worker'].forEach(t => {
+        if (t !== type) {
+            const other = document.getElementById(`scorecardFilter${t.charAt(0).toUpperCase() + t.slice(1)}Dropdown`);
+            if (other) other.classList.add('hidden');
+        }
+    });
+};
+
+// Update Single Select Filter
+window.updateScorecardFilter = function(type, value) {
+    ScorecardState.filters[type] = value;
+    
+    // Update display
+    const display = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Display`);
+    if (display) {
+        const span = display.querySelector('span');
+        if (span) {
+            span.textContent = value || 'All';
+            span.className = value ? 'text-gray-900' : 'text-gray-500';
+        }
+    }
+    
+    // Close dropdown
+    const dropdown = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Dropdown`);
+    if (dropdown) dropdown.classList.add('hidden');
+};
+
+// Update Multi-Select Filter
+window.updateScorecardMultiSelect = function(type) {
+    const checkboxes = document.querySelectorAll(`.scorecard-${type}-checkbox:checked`);
+    const values = Array.from(checkboxes).map(cb => cb.value);
+    
+    const filterKey = type === 'workingDay' ? 'workingDays' : 
+                      type === 'category' ? 'categories' : 
+                      type === 'process' ? 'processes' : 'workers';
+    
+    ScorecardState.filters[filterKey] = values;
+    
+    // Update display
+    const display = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Display`);
+    if (display) {
+        const span = display.querySelector('span');
+        if (span) {
+            if (values.length === 0) {
+                span.textContent = type === 'workingDay' ? 'Select dates...' : 'Select...';
+                span.className = 'text-gray-500';
+            } else {
+                span.textContent = `${values.length} selected`;
+                span.className = 'text-gray-900';
+            }
+        }
+    }
+};
+
+// Toggle All Checkboxes
+window.toggleScorecardAll = function(type, checkbox) {
+    const checkboxes = document.querySelectorAll(`.scorecard-${type}-checkbox`);
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateScorecardMultiSelect(type);
+};
+
+// Toggle All Dates
+window.toggleScorecardAllDates = function(checkbox) {
+    const checkboxes = document.querySelectorAll('.scorecard-workingDay-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateScorecardMultiSelect('workingDay');
+};
+
+// Filter Worker List
+window.filterScorecardWorkerList = function(searchTerm) {
+    const options = document.querySelectorAll('.scorecard-worker-option');
+    const term = searchTerm.toLowerCase();
+    
+    options.forEach(option => {
+        const text = option.textContent.toLowerCase();
+        option.style.display = text.includes(term) ? 'flex' : 'none';
+    });
+};
+
+// Load Scorecard Data from AppState with filters applied
 function loadScorecardData() {
     try {
-        // Use workerSummary directly (already calculated in Report tab!)
-        const workerSummary = window.AppState.workerSummary;
+        // Filter processedData first
+        let filteredData = window.AppState.processedData;
         
-        // Transform to Scorecard format
-        ScorecardState.allWorkers = workerSummary.map(worker => {
-            const utilization = worker.utilizationRate || 0;
-            const efficiency = worker.efficiencyRate || 0;
+        // Apply filters
+        if (ScorecardState.filters.shift) {
+            filteredData = filteredData.filter(r => r.actualShift === ScorecardState.filters.shift);
+        }
+        
+        if (ScorecardState.filters.workingDays.length > 0) {
+            filteredData = filteredData.filter(r => ScorecardState.filters.workingDays.includes(r.workingDay));
+        }
+        
+        if (ScorecardState.filters.workingShift) {
+            filteredData = filteredData.filter(r => r.workingShift === ScorecardState.filters.workingShift);
+        }
+        
+        if (ScorecardState.filters.categories.length > 0) {
+            filteredData = filteredData.filter(r => ScorecardState.filters.categories.includes(r.foDesc2));
+        }
+        
+        if (ScorecardState.filters.processes.length > 0) {
+            filteredData = filteredData.filter(r => ScorecardState.filters.processes.includes(r.foDesc3));
+        }
+        
+        if (ScorecardState.filters.workers.length > 0) {
+            filteredData = filteredData.filter(r => ScorecardState.filters.workers.includes(r.workerName));
+        }
+        
+        console.log(`📊 Filtered data: ${filteredData.length} records (from ${window.AppState.processedData.length})`);
+        
+        // Aggregate filtered data by worker (same logic as Report tab)
+        const workerMap = {};
+        
+        filteredData.forEach(record => {
+            const name = record.workerName;
+            if (!name) return;
+            
+            if (!workerMap[name]) {
+                workerMap[name] = {
+                    name: name,
+                    totalShiftTime: 0,
+                    totalActualTime: 0,
+                    totalAssignedST: 0,
+                    workCount: 0,
+                    shifts: new Set(),
+                    main_process: record.foDesc3,
+                    category: record.foDesc2
+                };
+            }
+            
+            const shiftMinutes = (record.shiftCount || 0) * 660;
+            const actualMinutes = record.workerActMins || 0;
+            const st = record['Worker S/T'] || 0;
+            const rate = record['Worker Rate(%)'] || 0;
+            const assigned = (st * rate / 100);
+            const adjustmentRatio = record.overlapAdjustmentRatio || 1;
+            const adjustedAssigned = assigned * adjustmentRatio;
+            
+            workerMap[name].totalShiftTime += shiftMinutes;
+            workerMap[name].totalActualTime += actualMinutes;
+            workerMap[name].totalAssignedST += adjustedAssigned;
+            workerMap[name].workCount++;
+            
+            const shiftKey = `${record.workingDay}_${record.workingShift}`;
+            workerMap[name].shifts.add(shiftKey);
+        });
+        
+        // Calculate metrics
+        ScorecardState.allWorkers = Object.values(workerMap).map(worker => {
+            const utilization = worker.totalShiftTime > 0 
+                ? (worker.totalActualTime / worker.totalShiftTime) * 100 
+                : 0;
+            const efficiency = worker.totalShiftTime > 0 
+                ? (worker.totalAssignedST / worker.totalShiftTime) * 100 
+                : 0;
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
             return {
-                name: worker.workerName,
-                main_process: worker.foDesc3 || 'Unknown',
-                category: worker.foDesc2 || '',
-                work_count: worker.woCount || 0,
-                shift_count: worker.shiftCount || 0,
+                name: worker.name,
+                main_process: worker.main_process || 'Unknown',
+                category: worker.category || '',
+                work_count: worker.workCount,
+                shift_count: worker.shifts.size,
                 utilization: utilization,
                 efficiency: efficiency,
                 score: score,
                 grade: getGrade(score),
-                utilization_band: worker.utilizationBand?.label || '',
-                efficiency_band: worker.efficiencyBand?.label || '',
-                total_minutes: worker.totalMinutes || 0,
-                assigned_st: worker.assignedStandardTime || 0
+                total_minutes: worker.totalActualTime,
+                assigned_st: worker.totalAssignedST
             };
         });
         
-        console.log(`📊 Scorecard: Transformed ${ScorecardState.allWorkers.length} workers`);
+        console.log(`📊 Scorecard: Aggregated ${ScorecardState.allWorkers.length} workers`);
         console.log('First worker:', ScorecardState.allWorkers[0]);
         
-        // Update process filter
-        updateProcessFilter();
-        
-        // Apply filters and render
-        window.resetScorecardFilters();
+        // Apply grade filter and render
+        applyScorecardGradeFilter();
         
     } catch (error) {
         console.error('❌ Error loading scorecard data:', error);
@@ -95,72 +433,80 @@ function getGrade(score) {
     return 'D';
 }
 
-// Update Process Filter (sorted by CATEGORY_ORDER)
-function updateProcessFilter() {
-    const processFilter = document.getElementById('scorecardProcessFilter');
-    if (!processFilter) return;
+// Apply Filters (called by Apply button)
+window.applyScorecardFilters = function() {
+    // Close all dropdowns
+    ['shift', 'workingDay', 'workingShift', 'category', 'process', 'worker'].forEach(type => {
+        const dropdown = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Dropdown`);
+        if (dropdown) dropdown.classList.add('hidden');
+    });
     
-    // Get unique processes
-    const processes = [...new Set(ScorecardState.allWorkers.map(w => w.main_process))];
-    
-    // Sort by CATEGORY_ORDER (same as Report tab)
-    if (window.CATEGORY_ORDER) {
-        processes.sort((a, b) => {
-            const catA = ScorecardState.allWorkers.find(w => w.main_process === a)?.category || '';
-            const catB = ScorecardState.allWorkers.find(w => w.main_process === b)?.category || '';
-            
-            const orderA = window.CATEGORY_ORDER[catA] || 999;
-            const orderB = window.CATEGORY_ORDER[catB] || 999;
-            
-            if (orderA !== orderB) return orderA - orderB;
-            return a.localeCompare(b);
-        });
-    }
-    
-    // Build options
-    processFilter.innerHTML = '<option value="">All Processes</option>' +
-        processes.map(p => `<option value="${p}">${p}</option>`).join('');
-    
-    console.log(`📋 Process filter updated: ${processes.length} processes`);
-}
-
-// Apply Filters
-window.resetScorecardFilters = function() {
-    const searchInput = document.getElementById('scorecardWorkerSearch');
-    const processFilter = document.getElementById('scorecardProcessFilter');
-    const gradeFilter = document.getElementById('scorecardGradeFilter');
-    
-    if (searchInput) searchInput.value = '';
-    if (processFilter) processFilter.value = '';
-    if (gradeFilter) gradeFilter.value = '';
-    
-    applyScorecardFilters();
+    // Reload data with new filters
+    loadScorecardData();
 };
 
-function applyScorecardFilters() {
-    const searchInput = document.getElementById('scorecardWorkerSearch');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    const processFilter = document.getElementById('scorecardProcessFilter').value;
-    const gradeFilter = document.getElementById('scorecardGradeFilter').value;
+// Reset Filters
+window.resetScorecardFilters = function() {
+    // Reset filter state
+    ScorecardState.filters = {
+        shift: '',
+        workingDays: [],
+        workingShift: '',
+        categories: [],
+        processes: [],
+        workers: [],
+        grade: ''
+    };
     
-    ScorecardState.filteredWorkers = ScorecardState.allWorkers.filter(worker => {
-        // Search filter
-        if (searchTerm && !worker.name.toLowerCase().includes(searchTerm)) {
-            return false;
+    // Reset radio buttons
+    document.querySelectorAll('input[name="scorecardShift"]').forEach(r => r.checked = r.value === '');
+    document.querySelectorAll('input[name="scorecardWorkingShift"]').forEach(r => r.checked = r.value === '');
+    
+    // Reset checkboxes
+    document.querySelectorAll('.scorecard-workingDay-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.scorecard-category-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.scorecard-process-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.scorecard-worker-checkbox').forEach(cb => cb.checked = false);
+    
+    // Reset grade filter
+    const gradeFilter = document.getElementById('scorecardGradeFilter');
+    if (gradeFilter) gradeFilter.value = '';
+    
+    // Reset display texts
+    const displayResets = [
+        ['scorecardFilterShiftDisplay', 'All'],
+        ['scorecardFilterWorkingDayDisplay', 'Select dates...'],
+        ['scorecardFilterWorkingShiftDisplay', 'All'],
+        ['scorecardFilterCategoryDisplay', 'Select...'],
+        ['scorecardFilterProcessDisplay', 'Select...'],
+        ['scorecardFilterWorkerDisplay', 'Select...']
+    ];
+    
+    displayResets.forEach(([id, text]) => {
+        const display = document.getElementById(id);
+        if (display) {
+            const span = display.querySelector('span');
+            if (span) {
+                span.textContent = text;
+                span.className = 'text-gray-500';
+            }
         }
-        
-        // Process filter
-        if (processFilter && worker.main_process !== processFilter) {
-            return false;
-        }
-        
-        // Grade filter
-        if (gradeFilter && worker.grade !== gradeFilter) {
-            return false;
-        }
-        
-        return true;
     });
+    
+    // Reload data
+    loadScorecardData();
+};
+
+// Apply Grade Filter
+function applyScorecardGradeFilter() {
+    const gradeFilter = document.getElementById('scorecardGradeFilter');
+    const selectedGrade = gradeFilter ? gradeFilter.value : '';
+    
+    if (selectedGrade) {
+        ScorecardState.filteredWorkers = ScorecardState.allWorkers.filter(w => w.grade === selectedGrade);
+    } else {
+        ScorecardState.filteredWorkers = [...ScorecardState.allWorkers];
+    }
     
     renderScorecardTable();
 }
@@ -171,7 +517,9 @@ function renderScorecardTable() {
     const countSpan = document.getElementById('scorecardWorkerCount');
     
     // Update count
-    countSpan.textContent = `${ScorecardState.filteredWorkers.length} workers found`;
+    if (countSpan) {
+        countSpan.textContent = `${ScorecardState.filteredWorkers.length}`;
+    }
     
     if (ScorecardState.filteredWorkers.length === 0) {
         tbody.innerHTML = `
@@ -252,18 +600,6 @@ function renderScorecardTable() {
     `).join('');
 }
 
-// Get Band Color
-function getBandColor(band) {
-    switch (band) {
-        case 'Excellent': return 'bg-green-100 text-green-800';
-        case 'Good': return 'bg-blue-100 text-blue-800';
-        case 'Average': return 'bg-yellow-100 text-yellow-800';
-        case 'Below Average': return 'bg-orange-100 text-orange-800';
-        case 'Poor': return 'bg-red-100 text-red-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-}
-
 // Sort Table
 window.sortScorecardTable = function(column) {
     if (ScorecardState.sortColumn === column) {
@@ -275,25 +611,14 @@ window.sortScorecardTable = function(column) {
     renderScorecardTable();
 };
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Search input
-    const searchInput = document.getElementById('scorecardWorkerSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', applyScorecardFilters);
-    }
-    
-    // Process filter
-    const processFilter = document.getElementById('scorecardProcessFilter');
-    if (processFilter) {
-        processFilter.addEventListener('change', applyScorecardFilters);
-    }
-    
-    // Grade filter
-    const gradeFilter = document.getElementById('scorecardGradeFilter');
-    if (gradeFilter) {
-        gradeFilter.addEventListener('change', applyScorecardFilters);
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('[id^="scorecardFilter"]')) {
+        ['shift', 'workingDay', 'workingShift', 'category', 'process', 'worker'].forEach(type => {
+            const dropdown = document.getElementById(`scorecardFilter${type.charAt(0).toUpperCase() + type.slice(1)}Dropdown`);
+            if (dropdown) dropdown.classList.add('hidden');
+        });
     }
 });
 
-console.log('✅ Scorecard module loaded (using AppState.workerSummary)');
+console.log('✅ Scorecard module loaded with advanced filters');
