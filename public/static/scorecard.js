@@ -1,5 +1,5 @@
 // Scorecard Tab JavaScript
-// Reuses Report tab's data loading logic from AppState
+// Reuses Report tab's data aggregation logic
 
 // Make ScorecardState globally accessible for debugging
 window.ScorecardState = {
@@ -36,7 +36,7 @@ function initScorecardTab() {
     loadScorecardData();
 }
 
-// Load and Aggregate Scorecard Data
+// Load and Aggregate Scorecard Data (Reuse Report logic)
 function loadScorecardData() {
     try {
         // Show loading
@@ -49,58 +49,68 @@ function loadScorecardData() {
             </tr>
         `;
         
-        // Get processed data from AppState
-        const data = window.AppState.processedData;
+        // Aggregate by worker using same logic as Report tab
+        const workerMap = {};
         
-        // Aggregate by worker
-        const workerMap = new Map();
-        
-        data.forEach(record => {
+        window.AppState.processedData.forEach(record => {
             const name = record.workerName;
             if (!name) return;
             
-            if (!workerMap.has(name)) {
-                workerMap.set(name, {
+            const key = name;
+            
+            if (!workerMap[key]) {
+                workerMap[key] = {
                     name: name,
                     works: [],
-                    totalShiftTime: 0,
-                    totalActualTime: 0,
-                    totalStandardTime: 0,
-                    processes: new Set(),
-                    shifts: new Set()
-                });
+                    totalShiftMinutes: 0,
+                    totalActualMinutes: 0,
+                    totalAssignedStandardTime: 0,
+                    processes: {},
+                    shifts: {}
+                };
             }
             
-            const worker = workerMap.get(name);
+            const worker = workerMap[key];
             worker.works.push(record);
-            worker.totalShiftTime += record.shiftTime || 0;
-            worker.totalActualTime += record.actualTime || 0;
-            worker.totalStandardTime += record.standardTime || 0;
             
-            if (record.foDesc3) worker.processes.add(record.foDesc3);
-            if (record.workingShift) worker.shifts.add(record.workingShift);
+            // Accumulate time data (same as Report tab)
+            const actualMinutes = record.workerActMins || 0;
+            const shiftMinutes = record.shiftTime || 0;
+            const st = record['Worker S/T'] || 0;
+            const rate = record['Worker Rate(%)'] || 0;
+            const assigned = (st * rate / 100);
+            const adjustmentRatio = record.overlapAdjustmentRatio || 1;
+            const adjustedAssigned = assigned * adjustmentRatio;
+            
+            worker.totalShiftMinutes += shiftMinutes;
+            worker.totalActualMinutes += actualMinutes;
+            worker.totalAssignedStandardTime += adjustedAssigned;
+            
+            // Track processes and shifts
+            const process = record.foDesc3 || 'Unknown';
+            const shift = record.workingShift || 'Unknown';
+            
+            worker.processes[process] = (worker.processes[process] || 0) + 1;
+            worker.shifts[shift] = (worker.shifts[shift] || 0) + 1;
         });
         
         // Calculate metrics for each worker
-        const workers = Array.from(workerMap.values()).map(worker => {
-            const utilization = worker.totalShiftTime > 0 
-                ? (worker.totalActualTime / worker.totalShiftTime) * 100 
+        const workers = Object.values(workerMap).map(worker => {
+            // Time Utilization Rate = (Actual Time / Shift Time) × 100
+            const utilization = worker.totalShiftMinutes > 0 
+                ? (worker.totalActualMinutes / worker.totalShiftMinutes) * 100 
                 : 0;
             
-            const efficiency = worker.totalActualTime > 0
-                ? (worker.totalStandardTime / worker.totalActualTime) * 100
+            // Work Efficiency Rate = (Assigned S/T / Shift Time) × 100
+            const efficiency = worker.totalShiftMinutes > 0
+                ? (worker.totalAssignedStandardTime / worker.totalShiftMinutes) * 100
                 : 0;
             
             // Composite score: 50% utilization + 50% efficiency
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
             // Determine main process (most frequent)
-            const processCounts = {};
-            worker.works.forEach(w => {
-                const proc = w.foDesc3 || 'Unknown';
-                processCounts[proc] = (processCounts[proc] || 0) + 1;
-            });
-            const mainProcess = Object.entries(processCounts)
+            const mainProcess = Object.entries(worker.processes)
                 .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
             
             return {
@@ -110,11 +120,11 @@ function loadScorecardData() {
                 score: score,
                 utilization: utilization,
                 efficiency: efficiency,
-                totalShiftTime: worker.totalShiftTime,
-                totalActualTime: worker.totalActualTime,
-                totalStandardTime: worker.totalStandardTime,
-                processes: Array.from(worker.processes),
-                shifts: Array.from(worker.shifts),
+                totalShiftMinutes: worker.totalShiftMinutes,
+                totalActualMinutes: worker.totalActualMinutes,
+                totalAssignedStandardTime: worker.totalAssignedStandardTime,
+                processes: worker.processes,
+                shifts: worker.shifts,
                 works: worker.works
             };
         });
@@ -143,9 +153,25 @@ function loadScorecardData() {
     }
 }
 
-// Update Process Filter Options
+// Update Process Filter Options (same order as Report tab)
 function updateProcessFilterOptions(workers) {
-    const processes = [...new Set(workers.map(w => w.main_process))].filter(p => p && p !== 'Unknown').sort();
+    const processes = [...new Set(workers.map(w => w.main_process))].filter(p => p && p !== 'Unknown');
+    
+    // Sort by process mapping order (same as Report tab)
+    if (window.AppState && window.AppState.processMapping) {
+        const processOrder = window.AppState.processMapping.map(p => p.foDesc3);
+        processes.sort((a, b) => {
+            const indexA = processOrder.indexOf(a);
+            const indexB = processOrder.indexOf(b);
+            if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+    } else {
+        processes.sort();
+    }
+    
     const selectElement = document.getElementById('scorecardProcessFilter');
     if (!selectElement) return;
     
@@ -324,102 +350,19 @@ function renderScorecardTable() {
 
 // View Worker Detail
 function viewWorkerDetail(workerName) {
-    console.log('📊 Loading detail for worker:', workerName);
+    console.log('📊 View button clicked - feature not yet implemented');
+    alert('Worker detail view coming soon!\n\nThis feature will show:\n- Performance trends\n- Work distribution\n- AI insights\n- Recent work records');
     
-    const worker = ScorecardState.allWorkers.find(w => w.name === workerName);
-    if (!worker) {
-        alert('Worker not found');
-        return;
-    }
-    
-    // Show detail view
-    document.getElementById('scorecardListView').classList.add('hidden');
-    document.getElementById('scorecardDetailView').classList.remove('hidden');
-    
-    ScorecardState.selectedWorker = worker;
-    
-    // Prepare detailed data
-    const detailedWorker = prepareWorkerDetail(worker);
-    renderWorkerDetail(detailedWorker);
-}
-
-// Prepare Worker Detail Data
-function prepareWorkerDetail(worker) {
-    // Sort works by date (most recent first)
-    const sortedWorks = worker.works.sort((a, b) => {
-        const dateA = new Date(a.workingDay);
-        const dateB = new Date(b.workingDay);
-        return dateB - dateA;
-    });
-    
-    // Calculate trend (group by date)
-    const dailyStats = {};
-    sortedWorks.forEach(work => {
-        const date = work.workingDay;
-        if (!dailyStats[date]) {
-            dailyStats[date] = {
-                date: date,
-                totalShiftTime: 0,
-                totalActualTime: 0,
-                totalStandardTime: 0,
-                count: 0
-            };
-        }
-        
-        dailyStats[date].totalShiftTime += work.shiftTime || 0;
-        dailyStats[date].totalActualTime += work.actualTime || 0;
-        dailyStats[date].totalStandardTime += work.standardTime || 0;
-        dailyStats[date].count++;
-    });
-    
-    const trend = Object.values(dailyStats).map(day => ({
-        date: day.date,
-        utilization: day.totalShiftTime > 0 ? (day.totalActualTime / day.totalShiftTime) * 100 : 0,
-        efficiency: day.totalActualTime > 0 ? (day.totalStandardTime / day.totalActualTime) * 100 : 0,
-        workCount: day.count
-    })).sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Shift distribution
-    const shiftCounts = {};
-    sortedWorks.forEach(work => {
-        const shift = work.workingShift || 'Unknown';
-        shiftCounts[shift] = (shiftCounts[shift] || 0) + 1;
-    });
-    
-    const shift_distribution = Object.entries(shiftCounts).map(([shift, count]) => ({
-        shift: shift,
-        count: count
-    }));
-    
-    // Process distribution
-    const processCounts = {};
-    sortedWorks.forEach(work => {
-        const process = work.foDesc3 || 'Unknown';
-        processCounts[process] = (processCounts[process] || 0) + 1;
-    });
-    
-    const process_distribution = Object.entries(processCounts).map(([process, count]) => ({
-        process: process,
-        count: count
-    }));
-    
-    // Recent works (last 20)
-    const recent_works = sortedWorks.slice(0, 20).map(work => ({
-        date: work.workingDay,
-        process: work.foDesc3,
-        shift: work.workingShift,
-        utilization: work.shiftTime > 0 ? (work.actualTime / work.shiftTime) * 100 : 0,
-        efficiency: work.actualTime > 0 ? (work.standardTime / work.actualTime) * 100 : 0,
-        remark: work.remark || ''
-    }));
-    
-    return {
-        ...worker,
-        trend: trend,
-        shift_distribution: shift_distribution,
-        process_distribution: process_distribution,
-        recent_works: recent_works
-    };
+    // TODO: Implement detail view
+    // const worker = ScorecardState.allWorkers.find(w => w.name === workerName);
+    // if (!worker) {
+    //     alert('Worker not found');
+    //     return;
+    // }
+    // 
+    // document.getElementById('scorecardListView').classList.add('hidden');
+    // document.getElementById('scorecardDetailView').classList.remove('hidden');
+    // renderWorkerDetail(worker);
 }
 
 // Back to List
@@ -432,313 +375,6 @@ function backToScorecardList() {
         if (chart) chart.destroy();
     });
     ScorecardState.charts = {};
-}
-
-// Render Worker Detail
-function renderWorkerDetail(worker) {
-    const gradeInfo = getGradeInfo(worker.score);
-    
-    // Calculate percentile
-    const betterCount = ScorecardState.allWorkers.filter(w => w.score > worker.score).length;
-    const percentile = ((betterCount / ScorecardState.allWorkers.length) * 100).toFixed(1);
-    
-    // Header
-    document.getElementById('workerDetailName').innerHTML = `
-        <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-bold text-gray-900">${worker.name}</h2>
-            <span class="px-4 py-2 rounded-full text-lg font-bold ${gradeInfo.color}">
-                Grade ${gradeInfo.grade}
-            </span>
-        </div>
-    `;
-    
-    document.getElementById('workerDetailInfo').innerHTML = `
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-                <span class="text-gray-500">Main Process</span>
-                <p class="font-semibold text-gray-900 mt-1">${worker.main_process}</p>
-            </div>
-            <div>
-                <span class="text-gray-500">Total Works</span>
-                <p class="font-semibold text-gray-900 mt-1">${worker.work_count.toLocaleString()}</p>
-            </div>
-            <div>
-                <span class="text-gray-500">Score</span>
-                <p class="font-semibold text-gray-900 mt-1">${worker.score.toFixed(1)} pts</p>
-            </div>
-            <div>
-                <span class="text-gray-500">Rank</span>
-                <p class="font-semibold text-gray-900 mt-1">Top ${percentile}%</p>
-            </div>
-        </div>
-    `;
-    
-    // KPIs
-    document.getElementById('workerDetailKpis').innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="text-sm font-medium text-blue-700">
-                        <i class="fas fa-clock mr-1"></i>Time Utilization
-                    </h4>
-                    <span class="text-2xl font-bold ${getPerformanceColor(worker.utilization, 'utilization')}">
-                        ${worker.utilization.toFixed(1)}%
-                    </span>
-                </div>
-                <div class="w-full bg-blue-200 rounded-full h-2.5">
-                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${Math.min(worker.utilization, 100)}%"></div>
-                </div>
-            </div>
-            
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="text-sm font-medium text-green-700">
-                        <i class="fas fa-bolt mr-1"></i>Work Efficiency
-                    </h4>
-                    <span class="text-2xl font-bold ${getPerformanceColor(worker.efficiency, 'efficiency')}">
-                        ${worker.efficiency.toFixed(1)}%
-                    </span>
-                </div>
-                <div class="w-full bg-green-200 rounded-full h-2.5">
-                    <div class="bg-green-600 h-2.5 rounded-full" style="width: ${Math.min(worker.efficiency, 100)}%"></div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Render charts
-    renderWorkerTrendChart(worker.trend);
-    renderWorkerDistributionCharts(worker.shift_distribution, worker.process_distribution);
-    renderWorkerWorkRecords(worker.recent_works);
-    renderWorkerInsights(worker);
-}
-
-// Render Trend Chart
-function renderWorkerTrendChart(trend) {
-    if (ScorecardState.charts.trend) {
-        ScorecardState.charts.trend.destroy();
-    }
-    
-    const ctx = document.getElementById('workerTrendChart');
-    if (!ctx) return;
-    
-    ScorecardState.charts.trend = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: trend.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-            datasets: [
-                {
-                    label: 'Utilization %',
-                    data: trend.map(d => d.utilization),
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'Efficiency %',
-                    data: trend.map(d => d.efficiency),
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 120,
-                    ticks: {
-                        callback: value => value + '%'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Render Distribution Charts
-function renderWorkerDistributionCharts(shiftDist, processDist) {
-    if (ScorecardState.charts.shift) {
-        ScorecardState.charts.shift.destroy();
-    }
-    
-    const shiftCtx = document.getElementById('workerShiftChart');
-    if (shiftCtx && shiftDist && shiftDist.length > 0) {
-        ScorecardState.charts.shift = new Chart(shiftCtx, {
-            type: 'doughnut',
-            data: {
-                labels: shiftDist.map(d => d.shift),
-                datasets: [{
-                    data: shiftDist.map(d => d.count),
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    }
-    
-    if (ScorecardState.charts.process) {
-        ScorecardState.charts.process.destroy();
-    }
-    
-    const processCtx = document.getElementById('workerProcessChart');
-    if (processCtx && processDist && processDist.length > 0) {
-        ScorecardState.charts.process = new Chart(processCtx, {
-            type: 'doughnut',
-            data: {
-                labels: processDist.map(d => d.process),
-                datasets: [{
-                    data: processDist.map(d => d.count),
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    }
-}
-
-// Render Work Records
-function renderWorkerWorkRecords(works) {
-    const tbody = document.getElementById('workerWorkRecordsBody');
-    if (!tbody) return;
-    
-    if (!works || works.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="px-4 py-4 text-center text-gray-500 text-sm">
-                    No work records available
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    tbody.innerHTML = works.map(work => {
-        const utilizationColor = getPerformanceColor(work.utilization, 'utilization');
-        const efficiencyColor = getPerformanceColor(work.efficiency, 'efficiency');
-        
-        return `
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm text-gray-900">
-                    ${new Date(work.date).toLocaleDateString()}
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-700">
-                    <span class="inline-block px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
-                        ${work.process || '-'}
-                    </span>
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-700">
-                    ${work.shift || '-'}
-                </td>
-                <td class="px-4 py-3 text-sm text-right font-medium ${utilizationColor}">
-                    ${work.utilization.toFixed(1)}%
-                </td>
-                <td class="px-4 py-3 text-sm text-right font-medium ${efficiencyColor}">
-                    ${work.efficiency.toFixed(1)}%
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">
-                    ${work.remark || '-'}
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-// Render Insights
-function renderWorkerInsights(worker) {
-    const insights = [];
-    
-    if (worker.utilization >= 80) {
-        insights.push({ type: 'success', icon: 'fa-check-circle', text: `Excellent time utilization (${worker.utilization.toFixed(1)}%)` });
-    } else if (worker.utilization < 60) {
-        insights.push({ type: 'warning', icon: 'fa-exclamation-triangle', text: `Low time utilization (${worker.utilization.toFixed(1)}%)` });
-    }
-    
-    if (worker.efficiency >= 90) {
-        insights.push({ type: 'success', icon: 'fa-star', text: `Outstanding work efficiency (${worker.efficiency.toFixed(1)}%)` });
-    } else if (worker.efficiency < 70) {
-        insights.push({ type: 'warning', icon: 'fa-flag', text: `Efficiency needs improvement (${worker.efficiency.toFixed(1)}%)` });
-    }
-    
-    if (worker.score >= 85) {
-        insights.push({ type: 'info', icon: 'fa-trophy', text: 'Top performer - maintain this excellence' });
-    } else if (worker.score < 65) {
-        insights.push({ type: 'danger', icon: 'fa-hand-paper', text: 'Performance review recommended' });
-    }
-    
-    if (worker.trend && worker.trend.length >= 7) {
-        const recent = worker.trend.slice(-7);
-        const avgRecent = recent.reduce((sum, d) => sum + d.utilization, 0) / recent.length;
-        const older = worker.trend.slice(0, 7);
-        const avgOlder = older.length > 0 ? older.reduce((sum, d) => sum + d.utilization, 0) / older.length : avgRecent;
-        
-        if (avgRecent > avgOlder + 5) {
-            insights.push({ type: 'success', icon: 'fa-arrow-up', text: 'Positive performance trend detected' });
-        } else if (avgRecent < avgOlder - 5) {
-            insights.push({ type: 'warning', icon: 'fa-arrow-down', text: 'Performance declining - attention needed' });
-        }
-    }
-    
-    const container = document.getElementById('workerInsights');
-    if (!container) return;
-    
-    if (insights.length === 0) {
-        container.innerHTML = `
-            <div class="text-center py-4 text-gray-500 text-sm">
-                <i class="fas fa-info-circle mr-2"></i>
-                No specific insights available
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = insights.map(insight => {
-        let colorClass = '';
-        switch(insight.type) {
-            case 'success': colorClass = 'bg-green-50 border-green-200 text-green-700'; break;
-            case 'warning': colorClass = 'bg-yellow-50 border-yellow-200 text-yellow-700'; break;
-            case 'danger': colorClass = 'bg-red-50 border-red-200 text-red-700'; break;
-            default: colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
-        }
-        
-        return `
-            <div class="p-3 rounded-lg border ${colorClass}">
-                <i class="fas ${insight.icon} mr-2"></i>
-                <span class="text-sm font-medium">${insight.text}</span>
-            </div>
-        `;
-    }).join('');
 }
 
 // Reset Filters
@@ -767,4 +403,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-console.log('✅ Scorecard module loaded (using AppState)');
+console.log('✅ Scorecard module loaded (using Report aggregation logic)');
