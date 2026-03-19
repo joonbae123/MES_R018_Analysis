@@ -148,6 +148,19 @@ function loadScorecardData() {
             // Composite score: 50% utilization + 50% efficiency
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
+            // DEBUG: Log first worker
+            if (Object.keys(workerMap).indexOf(worker.name) === 0) {
+                console.log('🔍 First worker calculation:', {
+                    name: worker.name,
+                    totalShiftTime: worker.totalShiftTime,
+                    totalActualTime: worker.totalActualTime,
+                    totalAssignedStandardTime: worker.totalAssignedStandardTime,
+                    utilization: utilization.toFixed(2) + '%',
+                    efficiency: efficiency.toFixed(2) + '%',
+                    score: score.toFixed(2)
+                });
+            }
+            
             // Determine main process (sorted by category/seq, then count)
             const mainProcess = Object.entries(worker.processes)
                 .sort((a, b) => {
