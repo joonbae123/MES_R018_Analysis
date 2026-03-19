@@ -1725,7 +1725,7 @@
                         </div>
                         <!-- Table with fixed header and scrollable body (max-height: 600px) -->
                         <div class="overflow-hidden border border-gray-200 rounded-lg">
-                            <div class="overflow-x-auto">
+                            <div class="overflow-y-auto" style="max-height: 600px;">
                                 <table class="min-w-full" id="scorecardWorkerTable">
                                     <thead class="bg-gray-50 sticky top-0 z-[1]">
                                         <tr>
@@ -1758,10 +1758,6 @@
                                             </th>
                                         </tr>
                                     </thead>
-                                </table>
-                            </div>
-                            <div class="overflow-y-auto" style="max-height: 600px;">
-                                <table class="min-w-full">
                                     <tbody id="scorecardTableBody" class="bg-white divide-y divide-gray-200">
                                         <tr>
                                             <td colspan="9" class="px-4 py-8 text-center text-gray-500">
