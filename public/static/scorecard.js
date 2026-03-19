@@ -14,18 +14,8 @@ window.ScorecardState = {
 // Local reference
 const ScorecardState = window.ScorecardState;
 
-// Category order (same as Report)
-const CATEGORY_ORDER = {
-    'BT Process': 1,
-    'DS': 2,
-    'BT Complete': 3,
-    'BT QC': 4,
-    'WT': 5,
-    'WT QC': 6,
-    'IM': 7,
-    'IM QC': 8,
-    'Other': 999
-};
+// Use CATEGORY_ORDER from app.js (already declared globally)
+// const CATEGORY_ORDER is in app.js
 
 // Initialize Scorecard Tab (make globally accessible)
 window.initScorecardTab = function() {
@@ -162,8 +152,8 @@ function loadScorecardData() {
             const mainProcess = Object.entries(worker.processes)
                 .sort((a, b) => {
                     // Sort by category order first
-                    const catA = CATEGORY_ORDER[a[1].category] || 999;
-                    const catB = CATEGORY_ORDER[b[1].category] || 999;
+                    const catA = window.CATEGORY_ORDER[a[1].category] || 999;
+                    const catB = window.CATEGORY_ORDER[b[1].category] || 999;
                     if (catA !== catB) return catA - catB;
                     
                     // Then by seq
@@ -223,7 +213,7 @@ function updateProcessFilterOptions() {
     
     window.AppState.processedData.forEach(d => {
         if (d.foDesc3 && !processMap.has(d.foDesc3)) {
-            const categorySeq = CATEGORY_ORDER[d.foDesc2] || 999;
+            const categorySeq = window.CATEGORY_ORDER[d.foDesc2] || 999;
             const processSeq = d.seq !== undefined ? d.seq : 999;
             processMap.set(d.foDesc3, {
                 category: d.foDesc2,

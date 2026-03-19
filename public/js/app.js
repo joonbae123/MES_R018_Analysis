@@ -4,7 +4,8 @@
 // Version: 4.3.5 - Rework Display, Efficiency Modal Enhancement, Overlap Adjustment
 
 // Category order for sorting
-const CATEGORY_ORDER = {
+// Category order for FO Desc 2 (make globally accessible for Scorecard)
+window.CATEGORY_ORDER = {
     'BT Process': 1,
     'DS': 2,
     'BT Complete': 3,
@@ -15,6 +16,7 @@ const CATEGORY_ORDER = {
     'IM QC': 8,
     'Other': 999
 };
+const CATEGORY_ORDER = window.CATEGORY_ORDER;
 
 // ����� Process Mapping �칙 (FO Desc � FO Desc 2, FO Desc 3)
 // Excel ��� Mapping ��가 �� � � �칙� 사�
