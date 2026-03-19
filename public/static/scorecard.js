@@ -105,19 +105,19 @@ function buildWorkingDayDropdown(workingDays) {
     
     // All dates option
     html += `
-        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold mb-2">
+        <label class="flex items-center px-3 py-2.5 hover:bg-blue-50 cursor-pointer rounded-md border-b-2 border-gray-200 bg-blue-50 mb-2">
             <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAllDates(this)">
-            <span class="text-sm text-blue-700">Select All Dates</span>
+            <span class="text-sm font-semibold text-blue-700">Select All Dates</span>
         </label>
     `;
     
     // Month groups
     Object.keys(byMonth).sort().reverse().forEach(month => {
-        html += `<div class="mb-3">`;
-        html += `<div class="px-3 py-1 bg-gray-100 text-xs font-bold text-gray-700 mb-1">${month}</div>`;
+        html += `<div class="mb-2">`;
+        html += `<div class="px-3 py-1.5 bg-gradient-to-r from-gray-100 to-gray-50 text-xs font-bold text-gray-700 rounded-md mb-1">${month}</div>`;
         byMonth[month].forEach(day => {
             html += `
-                <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded">
+                <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer rounded-md transition-colors">
                     <input type="checkbox" value="${day}" class="scorecard-workingDay-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('workingDay')">
                     <span class="text-sm text-gray-700">${day}</span>
                 </label>
@@ -139,15 +139,15 @@ function buildCategoryDropdown(categories) {
     
     // All categories option
     html += `
-        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+        <label class="flex items-center px-3 py-2.5 hover:bg-blue-50 cursor-pointer rounded-md border-b-2 border-gray-200 bg-blue-50 mb-1">
             <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAll('category', this)">
-            <span class="text-sm text-blue-700">Select All Categories</span>
+            <span class="text-sm font-semibold text-blue-700">Select All</span>
         </label>
     `;
     
     categories.forEach(cat => {
         html += `
-            <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+            <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer rounded-md transition-colors">
                 <input type="checkbox" value="${cat}" class="scorecard-category-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('category')">
                 <span class="text-sm text-gray-700">${cat}</span>
             </label>
@@ -167,15 +167,15 @@ function buildProcessDropdown(processes) {
     
     // All processes option
     html += `
-        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+        <label class="flex items-center px-3 py-2.5 hover:bg-blue-50 cursor-pointer rounded-md border-b-2 border-gray-200 bg-blue-50 mb-1">
             <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAll('process', this)">
-            <span class="text-sm text-blue-700">Select All Processes</span>
+            <span class="text-sm font-semibold text-blue-700">Select All</span>
         </label>
     `;
     
     processes.forEach(proc => {
         html += `
-            <label class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+            <label class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer rounded-md transition-colors">
                 <input type="checkbox" value="${proc}" class="scorecard-process-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('process')">
                 <span class="text-sm text-gray-700">${proc}</span>
             </label>
@@ -195,23 +195,25 @@ function buildWorkerDropdown(workers) {
     
     // Search box
     html += `
-        <input type="text" id="scorecardWorkerSearchBox" placeholder="Search workers..." 
-               class="w-full px-3 py-2 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-               oninput="filterScorecardWorkerList(this.value)">
+        <div class="mb-2">
+            <input type="text" id="scorecardWorkerSearchBox" placeholder="Search workers..." 
+                   class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm"
+                   oninput="filterScorecardWorkerList(this.value)">
+        </div>
     `;
     
     // All workers option
     html += `
-        <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
+        <label class="flex items-center px-3 py-2.5 hover:bg-blue-50 cursor-pointer rounded-md border-b-2 border-gray-200 bg-blue-50 mb-1">
             <input type="checkbox" class="mr-3 h-4 w-4 text-blue-600" onchange="toggleScorecardAll('worker', this)">
-            <span class="text-sm text-blue-700">Select All Workers</span>
+            <span class="text-sm font-semibold text-blue-700">Select All</span>
         </label>
     `;
     
-    html += '<div id="scorecardWorkerList">';
+    html += '<div id="scorecardWorkerList" class="max-h-48 overflow-y-auto">';
     workers.forEach(worker => {
         html += `
-            <label class="scorecard-worker-option flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100">
+            <label class="scorecard-worker-option flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer rounded-md transition-colors">
                 <input type="checkbox" value="${worker}" class="scorecard-worker-checkbox mr-3 h-4 w-4 text-blue-600" onchange="updateScorecardMultiSelect('worker')">
                 <span class="text-sm text-gray-700">${worker}</span>
             </label>
