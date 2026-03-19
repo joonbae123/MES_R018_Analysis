@@ -1575,14 +1575,14 @@
                     Filters
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Shift</label>
                         <div class="relative">
                             <button id="scorecardFilterShiftDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('shift')">
                                 <span class="text-gray-500">All</span>
                                 <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
                             </button>
-                            <div id="scorecardFilterShiftDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                            <div id="scorecardFilterShiftDropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
                                 <div class="p-2">
                                     <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
                                         <input type="radio" name="scorecardShift" value="" class="mr-3 h-4 w-4 text-blue-600" checked onchange="updateScorecardFilter('shift', '')">
@@ -1604,25 +1604,25 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Working Date (Multi)</label>
                         <div class="relative">
                             <button id="scorecardFilterWorkingDayDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('workingDay')">
                                 <span class="text-gray-500">Select dates...</span>
                                 <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
                             </button>
-                            <div id="scorecardFilterWorkingDayDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-y-auto">
+                            <div id="scorecardFilterWorkingDayDropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-y-auto">
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Working Shift</label>
                         <div class="relative">
                             <button id="scorecardFilterWorkingShiftDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('workingShift')">
                                 <span class="text-gray-500">All</span>
                                 <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
                             </button>
-                            <div id="scorecardFilterWorkingShiftDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                            <div id="scorecardFilterWorkingShiftDropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
                                 <div class="p-2">
                                     <label class="flex items-center px-3 py-2 hover:bg-blue-100 cursor-pointer rounded border-b-2 border-gray-300 bg-gray-50 font-semibold">
                                         <input type="radio" name="scorecardWorkingShift" value="" class="mr-3 h-4 w-4 text-blue-600" checked onchange="updateScorecardFilter('workingShift', '')">
@@ -1640,36 +1640,36 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Category (FO Desc 2)</label>
                         <div class="relative">
                             <button id="scorecardFilterCategoryDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('category')">
                                 <span class="text-gray-500">Select...</span>
                                 <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
                             </button>
-                            <div id="scorecardFilterCategoryDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            <div id="scorecardFilterCategoryDropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Process (FO Desc 3)</label>
                         <div class="relative">
                             <button id="scorecardFilterProcessDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('process')">
                                 <span class="text-gray-500">Select...</span>
                                 <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
                             </button>
-                            <div id="scorecardFilterProcessDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                            <div id="scorecardFilterProcessDropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Worker</label>
                         <div class="relative">
                             <button id="scorecardFilterWorkerDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('worker')">
                                 <span class="text-gray-500">Select...</span>
                                 <i class="fas fa-chevron-down float-right mt-1 text-gray-400"></i>
                             </button>
-                            <div id="scorecardFilterWorkerDropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden">
+                            <div id="scorecardFilterWorkerDropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden">
                                 <!-- Search Input -->
                                 <div class="sticky top-0 bg-white p-2 border-b border-gray-200">
                                     <input type="text" id="scorecardWorkerSearchBox" 
