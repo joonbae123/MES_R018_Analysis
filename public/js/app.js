@@ -481,6 +481,11 @@ function switchTab(tabName) {
     });
     document.getElementById(tabName + 'Tab')?.classList.remove('hidden');
     
+    // Call global showTab hook for extensions (like Scorecard)
+    if (typeof window.showTab === 'function') {
+        window.showTab(tabName);
+    }
+    
     // Initialize Dashboard when switching to dashboard tab
     if (tabName === 'dashboard') {
         console.log('🔍 Switching to Dashboard tab');
