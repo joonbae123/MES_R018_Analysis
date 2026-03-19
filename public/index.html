@@ -1568,102 +1568,106 @@
 
         <!-- Scorecard Tab -->
         <div id="scorecardTab" class="tab-content hidden">
-            <div class="grid grid-cols-4 gap-6">
-                
-                <!-- Left Sidebar: Worker List (25%) -->
-                <div class="bg-white shadow rounded-lg p-4">
-                    <h3 class="text-lg font-bold mb-4">
-                        <i class="fas fa-users text-purple-600 mr-2"></i>
-                        작업자 목록
-                    </h3>
-                    
-                    <!-- Search -->
-                    <input type="text" id="scorecardWorkerSearch" 
-                           placeholder="이름 검색..." 
-                           class="w-full px-3 py-2 border rounded mb-3 text-sm">
-                    
-                    <!-- Process Filter -->
-                    <select id="scorecardProcessFilter" class="w-full px-3 py-2 border rounded mb-3 text-sm">
-                        <option value="">전체 공정</option>
-                        <option value="Bevel">Bevel</option>
-                        <option value="Cut">Cut</option>
-                        <option value="Paint">Paint</option>
-                        <option value="FU">FU</option>
-                        <option value="Bend">Bend</option>
-                    </select>
-                    
-                    <!-- Grade Filter -->
-                    <select id="scorecardGradeFilter" class="w-full px-3 py-2 border rounded mb-4 text-sm">
-                        <option value="">전체 등급</option>
-                        <option value="S">S등급</option>
-                        <option value="A">A등급</option>
-                        <option value="B">B등급</option>
-                        <option value="C">C등급</option>
-                        <option value="D">D등급</option>
-                    </select>
-                    
-                    <!-- Worker List -->
-                    <div id="scorecardWorkerList" class="space-y-2 overflow-y-auto" style="max-height: 600px;">
-                        <p class="text-gray-500 text-center py-8 text-sm">데이터를 업로드해주세요</p>
+            <!-- Filters -->
+            <div class="card">
+                <h3 class="text-lg font-bold mb-4">
+                    <i class="fas fa-filter text-blue-600 mr-2"></i>
+                    Filters
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Worker Name</label>
+                        <input type="text" id="scorecardWorkerSearch" 
+                               placeholder="Search by name..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process</label>
+                        <select id="scorecardProcessFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Processes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Grade</label>
+                        <select id="scorecardGradeFilter" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Grades</option>
+                            <option value="S">S Grade (90+)</option>
+                            <option value="A">A Grade (80-89)</option>
+                            <option value="B">B Grade (70-79)</option>
+                            <option value="C">C Grade (60-69)</option>
+                            <option value="D">D Grade (<60)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="resetScorecardFilters()" class="btn btn-secondary w-full">
+                            <i class="fas fa-undo mr-2"></i>Reset
+                        </button>
                     </div>
                 </div>
-                
-                <!-- Right Main Area: Worker Card or Overview (75%) -->
-                <div class="col-span-3" id="scorecardMainContainer">
-                    <!-- Overview Screen (default) -->
-                    <div id="scorecardOverview">
-                        <div class="bg-white shadow rounded-lg p-6 mb-6">
-                            <h2 class="text-2xl font-bold mb-4">
-                                <i class="fas fa-trophy text-purple-600 mr-2"></i>
-                                Performance Scorecard
-                            </h2>
-                            <p class="text-gray-600 mb-6">
-                                작업자별 종합 성적표 및 성과 분석
-                            </p>
-                            
-                            <!-- Grade Distribution -->
-                            <div class="card">
-                                <h3 class="text-lg font-bold mb-4">
-                                    <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
-                                    등급 분포
-                                </h3>
-                                <canvas id="gradeDistChart" height="100"></canvas>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-6 mt-6">
-                                <!-- Top 10 -->
-                                <div class="card">
-                                    <h3 class="text-lg font-bold mb-4">
-                                        <i class="fas fa-medal text-yellow-600 mr-2"></i>
-                                        Top 10 작업자
-                                    </h3>
-                                    <div id="top10List" class="space-y-2">
-                                        <!-- Dynamic content -->
-                                    </div>
-                                </div>
-                                
-                                <!-- Needs Improvement -->
-                                <div class="card">
-                                    <h3 class="text-lg font-bold mb-4">
-                                        <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
-                                        개선 필요 (D등급)
-                                    </h3>
-                                    <div id="needsImprovementList" class="space-y-2">
-                                        <!-- Dynamic content -->
-                                    </div>
-                                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div id="scorecardMainContainer">
+                <!-- Worker List View (default) -->
+                <div id="scorecardListView">
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold">
+                                <i class="fas fa-users text-blue-600 mr-2"></i>
+                                Worker Performance List
+                            </h3>
+                            <div class="text-sm text-gray-600">
+                                <span id="scorecardWorkerCount">0</span> workers found
                             </div>
                         </div>
-                        
-                        <div class="text-center text-gray-400 mt-8">
-                            <p class="text-lg">👈 좌측에서 작업자를 선택하여 상세 성적표를 확인하세요</p>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full" id="scorecardWorkerTable">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Rank
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortScorecardTable('name')">
+                                            Worker Name <i class="fas fa-sort text-gray-400"></i>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortScorecardTable('process')">
+                                            Main Process <i class="fas fa-sort text-gray-400"></i>
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortScorecardTable('score')">
+                                            Score <i class="fas fa-sort text-gray-400"></i>
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Grade
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortScorecardTable('utilization')">
+                                            Utilization <i class="fas fa-sort text-gray-400"></i>
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortScorecardTable('efficiency')">
+                                            Efficiency <i class="fas fa-sort text-gray-400"></i>
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Work Count
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scorecardTableBody" class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                                            Please upload data first
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    
-                    <!-- Worker Card Screen (when worker selected) -->
-                    <div id="scorecardWorkerCard" class="hidden">
-                        <!-- Dynamic content will be loaded here -->
-                    </div>
+                </div>
+
+                <!-- Worker Detail View (when worker selected) -->
+                <div id="scorecardDetailView" class="hidden">
+                    <!-- Dynamic content will be loaded here -->
                 </div>
             </div>
         </div>

@@ -1,30 +1,60 @@
 // Scorecard Tab JavaScript
+// Consistent design with Dashboard and Report tabs
 
-let scorecardData = {
+let ScorecardState = {
     currentUploadId: null,
     allWorkers: [],
     filteredWorkers: [],
     selectedWorker: null,
+    sortColumn: 'score',
+    sortDirection: 'desc',
     charts: {}
 };
 
 // Initialize Scorecard Tab
 async function initScorecardTab(uploadId) {
+    console.log('🎯 Initializing Scorecard Tab, uploadId:', uploadId);
+    
     if (!uploadId) {
-        console.log('No upload ID provided');
+        console.log('❌ No upload ID provided');
+        document.getElementById('scorecardTableBody').innerHTML = `
+            <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Please upload data first
+                </td>
+            </tr>
+        `;
         return;
     }
     
-    scorecardData.currentUploadId = uploadId;
-    await loadWorkersList();
+    ScorecardState.currentUploadId = uploadId;
+    await loadScorecardData();
 }
 
-// Load Workers List
-async function loadWorkersList(processFilter = '', gradeFilter = '') {
+// Load Scorecard Data
+async function loadScorecardData() {
     try {
-        let url = `/api/scorecard/workers?uploadId=${scorecardData.currentUploadId}`;
-        if (processFilter) url += `&process=${processFilter}`;
-        if (gradeFilter) url += `&grade=${gradeFilter}`;
+        // Show loading
+        document.getElementById('scorecardTableBody').innerHTML = `
+            <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                    Loading workers data...
+                </td>
+            </tr>
+        `;
+        
+        // Get current filter values
+        const processFilter = document.getElementById('scorecardProcessFilter')?.value || '';
+        const gradeFilter = document.getElementById('scorecardGradeFilter')?.value || '';
+        
+        // Build API URL
+        let url = `/api/scorecard/workers?uploadId=${ScorecardState.currentUploadId}`;
+        if (processFilter) url += `&process=${encodeURIComponent(processFilter)}`;
+        if (gradeFilter) url += `&grade=${encodeURIComponent(gradeFilter)}`;
+        
+        console.log('📡 Fetching scorecard data:', url);
         
         const response = await fetch(url);
         const data = await response.json();
@@ -33,572 +63,574 @@ async function loadWorkersList(processFilter = '', gradeFilter = '') {
             throw new Error(data.error || 'Failed to load workers');
         }
         
-        scorecardData.allWorkers = data.workers;
-        scorecardData.filteredWorkers = data.workers;
+        console.log(`✅ Loaded ${data.workers.length} workers`);
         
-        renderWorkersList(scorecardData.filteredWorkers);
-        renderOverview(scorecardData.allWorkers);
+        ScorecardState.allWorkers = data.workers;
+        ScorecardState.filteredWorkers = data.workers;
+        
+        // Update process filter options
+        updateProcessFilterOptions(data.workers);
+        
+        // Apply search filter
+        applySearchFilter();
+        
+        // Render table
+        renderScorecardTable();
         
     } catch (error) {
-        console.error('Failed to load workers list:', error);
-        document.getElementById('scorecardWorkerList').innerHTML = `
-            <div class="text-red-500 text-sm text-center py-4">
-                <i class="fas fa-exclamation-circle mr-2"></i>
-                데이터 로드 실패
-            </div>
+        console.error('❌ Failed to load scorecard data:', error);
+        document.getElementById('scorecardTableBody').innerHTML = `
+            <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-red-500">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Error loading data: ${error.message}
+                </td>
+            </tr>
         `;
     }
 }
 
-// Render Workers List
-function renderWorkersList(workers) {
-    const gradeColors = {
-        'S': 'bg-yellow-100 border-yellow-400 text-yellow-900',
-        'A': 'bg-green-100 border-green-400 text-green-900',
-        'B': 'bg-blue-100 border-blue-400 text-blue-900',
-        'C': 'bg-orange-100 border-orange-400 text-orange-900',
-        'D': 'bg-red-100 border-red-400 text-red-900'
-    };
+// Update Process Filter Options
+function updateProcessFilterOptions(workers) {
+    const processes = [...new Set(workers.map(w => w.main_process))].filter(p => p).sort();
+    const selectElement = document.getElementById('scorecardProcessFilter');
+    const currentValue = selectElement.value;
     
-    if (workers.length === 0) {
-        document.getElementById('scorecardWorkerList').innerHTML = `
-            <p class="text-gray-500 text-center py-8 text-sm">검색 결과가 없습니다</p>
+    selectElement.innerHTML = '<option value="">All Processes</option>';
+    processes.forEach(process => {
+        selectElement.innerHTML += `<option value="${process}">${process}</option>`;
+    });
+    
+    if (currentValue) {
+        selectElement.value = currentValue;
+    }
+}
+
+// Apply Search Filter
+function applySearchFilter() {
+    const searchTerm = document.getElementById('scorecardWorkerSearch')?.value.toLowerCase() || '';
+    
+    if (searchTerm) {
+        ScorecardState.filteredWorkers = ScorecardState.allWorkers.filter(worker => 
+            worker.name.toLowerCase().includes(searchTerm)
+        );
+    } else {
+        ScorecardState.filteredWorkers = ScorecardState.allWorkers;
+    }
+    
+    renderScorecardTable();
+}
+
+// Sort Table
+function sortScorecardTable(column) {
+    if (ScorecardState.sortColumn === column) {
+        ScorecardState.sortDirection = ScorecardState.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        ScorecardState.sortColumn = column;
+        ScorecardState.sortDirection = 'desc';
+    }
+    
+    ScorecardState.filteredWorkers.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch(column) {
+            case 'name':
+                aVal = a.name;
+                bVal = b.name;
+                break;
+            case 'process':
+                aVal = a.main_process;
+                bVal = b.main_process;
+                break;
+            case 'score':
+                aVal = a.score;
+                bVal = b.score;
+                break;
+            case 'utilization':
+                aVal = a.utilization;
+                bVal = b.utilization;
+                break;
+            case 'efficiency':
+                aVal = a.efficiency;
+                bVal = b.efficiency;
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aVal < bVal) return ScorecardState.sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return ScorecardState.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    renderScorecardTable();
+}
+
+// Get Grade Info
+function getGradeInfo(score) {
+    if (score >= 90) return { grade: 'S', color: 'bg-yellow-50 text-yellow-700 border border-yellow-200' };
+    if (score >= 80) return { grade: 'A', color: 'bg-green-50 text-green-700 border border-green-200' };
+    if (score >= 70) return { grade: 'B', color: 'bg-blue-50 text-blue-700 border border-blue-200' };
+    if (score >= 60) return { grade: 'C', color: 'bg-orange-50 text-orange-700 border border-orange-200' };
+    return { grade: 'D', color: 'bg-red-50 text-red-700 border border-red-200' };
+}
+
+// Get Performance Color
+function getPerformanceColor(value, type = 'utilization') {
+    const threshold = type === 'utilization' ? 70 : 80;
+    if (value >= threshold) return 'text-green-600';
+    if (value >= threshold * 0.7) return 'text-yellow-600';
+    return 'text-red-600';
+}
+
+// Render Scorecard Table
+function renderScorecardTable() {
+    const tbody = document.getElementById('scorecardTableBody');
+    const countElement = document.getElementById('scorecardWorkerCount');
+    
+    if (!ScorecardState.filteredWorkers || ScorecardState.filteredWorkers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                    <i class="fas fa-search mr-2"></i>
+                    No workers found
+                </td>
+            </tr>
         `;
+        countElement.textContent = '0';
         return;
     }
     
-    const html = workers.map(w => `
-        <div class="border-2 ${gradeColors[w.grade]} rounded-lg p-3 cursor-pointer hover:shadow-lg transition worker-card"
-             data-worker-name="${w.name}"
-             onclick="selectWorker('${w.name}')">
-            <div class="flex justify-between items-start mb-2">
-                <span class="font-bold text-sm">${w.name}</span>
-                <span class="text-lg font-bold">${w.grade}</span>
-            </div>
-            <div class="text-xs text-gray-700 space-y-1">
-                <div><i class="fas fa-industry w-4"></i> ${w.main_process}</div>
-                <div><i class="fas fa-chart-line w-4"></i> ${w.score}점</div>
-                <div><i class="fas fa-box w-4"></i> ${w.work_count}건</div>
-            </div>
-        </div>
-    `).join('');
+    countElement.textContent = ScorecardState.filteredWorkers.length.toLocaleString();
     
-    document.getElementById('scorecardWorkerList').innerHTML = html;
+    tbody.innerHTML = ScorecardState.filteredWorkers.map((worker, index) => {
+        const gradeInfo = getGradeInfo(worker.score);
+        const utilizationColor = getPerformanceColor(worker.utilization, 'utilization');
+        const efficiencyColor = getPerformanceColor(worker.efficiency, 'efficiency');
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-900">
+                    ${index + 1}
+                </td>
+                <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                    ${worker.name}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                    <span class="inline-block px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+                        ${worker.main_process || '-'}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-semibold text-gray-900">
+                    ${worker.score.toFixed(1)}
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <span class="inline-block px-3 py-1 rounded-full text-sm font-bold ${gradeInfo.color}">
+                        ${gradeInfo.grade}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-medium ${utilizationColor}">
+                    ${worker.utilization.toFixed(1)}%
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-medium ${efficiencyColor}">
+                    ${worker.efficiency.toFixed(1)}%
+                </td>
+                <td class="px-4 py-3 text-sm text-right text-gray-700">
+                    ${worker.work_count.toLocaleString()}
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <button onclick="viewWorkerDetail('${worker.name}')" 
+                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
-// Select Worker
-async function selectWorker(workerName) {
-    // Highlight selected worker
-    document.querySelectorAll('.worker-card').forEach(card => {
-        card.classList.remove('ring-4', 'ring-purple-500');
-    });
-    event.currentTarget?.classList.add('ring-4', 'ring-purple-500');
+// View Worker Detail
+async function viewWorkerDetail(workerName) {
+    console.log('📊 Loading detail for worker:', workerName);
     
-    scorecardData.selectedWorker = workerName;
-    
-    // Show loading
-    document.getElementById('scorecardOverview').classList.add('hidden');
-    document.getElementById('scorecardWorkerCard').classList.remove('hidden');
-    document.getElementById('scorecardWorkerCard').innerHTML = `
-        <div class="text-center py-20">
-            <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
-            <p class="text-gray-600">성적표를 불러오는 중...</p>
-        </div>
-    `;
-    
-    // Load worker card
-    await loadWorkerCard(workerName);
-}
-
-// Load Worker Card
-async function loadWorkerCard(workerName) {
     try {
-        const response = await fetch(`/api/scorecard/worker/${encodeURIComponent(workerName)}?uploadId=${scorecardData.currentUploadId}&days=30`);
+        // Show loading in detail view
+        document.getElementById('scorecardListView').classList.add('hidden');
+        document.getElementById('scorecardDetailView').classList.remove('hidden');
+        
+        // Build API URL
+        const url = `/api/scorecard/worker/${encodeURIComponent(workerName)}?uploadId=${ScorecardState.currentUploadId}&days=30`;
+        
+        console.log('📡 Fetching worker detail:', url);
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (!data.success) {
-            throw new Error(data.error || 'Failed to load worker card');
+            throw new Error(data.error || 'Failed to load worker detail');
         }
         
-        renderWorkerCard(data);
+        console.log('✅ Worker detail loaded:', data.worker);
+        
+        ScorecardState.selectedWorker = data.worker;
+        renderWorkerDetail(data.worker);
         
     } catch (error) {
-        console.error('Failed to load worker card:', error);
-        document.getElementById('scorecardWorkerCard').innerHTML = `
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <p class="text-red-600">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    데이터를 불러올 수 없습니다: ${error.message}
-                </p>
-            </div>
-        `;
+        console.error('❌ Failed to load worker detail:', error);
+        alert('Failed to load worker detail: ' + error.message);
+        backToScorecardList();
     }
 }
 
-// Render Worker Card
-function renderWorkerCard(data) {
-    const gradeColors = {
-        'S': 'bg-yellow-400 text-yellow-900',
-        'A': 'bg-green-400 text-green-900',
-        'B': 'bg-blue-400 text-blue-900',
-        'C': 'bg-orange-400 text-orange-900',
-        'D': 'bg-red-400 text-red-900'
-    };
+// Back to List
+function backToScorecardList() {
+    document.getElementById('scorecardDetailView').classList.add('hidden');
+    document.getElementById('scorecardListView').classList.remove('hidden');
     
-    const container = document.getElementById('scorecardWorkerCard');
+    // Destroy charts
+    Object.values(ScorecardState.charts).forEach(chart => {
+        if (chart) chart.destroy();
+    });
+    ScorecardState.charts = {};
+}
+
+// Render Worker Detail
+function renderWorkerDetail(worker) {
+    const gradeInfo = getGradeInfo(worker.score);
     
-    container.innerHTML = `
-        <!-- Back Button -->
-        <div class="mb-4">
-            <button onclick="backToOverview()" class="text-purple-600 hover:text-purple-800 font-medium">
-                <i class="fas fa-arrow-left mr-2"></i>목록으로 돌아가기
-            </button>
+    // Calculate percentile (simple approximation)
+    const betterCount = ScorecardState.allWorkers.filter(w => w.score > worker.score).length;
+    const percentile = ((betterCount / ScorecardState.allWorkers.length) * 100).toFixed(1);
+    
+    // Header
+    document.getElementById('workerDetailName').innerHTML = `
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-gray-900">${worker.name}</h2>
+            <span class="px-4 py-2 rounded-full text-lg font-bold ${gradeInfo.color}">
+                Grade ${gradeInfo.grade}
+            </span>
         </div>
-        
-        <!-- Header Card -->
-        <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h2 class="text-3xl font-bold">
-                        <i class="fas fa-user text-purple-600 mr-2"></i>${data.name}
-                    </h2>
-                    <p class="text-gray-600 mt-1">
-                        BT Team | ${data.header.mainProcess} | Total: ${data.header.totalWorks} Work Orders
-                    </p>
-                </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-600">
-                        <i class="fas fa-calendar mr-1"></i>${data.period.start} ~ ${data.period.end}
-                    </p>
-                </div>
+    `;
+    
+    document.getElementById('workerDetailInfo').innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+                <span class="text-gray-500">Main Process</span>
+                <p class="font-semibold text-gray-900 mt-1">${worker.main_process || '-'}</p>
             </div>
-            
-            <div class="mb-4">
-                <span class="text-2xl font-bold">종합 성적</span>
-                <span class="${gradeColors[data.header.grade]} text-2xl font-bold px-4 py-2 rounded ml-4">
-                    ${data.header.grade}등급
-                </span>
-                <span class="text-3xl font-bold ml-4">${data.header.score}점</span>
+            <div>
+                <span class="text-gray-500">Total Works</span>
+                <p class="font-semibold text-gray-900 mt-1">${worker.work_count.toLocaleString()}</p>
             </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span class="text-sm font-medium">
-                            <i class="fas fa-clock text-blue-600 mr-1"></i>Time Utilization
-                        </span>
-                        <span class="font-bold">${data.header.utilization}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: ${data.header.utilization}%"></div>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">가중치 50% = ${(data.header.utilization * 0.5).toFixed(1)}점</p>
-                </div>
-                
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <span class="text-sm font-medium">
-                            <i class="fas fa-bolt text-green-600 mr-1"></i>Work Efficiency
-                        </span>
-                        <span class="font-bold">${data.header.efficiency}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="bg-green-500 h-4 rounded-full transition-all duration-500" style="width: ${Math.min(data.header.efficiency, 100)}%"></div>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">가중치 50% = ${(data.header.efficiency * 0.5).toFixed(1)}점</p>
-                </div>
+            <div>
+                <span class="text-gray-500">Score</span>
+                <p class="font-semibold text-gray-900 mt-1">${worker.score.toFixed(1)} pts</p>
             </div>
-            
-            <div class="text-center text-lg font-medium">
-                <i class="fas fa-chart-line text-purple-600 mr-2"></i>
-                상위 <span class="font-bold text-purple-600">${data.header.ranking.percentile}%</span> 
-                <span class="text-gray-600">(전체 ${data.header.ranking.total}명 중)</span>
+            <div>
+                <span class="text-gray-500">Rank</span>
+                <p class="font-semibold text-gray-900 mt-1">Top ${percentile}%</p>
             </div>
         </div>
-        
-        <!-- Main Grid -->
-        <div class="grid grid-cols-3 gap-6">
-            
-            <!-- Trend Chart (col-span-2) -->
-            <div class="col-span-2 bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">
-                    <i class="fas fa-chart-line text-blue-600 mr-2"></i>
-                    Performance Trend (최근 30일)
-                </h3>
-                <canvas id="workerTrendChart"></canvas>
-            </div>
-            
-            <!-- Insights -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">
-                    <i class="fas fa-lightbulb text-yellow-600 mr-2"></i>
-                    Quick Insights
-                </h3>
-                <div id="workerInsights" class="text-sm space-y-3">
-                    ${renderInsights(data.insights)}
+    `;
+    
+    // KPIs
+    document.getElementById('workerDetailKpis').innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-sm font-medium text-blue-700">
+                        <i class="fas fa-clock mr-1"></i>Time Utilization
+                    </h4>
+                    <span class="text-2xl font-bold ${getPerformanceColor(worker.utilization, 'utilization')}">
+                        ${worker.utilization.toFixed(1)}%
+                    </span>
+                </div>
+                <div class="w-full bg-blue-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${Math.min(worker.utilization, 100)}%"></div>
                 </div>
             </div>
             
-            <!-- Distribution -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">
-                    <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
-                    Work Distribution
-                </h3>
-                <div class="mb-4">
-                    <p class="text-xs text-gray-600 mb-2 font-medium">시프트 분포</p>
-                    <canvas id="workerShiftChart" height="150"></canvas>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-sm font-medium text-green-700">
+                        <i class="fas fa-bolt mr-1"></i>Work Efficiency
+                    </h4>
+                    <span class="text-2xl font-bold ${getPerformanceColor(worker.efficiency, 'efficiency')}">
+                        ${worker.efficiency.toFixed(1)}%
+                    </span>
                 </div>
-                <div class="mt-6">
-                    <p class="text-xs text-gray-600 mb-2 font-medium">공정 분포</p>
-                    <canvas id="workerProcessChart" height="150"></canvas>
-                </div>
-            </div>
-            
-            <!-- Recent Work Records (col-span-2) -->
-            <div class="col-span-2 bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-bold mb-4">
-                    <i class="fas fa-list text-gray-600 mr-2"></i>
-                    Recent Work Records (최근 20건)
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-3 py-2 text-left">날짜</th>
-                                <th class="px-3 py-2 text-left">공정</th>
-                                <th class="px-3 py-2 text-left">Shift</th>
-                                <th class="px-3 py-2 text-right">작업시간</th>
-                                <th class="px-3 py-2 text-right">활용도</th>
-                                <th class="px-3 py-2 text-right">효율</th>
-                                <th class="px-3 py-2 text-left">비고</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${renderWorkTable(data.recentWorks)}
-                        </tbody>
-                    </table>
+                <div class="w-full bg-green-200 rounded-full h-2.5">
+                    <div class="bg-green-600 h-2.5 rounded-full" style="width: ${Math.min(worker.efficiency, 100)}%"></div>
                 </div>
             </div>
         </div>
     `;
     
     // Render charts
-    setTimeout(() => {
-        renderWorkerTrendChart(data.trend);
-        renderWorkerDistributionCharts(data.distribution);
-    }, 100);
+    renderWorkerTrendChart(worker.trend);
+    renderWorkerDistributionCharts(worker.shift_distribution, worker.process_distribution);
+    renderWorkerWorkRecords(worker.recent_works);
+    renderWorkerInsights(worker);
 }
 
-// Render Insights
-function renderInsights(insights) {
-    let html = '';
-    
-    if (insights.strengths.length > 0) {
-        html += `
-            <div>
-                <h4 class="font-bold text-green-600 mb-1">
-                    <i class="fas fa-check-circle mr-1"></i>강점
-                </h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    ${insights.strengths.map(s => `<li>${s}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-    }
-    
-    if (insights.warnings.length > 0) {
-        html += `
-            <div>
-                <h4 class="font-bold text-yellow-600 mb-1">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>주의
-                </h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    ${insights.warnings.map(w => `<li>${w}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-    }
-    
-    if (insights.improvements.length > 0) {
-        html += `
-            <div>
-                <h4 class="font-bold text-blue-600 mb-1">
-                    <i class="fas fa-arrow-up mr-1"></i>개선 추세
-                </h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    ${insights.improvements.map(i => `<li>${i}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-    }
-    
-    if (insights.recommendations.length > 0) {
-        html += `
-            <div>
-                <h4 class="font-bold text-purple-600 mb-1">
-                    <i class="fas fa-graduation-cap mr-1"></i>추천
-                </h4>
-                <ul class="list-disc list-inside text-gray-700">
-                    ${insights.recommendations.map(r => `<li>${r}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-    }
-    
-    if (html === '') {
-        html = '<p class="text-gray-500 text-center py-4">인사이트가 없습니다</p>';
-    }
-    
-    return html;
-}
-
-// Render Work Table
-function renderWorkTable(works) {
-    return works.map(w => {
-        const utilColor = w.util_rate >= 80 ? 'text-green-600 font-bold' : 
-                         w.util_rate >= 60 ? 'text-yellow-600' : 'text-red-600';
-        const effColor = w.eff_rate >= 80 ? 'text-green-600 font-bold' : 
-                        w.eff_rate >= 60 ? 'text-yellow-600' : 'text-red-600';
-        
-        return `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="px-3 py-2">${w.date}</td>
-                <td class="px-3 py-2">${w.fo_desc}</td>
-                <td class="px-3 py-2">${w.shift}</td>
-                <td class="px-3 py-2 text-right">${(w.work_time / 60).toFixed(1)}h</td>
-                <td class="px-3 py-2 text-right ${utilColor}">${w.util_rate}%</td>
-                <td class="px-3 py-2 text-right ${effColor}">${w.eff_rate}%</td>
-                <td class="px-3 py-2 text-gray-600">${w.rework ? '재작업' : ''}</td>
-            </tr>
-        `;
-    }).join('');
-}
-
-// Render Worker Trend Chart
+// Render Trend Chart
 function renderWorkerTrendChart(trend) {
+    // Destroy existing chart
+    if (ScorecardState.charts.trend) {
+        ScorecardState.charts.trend.destroy();
+    }
+    
     const ctx = document.getElementById('workerTrendChart');
     if (!ctx) return;
     
-    if (scorecardData.charts.trend) {
-        scorecardData.charts.trend.destroy();
-    }
-    
-    scorecardData.charts.trend = new Chart(ctx.getContext('2d'), {
+    ScorecardState.charts.trend = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: trend.map(d => d.date),
+            labels: trend.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
             datasets: [
                 {
-                    label: 'Time Utilization (%)',
+                    label: 'Utilization %',
                     data: trend.map(d => d.utilization),
-                    borderColor: 'rgb(59, 130, 246)',
+                    borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4
+                    tension: 0.4,
+                    fill: true
                 },
                 {
-                    label: 'Work Efficiency (%)',
+                    label: 'Efficiency %',
                     data: trend.map(d => d.efficiency),
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    tension: 0.4
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }
             ]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top' }
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
             },
             scales: {
-                y: { 
-                    beginAtZero: true, 
-                    max: 120,
-                    title: { display: true, text: 'Performance (%)' }
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: value => value + '%'
+                    }
                 }
             }
         }
     });
 }
 
-// Render Worker Distribution Charts
-function renderWorkerDistributionCharts(distribution) {
-    // Shift Chart
+// Render Distribution Charts
+function renderWorkerDistributionCharts(shiftDist, processDist) {
+    // Shift Distribution
+    if (ScorecardState.charts.shift) {
+        ScorecardState.charts.shift.destroy();
+    }
+    
     const shiftCtx = document.getElementById('workerShiftChart');
-    if (shiftCtx && distribution.shift.length > 0) {
-        if (scorecardData.charts.shift) {
-            scorecardData.charts.shift.destroy();
-        }
-        
-        scorecardData.charts.shift = new Chart(shiftCtx.getContext('2d'), {
+    if (shiftCtx && shiftDist && shiftDist.length > 0) {
+        ScorecardState.charts.shift = new Chart(shiftCtx, {
             type: 'doughnut',
             data: {
-                labels: distribution.shift.map(s => s.shift),
+                labels: shiftDist.map(d => d.shift),
                 datasets: [{
-                    data: distribution.shift.map(s => s.count),
-                    backgroundColor: ['#FBBF24', '#1E40AF']
+                    data: shiftDist.map(d => d.count),
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
         });
     }
     
-    // Process Chart
+    // Process Distribution
+    if (ScorecardState.charts.process) {
+        ScorecardState.charts.process.destroy();
+    }
+    
     const processCtx = document.getElementById('workerProcessChart');
-    if (processCtx && distribution.process.length > 0) {
-        if (scorecardData.charts.process) {
-            scorecardData.charts.process.destroy();
-        }
-        
-        scorecardData.charts.process = new Chart(processCtx.getContext('2d'), {
+    if (processCtx && processDist && processDist.length > 0) {
+        ScorecardState.charts.process = new Chart(processCtx, {
             type: 'doughnut',
             data: {
-                labels: distribution.process.map(p => p.fo_desc),
+                labels: processDist.map(d => d.process),
                 datasets: [{
-                    data: distribution.process.map(p => p.count),
-                    backgroundColor: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6']
+                    data: processDist.map(d => d.count),
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
         });
     }
 }
 
-// Render Overview
-function renderOverview(workers) {
-    if (workers.length === 0) return;
+// Render Work Records
+function renderWorkerWorkRecords(works) {
+    const tbody = document.getElementById('workerWorkRecordsBody');
     
-    // Grade distribution
-    const gradeCounts = {
-        'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0
-    };
-    
-    workers.forEach(w => {
-        if (gradeCounts[w.grade] !== undefined) {
-            gradeCounts[w.grade]++;
-        }
-    });
-    
-    const ctx = document.getElementById('gradeDistChart');
-    if (ctx) {
-        if (scorecardData.charts.gradeDist) {
-            scorecardData.charts.gradeDist.destroy();
-        }
-        
-        scorecardData.charts.gradeDist = new Chart(ctx.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['S등급', 'A등급', 'B등급', 'C등급', 'D등급'],
-                datasets: [{
-                    data: [gradeCounts.S, gradeCounts.A, gradeCounts.B, gradeCounts.C, gradeCounts.D],
-                    backgroundColor: ['#FBBF24', '#10B981', '#3B82F6', '#F59E0B', '#EF4444']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'right' }
-                }
-            }
-        });
-    }
-    
-    // Top 10
-    const top10 = workers.slice(0, 10);
-    document.getElementById('top10List').innerHTML = top10.map((w, idx) => `
-        <div class="flex justify-between items-center p-2 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer" onclick="selectWorker('${w.name}')">
-            <span class="font-medium">${idx + 1}. ${w.name}</span>
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-600">${w.score}점</span>
-                <span class="px-2 py-1 rounded text-xs font-bold ${getGradeBadgeClass(w.grade)}">${w.grade}</span>
-            </div>
-        </div>
-    `).join('');
-    
-    // Needs Improvement
-    const dGrade = workers.filter(w => w.grade === 'D');
-    if (dGrade.length > 0) {
-        document.getElementById('needsImprovementList').innerHTML = dGrade.map(w => `
-            <div class="flex justify-between items-center p-2 bg-red-50 rounded hover:bg-red-100 cursor-pointer" onclick="selectWorker('${w.name}')">
-                <span class="font-medium">${w.name}</span>
-                <span class="text-sm text-red-600">${w.score}점</span>
-            </div>
-        `).join('');
-    } else {
-        document.getElementById('needsImprovementList').innerHTML = `
-            <p class="text-gray-500 text-center py-4 text-sm">개선 필요한 작업자가 없습니다</p>
+    if (!works || works.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-4 py-4 text-center text-gray-500 text-sm">
+                    No work records available
+                </td>
+            </tr>
         `;
+        return;
     }
-}
-
-// Helper: Get grade badge class
-function getGradeBadgeClass(grade) {
-    const classes = {
-        'S': 'bg-yellow-400 text-yellow-900',
-        'A': 'bg-green-400 text-green-900',
-        'B': 'bg-blue-400 text-blue-900',
-        'C': 'bg-orange-400 text-orange-900',
-        'D': 'bg-red-400 text-red-900'
-    };
-    return classes[grade] || 'bg-gray-400 text-gray-900';
-}
-
-// Back to Overview
-function backToOverview() {
-    scorecardData.selectedWorker = null;
     
-    // Clear selection highlight
-    document.querySelectorAll('.worker-card').forEach(card => {
-        card.classList.remove('ring-4', 'ring-purple-500');
-    });
-    
-    // Show overview
-    document.getElementById('scorecardWorkerCard').classList.add('hidden');
-    document.getElementById('scorecardOverview').classList.remove('hidden');
+    tbody.innerHTML = works.slice(0, 20).map(work => {
+        const utilizationColor = getPerformanceColor(work.utilization, 'utilization');
+        const efficiencyColor = getPerformanceColor(work.efficiency, 'efficiency');
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-sm text-gray-900">
+                    ${new Date(work.date).toLocaleDateString()}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                    <span class="inline-block px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+                        ${work.process || '-'}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700">
+                    ${work.shift || '-'}
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-medium ${utilizationColor}">
+                    ${work.utilization.toFixed(1)}%
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-medium ${efficiencyColor}">
+                    ${work.efficiency.toFixed(1)}%
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">
+                    ${work.remark || '-'}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
-// Search Worker
+// Render Insights
+function renderWorkerInsights(worker) {
+    const insights = [];
+    
+    // Performance insights
+    if (worker.utilization >= 80) {
+        insights.push({ type: 'success', icon: 'fa-check-circle', text: `Excellent time utilization (${worker.utilization.toFixed(1)}%)` });
+    } else if (worker.utilization < 60) {
+        insights.push({ type: 'warning', icon: 'fa-exclamation-triangle', text: `Low time utilization (${worker.utilization.toFixed(1)}%)` });
+    }
+    
+    if (worker.efficiency >= 90) {
+        insights.push({ type: 'success', icon: 'fa-star', text: `Outstanding work efficiency (${worker.efficiency.toFixed(1)}%)` });
+    } else if (worker.efficiency < 70) {
+        insights.push({ type: 'warning', icon: 'fa-flag', text: `Efficiency needs improvement (${worker.efficiency.toFixed(1)}%)` });
+    }
+    
+    // Grade insights
+    if (worker.score >= 85) {
+        insights.push({ type: 'info', icon: 'fa-trophy', text: 'Top performer - maintain this excellence' });
+    } else if (worker.score < 65) {
+        insights.push({ type: 'danger', icon: 'fa-hand-paper', text: 'Performance review recommended' });
+    }
+    
+    // Trend insights (if available)
+    if (worker.trend && worker.trend.length >= 7) {
+        const recent = worker.trend.slice(-7);
+        const avgRecent = recent.reduce((sum, d) => sum + d.utilization, 0) / recent.length;
+        const older = worker.trend.slice(0, 7);
+        const avgOlder = older.reduce((sum, d) => sum + d.utilization, 0) / older.length;
+        
+        if (avgRecent > avgOlder + 5) {
+            insights.push({ type: 'success', icon: 'fa-arrow-up', text: 'Positive performance trend detected' });
+        } else if (avgRecent < avgOlder - 5) {
+            insights.push({ type: 'warning', icon: 'fa-arrow-down', text: 'Performance declining - attention needed' });
+        }
+    }
+    
+    const container = document.getElementById('workerInsights');
+    
+    if (insights.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-gray-500 text-sm">
+                <i class="fas fa-info-circle mr-2"></i>
+                No specific insights available
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = insights.map(insight => {
+        let colorClass = '';
+        switch(insight.type) {
+            case 'success': colorClass = 'bg-green-50 border-green-200 text-green-700'; break;
+            case 'warning': colorClass = 'bg-yellow-50 border-yellow-200 text-yellow-700'; break;
+            case 'danger': colorClass = 'bg-red-50 border-red-200 text-red-700'; break;
+            default: colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
+        }
+        
+        return `
+            <div class="p-3 rounded-lg border ${colorClass}">
+                <i class="fas ${insight.icon} mr-2"></i>
+                <span class="text-sm font-medium">${insight.text}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// Reset Filters
+function resetScorecardFilters() {
+    document.getElementById('scorecardWorkerSearch').value = '';
+    document.getElementById('scorecardProcessFilter').value = '';
+    document.getElementById('scorecardGradeFilter').value = '';
+    loadScorecardData();
+}
+
+// Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Search input
     const searchInput = document.getElementById('scorecardWorkerSearch');
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const keyword = e.target.value.toLowerCase();
-            scorecardData.filteredWorkers = scorecardData.allWorkers.filter(w => 
-                w.name.toLowerCase().includes(keyword)
-            );
-            renderWorkersList(scorecardData.filteredWorkers);
-        });
+        searchInput.addEventListener('input', applySearchFilter);
     }
     
-    // Process Filter
+    // Filter selects
     const processFilter = document.getElementById('scorecardProcessFilter');
     if (processFilter) {
-        processFilter.addEventListener('change', (e) => {
-            const gradeFilter = document.getElementById('scorecardGradeFilter').value;
-            loadWorkersList(e.target.value, gradeFilter);
-        });
+        processFilter.addEventListener('change', loadScorecardData);
     }
     
-    // Grade Filter
     const gradeFilter = document.getElementById('scorecardGradeFilter');
     if (gradeFilter) {
-        gradeFilter.addEventListener('change', (e) => {
-            const processFilter = document.getElementById('scorecardProcessFilter').value;
-            loadWorkersList(processFilter, e.target.value);
-        });
+        gradeFilter.addEventListener('change', loadScorecardData);
     }
 });
+
+console.log('✅ Scorecard module loaded');
