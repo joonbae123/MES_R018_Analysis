@@ -1055,7 +1055,7 @@ function buildScorecardDailyTable(dailyData) {
     if (dailyData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                     <i class="fas fa-exclamation-circle mr-2"></i>
                     No performance data available
                 </td>
@@ -1084,14 +1084,17 @@ function buildScorecardDailyTable(dailyData) {
             scoreBadge = 'bg-gray-400';
         }
         
+        // Format numbers with commas
+        const formatNumber = (num) => Math.round(num).toLocaleString('en-US');
+        
         return `
             <tr class="${rowClass}">
                 <td class="px-4 py-3 text-sm">${day.date}</td>
                 <td class="px-4 py-3 text-sm">${shiftList}</td>
                 <td class="px-4 py-3 text-sm text-center">${day.workCount}</td>
-                <td class="px-4 py-3 text-sm text-right">${day.shiftTime.toFixed(0)}</td>
-                <td class="px-4 py-3 text-sm text-right">${day.totalActualMins.toFixed(0)}</td>
-                <td class="px-4 py-3 text-sm text-right bg-purple-50">${day.totalAssignedST.toFixed(0)}</td>
+                <td class="px-4 py-3 text-sm text-right">${formatNumber(day.shiftTime)}</td>
+                <td class="px-4 py-3 text-sm text-right">${formatNumber(day.totalActualMins)}</td>
+                <td class="px-4 py-3 text-sm text-right">${formatNumber(day.totalAssignedST)}</td>
                 <td class="px-4 py-3 text-sm text-right">${day.utilization.toFixed(1)}%</td>
                 <td class="px-4 py-3 text-sm text-right">${day.efficiency.toFixed(1)}%</td>
                 <td class="px-4 py-3 text-sm text-right">
