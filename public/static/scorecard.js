@@ -810,9 +810,9 @@ function buildPerformanceInsights(worker, workerRecords, dailyData) {
         const comparisonText = scoreDiff > 0 ? 'above' : scoreDiff < 0 ? 'below' : 'at';
         
         const rankingHTML = `
-            <div class="font-medium text-gray-800">Rank #${workerRank} of ${totalWorkers}</div>
-            <div class="text-xl font-bold text-blue-600">Top ${rankPercentile}%</div>
-            <div class="text-xs text-gray-600 mt-1">
+            <div class="text-xs text-gray-600 mb-1">Rank #${workerRank} of ${totalWorkers}</div>
+            <div class="text-2xl font-bold text-blue-600 mb-1">Top ${rankPercentile}%</div>
+            <div class="text-xs text-gray-600">
                 ${comparisonIcon} ${Math.abs(scoreDiff).toFixed(1)} pts ${comparisonText} average
             </div>
         `;
@@ -837,15 +837,16 @@ function buildPerformanceInsights(worker, workerRecords, dailyData) {
         const trendLabel = trendChange > 5 ? 'Improving' : trendChange < -5 ? 'Declining' : 'Stable';
         
         const trendHTML = `
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">${trendIcon}</span>
-                <div>
-                    <div class="font-medium ${trendColor}">${trendLabel}</div>
-                    <div class="text-xs text-gray-600">
-                        Last 7d: ${avgLast7.toFixed(1)} pts
-                        ${prev7Days.length > 0 ? `<br>Prev 7d: ${avgPrev7.toFixed(1)} pts` : ''}
-                    </div>
-                </div>
+            <div class="text-xs text-gray-600 mb-1">
+                ${prev7Days.length > 0 ? `Last 7d vs Prev 7d` : 'Recent Performance'}
+            </div>
+            <div class="text-2xl font-bold ${trendColor} mb-1 flex items-center gap-2">
+                <span class="text-xl">${trendIcon}</span>
+                ${trendLabel}
+            </div>
+            <div class="text-xs text-gray-600">
+                Last 7d: ${avgLast7.toFixed(1)} pts
+                ${prev7Days.length > 0 ? `<br>Prev 7d: ${avgPrev7.toFixed(1)} pts` : ''}
             </div>
         `;
         trendEl.innerHTML = trendHTML;
@@ -873,10 +874,11 @@ function buildPerformanceInsights(worker, workerRecords, dailyData) {
         const totalDays = uniqueDates.size;
         
         const patternHTML = `
-            <div class="font-medium text-gray-800">${mainProcess}</div>
-            <div class="text-sm text-gray-600 mt-1">
+            <div class="text-xs text-gray-600 mb-1">Main Process</div>
+            <div class="text-2xl font-bold text-gray-800 mb-1">${mainProcess}</div>
+            <div class="text-xs text-gray-600">
                 ${totalDays} working days<br>
-                🌞 Day: ${dayPct}% | 🌙 Night: ${nightPct}%
+                ☀️ Day: ${dayPct}% | 🌙 Night: ${nightPct}%
             </div>
         `;
         patternEl.innerHTML = patternHTML;
