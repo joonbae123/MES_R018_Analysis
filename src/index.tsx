@@ -215,7 +215,7 @@ app.get('/api/upload-progress/:id', async (c) => {
     
     // DB에서 업로드 정보 조회
     const result = await env.DB.prepare(`
-      SELECT upload_status, progress_current, progress_total, upload_date, error_message
+      SELECT upload_status, progress_current, progress_total, upload_date
       FROM excel_uploads
       WHERE id = ?
     `).bind(uploadId).first()
@@ -240,8 +240,7 @@ app.get('/api/upload-progress/:id', async (c) => {
       current: result.progress_current,
       total: result.progress_total,
       percentage,
-      elapsed,
-      error: result.error_message
+      elapsed
     })
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500)
