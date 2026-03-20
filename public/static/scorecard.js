@@ -1070,6 +1070,12 @@ function buildPerformanceMatrix(dailyData) {
     const medianUtil = utilizations[Math.floor(utilizations.length / 2)] || 50;
     const medianEff = efficiencies[Math.floor(efficiencies.length / 2)] || 50;
     
+    // Calculate dynamic max values (add 10% padding)
+    const maxUtil = Math.max(...utilizations, 100);
+    const maxEff = Math.max(...efficiencies, 100);
+    const chartMaxUtil = Math.ceil(maxUtil / 10) * 10 + 10; // Round up to nearest 10, add 10
+    const chartMaxEff = Math.ceil(maxEff / 10) * 10 + 10;
+    
     // Categorize each day into quadrants
     let q1 = []; // High Util + High Eff (Superstar)
     let q2 = []; // Low Util + High Eff (Hidden Gem)
@@ -1205,9 +1211,12 @@ function buildPerformanceMatrix(dailyData) {
                         font: { weight: 'bold' }
                     },
                     min: 0,
-                    max: 100,
+                    max: chartMaxUtil,
                     ticks: {
-                        stepSize: 25
+                        stepSize: 25,
+                        callback: function(value) {
+                            return value + '%';
+                        }
                     },
                     grid: {
                         color: 'rgba(200, 200, 200, 0.2)'
@@ -1221,9 +1230,12 @@ function buildPerformanceMatrix(dailyData) {
                         font: { weight: 'bold' }
                     },
                     min: 0,
-                    max: 100,
+                    max: chartMaxEff,
                     ticks: {
-                        stepSize: 25
+                        stepSize: 25,
+                        callback: function(value) {
+                            return value + '%';
+                        }
                     },
                     grid: {
                         color: 'rgba(200, 200, 200, 0.2)'
@@ -1238,7 +1250,9 @@ function buildPerformanceMatrix(dailyData) {
         'Hidden Gem (Q2)': q2.length,
         'Needs Attention (Q3)': q3.length,
         'Busy but Inefficient (Q4)': q4.length,
-        'Threshold': `Util≥${medianUtil.toFixed(1)}%, Eff≥${medianEff.toFixed(1)}%`
+        'Threshold': `Util≥${medianUtil.toFixed(1)}%, Eff≥${medianEff.toFixed(1)}%`,
+        'Data Range': `Util: 0-${maxUtil.toFixed(1)}%, Eff: 0-${maxEff.toFixed(1)}%`,
+        'Chart Range': `Util: 0-${chartMaxUtil}%, Eff: 0-${chartMaxEff}%`
     });
 }
 
