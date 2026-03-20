@@ -617,13 +617,20 @@ window.showScorecardWorkerDetail = function(workerName) {
         }
     }
     
-    // Update summary cards
-    document.getElementById('scorecardModalGrade').textContent = worker.grade || '-';
-    document.getElementById('scorecardModalScore').textContent = (worker.score || 0).toFixed(1);
-    document.getElementById('scorecardModalUtilization').textContent = (worker.utilization || 0).toFixed(1) + '%';
-    document.getElementById('scorecardModalEfficiency').textContent = (worker.efficiency || 0).toFixed(1) + '%';
-    document.getElementById('scorecardModalShiftCount').textContent = worker.shift_count || 0;
-    document.getElementById('scorecardModalWorkCount').textContent = worker.work_count || 0;
+    // Update summary cards (with null checks)
+    const gradeEl = document.getElementById('scorecardModalGrade');
+    const scoreEl = document.getElementById('scorecardModalScore');
+    const utilEl = document.getElementById('scorecardModalUtilization');
+    const effEl = document.getElementById('scorecardModalEfficiency');
+    const shiftEl = document.getElementById('scorecardModalShiftCount');
+    const workEl = document.getElementById('scorecardModalWorkCount');
+    
+    if (gradeEl) gradeEl.textContent = worker.grade || '-';
+    if (scoreEl) scoreEl.textContent = (worker.score || 0).toFixed(1);
+    if (utilEl) utilEl.textContent = (worker.utilization || 0).toFixed(1) + '%';
+    if (effEl) effEl.textContent = (worker.efficiency || 0).toFixed(1) + '%';
+    if (shiftEl) shiftEl.textContent = worker.shift_count || 0;
+    if (workEl) workEl.textContent = worker.work_count || 0;
     
     console.log('📋 Summary cards updated:', {
         grade: worker.grade,
@@ -631,12 +638,21 @@ window.showScorecardWorkerDetail = function(workerName) {
         utilization: worker.utilization,
         efficiency: worker.efficiency,
         shift_count: worker.shift_count,
-        work_count: worker.work_count
+        work_count: worker.work_count,
+        elementsFound: {
+            grade: !!gradeEl,
+            score: !!scoreEl,
+            util: !!utilEl,
+            eff: !!effEl,
+            shift: !!shiftEl,
+            work: !!workEl
+        }
     });
     
     // Style grade badge
-    const gradeElement = document.getElementById('scorecardModalGrade');
-    gradeElement.className = 'text-4xl font-bold';
+    if (gradeEl) {
+        gradeEl.className = 'text-4xl font-bold';
+    }
     
     // Aggregate daily data
     const dailyData = aggregateDailyData(workerRecords);
@@ -678,27 +694,31 @@ window.closeScorecardWorkerModal = function(event) {
 // Build performance insights
 function buildPerformanceInsights(worker, workerRecords, dailyData) {
     // 1. Ranking & Comparison with all workers
-    const allWorkers = ScorecardState.allWorkers;
-    const workerRank = allWorkers.findIndex(w => w.name === worker.name) + 1;
-    const totalWorkers = allWorkers.length;
-    const avgScore = allWorkers.reduce((sum, w) => sum + w.score, 0) / totalWorkers;
-    const scoreDiff = worker.score - avgScore;
-    
-    const rankPercentile = ((totalWorkers - workerRank + 1) / totalWorkers * 100).toFixed(0);
-    const comparisonIcon = scoreDiff > 0 ? '🟢' : scoreDiff < 0 ? '🔴' : '⚪';
-    const comparisonText = scoreDiff > 0 ? 'above' : scoreDiff < 0 ? 'below' : 'at';
-    
-    const rankingHTML = `
-        <div class="font-medium text-gray-800">Rank #${workerRank} of ${totalWorkers}</div>
-        <div class="text-xl font-bold text-blue-600">Top ${rankPercentile}%</div>
-        <div class="text-xs text-gray-600 mt-1">
-            ${comparisonIcon} ${Math.abs(scoreDiff).toFixed(1)} pts ${comparisonText} average
-        </div>
-    `;
-    document.getElementById('scorecardModalRanking').innerHTML = rankingHTML;
+    const rankingEl = document.getElementById('scorecardModalRanking');
+    if (rankingEl) {
+        const allWorkers = ScorecardState.allWorkers;
+        const workerRank = allWorkers.findIndex(w => w.name === worker.name) + 1;
+        const totalWorkers = allWorkers.length;
+        const avgScore = allWorkers.reduce((sum, w) => sum + w.score, 0) / totalWorkers;
+        const scoreDiff = worker.score - avgScore;
+        
+        const rankPercentile = ((totalWorkers - workerRank + 1) / totalWorkers * 100).toFixed(0);
+        const comparisonIcon = scoreDiff > 0 ? '🟢' : scoreDiff < 0 ? '🔴' : '⚪';
+        const comparisonText = scoreDiff > 0 ? 'above' : scoreDiff < 0 ? 'below' : 'at';
+        
+        const rankingHTML = `
+            <div class="font-medium text-gray-800">Rank #${workerRank} of ${totalWorkers}</div>
+            <div class="text-xl font-bold text-blue-600">Top ${rankPercentile}%</div>
+            <div class="text-xs text-gray-600 mt-1">
+                ${comparisonIcon} ${Math.abs(scoreDiff).toFixed(1)} pts ${comparisonText} average
+            </div>
+        `;
+        rankingEl.innerHTML = rankingHTML;
+    }
     
     // 2. Recent Trend (Last 7 days vs Previous 7 days)
-    if (dailyData.length >= 2) {
+    const trendEl = document.getElementById('scorecardModalRecentTrend');
+    if (trendEl && dailyData.length >= 2) {
         const sortedDays = [...dailyData].sort((a, b) => new Date(b.date) - new Date(a.date));
         const last7Days = sortedDays.slice(0, Math.min(7, sortedDays.length));
         const prev7Days = sortedDays.slice(7, Math.min(14, sortedDays.length));
@@ -725,11 +745,12 @@ function buildPerformanceInsights(worker, workerRecords, dailyData) {
                 </div>
             </div>
         `;
-        document.getElementById('scorecardModalRecentTrend').innerHTML = trendHTML;
+        trendEl.innerHTML = trendHTML;
     }
     
     // 3. Work Pattern (Shift distribution & frequency)
-    if (workerRecords.length > 0) {
+    const patternEl = document.getElementById('scorecardModalWorkPattern');
+    if (patternEl && workerRecords.length > 0) {
         const shiftCounts = {};
         const uniqueDates = new Set();
         
@@ -755,7 +776,7 @@ function buildPerformanceInsights(worker, workerRecords, dailyData) {
                 🌞 Day: ${dayPct}% | 🌙 Night: ${nightPct}%
             </div>
         `;
-        document.getElementById('scorecardModalWorkPattern').innerHTML = patternHTML;
+        patternEl.innerHTML = patternHTML;
     }
 }
 
