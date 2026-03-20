@@ -648,23 +648,37 @@ window.showScorecardWorkerDetail = function(workerName) {
     // Get worker data from allWorkers
     const worker = ScorecardState.allWorkers.find(w => w.name === workerName);
     if (!worker) {
+        console.error('❌ Worker not found in allWorkers:', workerName);
+        console.log('Available workers:', ScorecardState.allWorkers.map(w => w.name));
         alert('Worker data not found');
         return;
     }
     
+    console.log('✅ Found worker:', worker);
+    
     // Get raw records for this worker (filtered by current filters)
     const workerRecords = window.AppState.processedData.filter(r => r.workerName === workerName);
+    console.log(`📊 Found ${workerRecords.length} raw records for ${workerName}`);
     
     // Update modal header with worker name
     document.getElementById('scorecardModalWorkerName').textContent = workerName;
     
     // Update summary cards
-    document.getElementById('scorecardModalGrade').textContent = worker.grade;
-    document.getElementById('scorecardModalScore').textContent = worker.score.toFixed(1);
-    document.getElementById('scorecardModalUtilization').textContent = worker.utilization.toFixed(1) + '%';
-    document.getElementById('scorecardModalEfficiency').textContent = worker.efficiency.toFixed(1) + '%';
-    document.getElementById('scorecardModalShiftCount').textContent = worker.shifts?.size || 0;
-    document.getElementById('scorecardModalWorkCount').textContent = worker.work_count;
+    document.getElementById('scorecardModalGrade').textContent = worker.grade || '-';
+    document.getElementById('scorecardModalScore').textContent = (worker.score || 0).toFixed(1);
+    document.getElementById('scorecardModalUtilization').textContent = (worker.utilization || 0).toFixed(1) + '%';
+    document.getElementById('scorecardModalEfficiency').textContent = (worker.efficiency || 0).toFixed(1) + '%';
+    document.getElementById('scorecardModalShiftCount').textContent = worker.shift_count || 0;
+    document.getElementById('scorecardModalWorkCount').textContent = worker.work_count || 0;
+    
+    console.log('📋 Summary cards updated:', {
+        grade: worker.grade,
+        score: worker.score,
+        utilization: worker.utilization,
+        efficiency: worker.efficiency,
+        shift_count: worker.shift_count,
+        work_count: worker.work_count
+    });
     
     // Style grade badge
     const gradeElement = document.getElementById('scorecardModalGrade');
@@ -672,6 +686,7 @@ window.showScorecardWorkerDetail = function(workerName) {
     
     // Aggregate daily data
     const dailyData = aggregateDailyData(workerRecords);
+    console.log(`📅 Aggregated ${dailyData.length} daily records`);
     
     // Build charts
     buildScorecardScoreChart(dailyData);
