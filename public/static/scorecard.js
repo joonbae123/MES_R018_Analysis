@@ -642,8 +642,8 @@ window.showScorecardWorkerDetail = function(workerName) {
     const dailyData = aggregateDailyData(workerRecords);
     console.log(`📅 Aggregated ${dailyData.length} daily records`);
     
-    // Build performance insights
-    buildPerformanceInsights(workerRecords, dailyData);
+    // Build performance insights (pass worker object for ranking)
+    buildPerformanceInsights(worker, workerRecords, dailyData);
     
     // Build charts
     buildScorecardScoreChart(dailyData);
@@ -676,72 +676,86 @@ window.closeScorecardWorkerModal = function(event) {
 };
 
 // Build performance insights
-function buildPerformanceInsights(workerRecords, dailyData) {
-    // 1. Top Processes by time spent
-    const processTimes = {};
-    workerRecords.forEach(record => {
-        const process = record.foDesc3 || 'Unknown';
-        if (!processTimes[process]) {
-            processTimes[process] = 0;
-        }
-        processTimes[process] += record.workerActMins || 0;
-    });
+function buildPerformanceInsights(worker, workerRecords, dailyData) {
+    // 1. Ranking & Comparison with all workers
+    const allWorkers = ScorecardState.allWorkers;
+    const workerRank = allWorkers.findIndex(w => w.name === worker.name) + 1;
+    const totalWorkers = allWorkers.length;
+    const avgScore = allWorkers.reduce((sum, w) => sum + w.score, 0) / totalWorkers;
+    const scoreDiff = worker.score - avgScore;
     
-    const topProcesses = Object.entries(processTimes)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
+    const rankPercentile = ((totalWorkers - workerRank + 1) / totalWorkers * 100).toFixed(0);
+    const comparisonIcon = scoreDiff > 0 ? '🟢' : scoreDiff < 0 ? '🔴' : '⚪';
+    const comparisonText = scoreDiff > 0 ? 'above' : scoreDiff < 0 ? 'below' : 'at';
     
-    const topProcessesHTML = topProcesses.length > 0 
-        ? topProcesses.map(([process, mins], idx) => 
-            `<div class="flex justify-between items-center">
-                <span class="font-medium">${idx + 1}. ${process}</span>
-                <span class="text-blue-600 font-bold">${(mins / 60).toFixed(1)}h</span>
-            </div>`
-        ).join('')
-        : '<div class="text-gray-500">No process data</div>';
+    const rankingHTML = `
+        <div class="font-medium text-gray-800">Rank #${workerRank} of ${totalWorkers}</div>
+        <div class="text-xl font-bold text-blue-600">Top ${rankPercentile}%</div>
+        <div class="text-xs text-gray-600 mt-1">
+            ${comparisonIcon} ${Math.abs(scoreDiff).toFixed(1)} pts ${comparisonText} average
+        </div>
+    `;
+    document.getElementById('scorecardModalRanking').innerHTML = rankingHTML;
     
-    document.getElementById('scorecardModalTopProcesses').innerHTML = topProcessesHTML;
-    
-    // 2. Best Performance Day
-    if (dailyData.length > 0) {
-        const bestDay = dailyData.reduce((best, day) => 
-            day.score > best.score ? day : best
-        );
-        
-        const bestDayHTML = `
-            <div class="font-medium text-gray-800">${bestDay.date}</div>
-            <div class="text-2xl font-bold text-green-600">${bestDay.score.toFixed(1)} pts</div>
-            <div class="text-xs text-gray-600 mt-1">
-                Util: ${bestDay.utilization.toFixed(1)}% | Eff: ${bestDay.efficiency.toFixed(1)}%
-            </div>
-        `;
-        document.getElementById('scorecardModalBestDay').innerHTML = bestDayHTML;
-    }
-    
-    // 3. Performance Trend
+    // 2. Recent Trend (Last 7 days vs Previous 7 days)
     if (dailyData.length >= 2) {
-        const recentDays = dailyData.slice(-3);
-        const avgRecent = recentDays.reduce((sum, d) => sum + d.score, 0) / recentDays.length;
+        const sortedDays = [...dailyData].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const last7Days = sortedDays.slice(0, Math.min(7, sortedDays.length));
+        const prev7Days = sortedDays.slice(7, Math.min(14, sortedDays.length));
         
-        const earlyDays = dailyData.slice(0, Math.min(3, dailyData.length));
-        const avgEarly = earlyDays.reduce((sum, d) => sum + d.score, 0) / earlyDays.length;
+        const avgLast7 = last7Days.reduce((sum, d) => sum + d.score, 0) / last7Days.length;
+        const avgPrev7 = prev7Days.length > 0 
+            ? prev7Days.reduce((sum, d) => sum + d.score, 0) / prev7Days.length 
+            : avgLast7;
         
-        const trend = avgRecent - avgEarly;
-        const trendIcon = trend > 0 ? '↑' : trend < 0 ? '↓' : '→';
-        const trendColor = trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-600';
+        const trendChange = avgLast7 - avgPrev7;
+        const trendIcon = trendChange > 5 ? '📈' : trendChange < -5 ? '📉' : '➡️';
+        const trendColor = trendChange > 5 ? 'text-green-600' : trendChange < -5 ? 'text-red-600' : 'text-gray-600';
+        const trendLabel = trendChange > 5 ? 'Improving' : trendChange < -5 ? 'Declining' : 'Stable';
         
         const trendHTML = `
             <div class="flex items-center gap-2">
-                <span class="${trendColor} text-3xl font-bold">${trendIcon}</span>
+                <span class="text-2xl">${trendIcon}</span>
                 <div>
-                    <div class="font-medium">${trend > 0 ? 'Improving' : trend < 0 ? 'Declining' : 'Stable'}</div>
+                    <div class="font-medium ${trendColor}">${trendLabel}</div>
                     <div class="text-xs text-gray-600">
-                        ${Math.abs(trend).toFixed(1)} pts ${trend > 0 ? 'increase' : trend < 0 ? 'decrease' : 'change'}
+                        Last 7d: ${avgLast7.toFixed(1)} pts
+                        ${prev7Days.length > 0 ? `<br>Prev 7d: ${avgPrev7.toFixed(1)} pts` : ''}
                     </div>
                 </div>
             </div>
         `;
-        document.getElementById('scorecardModalTrend').innerHTML = trendHTML;
+        document.getElementById('scorecardModalRecentTrend').innerHTML = trendHTML;
+    }
+    
+    // 3. Work Pattern (Shift distribution & frequency)
+    if (workerRecords.length > 0) {
+        const shiftCounts = {};
+        const uniqueDates = new Set();
+        
+        workerRecords.forEach(record => {
+            const shift = record.workingShift || 'Unknown';
+            shiftCounts[shift] = (shiftCounts[shift] || 0) + 1;
+            uniqueDates.add(record.workingDay);
+        });
+        
+        const totalRecords = workerRecords.length;
+        const dayCount = shiftCounts['Day'] || 0;
+        const nightCount = shiftCounts['Night'] || 0;
+        const dayPct = (dayCount / totalRecords * 100).toFixed(0);
+        const nightPct = (nightCount / totalRecords * 100).toFixed(0);
+        
+        const mainProcess = worker.main_process || 'Unknown';
+        const totalDays = uniqueDates.size;
+        
+        const patternHTML = `
+            <div class="font-medium text-gray-800">${mainProcess}</div>
+            <div class="text-sm text-gray-600 mt-1">
+                ${totalDays} working days<br>
+                🌞 Day: ${dayPct}% | 🌙 Night: ${nightPct}%
+            </div>
+        `;
+        document.getElementById('scorecardModalWorkPattern').innerHTML = patternHTML;
     }
 }
 
