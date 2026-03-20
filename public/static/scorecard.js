@@ -358,6 +358,9 @@ function loadScorecardData() {
         console.log(`📊 Scorecard: Converted ${ScorecardState.allWorkers.length} workers from workerSummary`);
         console.log('First worker:', ScorecardState.allWorkers[0]);
         
+        // Update grade distribution
+        updateGradeDistribution(ScorecardState.allWorkers);
+        
         // Apply grade filter and render
         applyScorecardGradeFilter();
         
@@ -382,6 +385,105 @@ function getGrade(score) {
     if (score >= 60) return 'B';
     if (score >= 50) return 'C';
     return 'D';
+}
+
+// Update Grade Distribution
+function updateGradeDistribution(workers) {
+    if (!workers || workers.length === 0) {
+        // Reset all to 0
+        ['S', 'A', 'B', 'C', 'D'].forEach(grade => {
+            document.getElementById(`grade${grade}_count`).textContent = '0';
+            document.getElementById(`grade${grade}_percent`).textContent = '0.0';
+            document.getElementById(`grade${grade}_bar`).style.width = '0%';
+            document.getElementById(`grade${grade}_score`).textContent = '-';
+            document.getElementById(`grade${grade}_util`).textContent = '-';
+            document.getElementById(`grade${grade}_eff`).textContent = '-';
+        });
+        document.getElementById('gradeSummary_total').textContent = '0';
+        document.getElementById('gradeSummary_avg').textContent = '0.0';
+        document.getElementById('gradeSummary_high').textContent = '0';
+        document.getElementById('gradeSummary_highPct').textContent = '0.0';
+        document.getElementById('gradeSummary_risk').textContent = '0';
+        document.getElementById('gradeSummary_riskPct').textContent = '0.0';
+        return;
+    }
+
+    // Group by grade
+    const gradeGroups = {
+        'S': [],
+        'A': [],
+        'B': [],
+        'C': [],
+        'D': []
+    };
+
+    workers.forEach(worker => {
+        const grade = worker.grade || getGrade(worker.score);
+        if (gradeGroups[grade]) {
+            gradeGroups[grade].push(worker);
+        }
+    });
+
+    const total = workers.length;
+    let totalScore = 0;
+    let highPerformers = 0;
+    let atRisk = 0;
+
+    // Update each grade
+    ['S', 'A', 'B', 'C', 'D'].forEach(grade => {
+        const gradeWorkers = gradeGroups[grade];
+        const count = gradeWorkers.length;
+        const percent = total > 0 ? (count / total * 100) : 0;
+
+        // Calculate averages
+        let avgScore = 0;
+        let avgUtil = 0;
+        let avgEff = 0;
+
+        if (count > 0) {
+            avgScore = gradeWorkers.reduce((sum, w) => sum + w.score, 0) / count;
+            avgUtil = gradeWorkers.reduce((sum, w) => sum + w.utilization, 0) / count;
+            avgEff = gradeWorkers.reduce((sum, w) => sum + w.efficiency, 0) / count;
+        }
+
+        // Update DOM
+        document.getElementById(`grade${grade}_count`).textContent = count;
+        document.getElementById(`grade${grade}_percent`).textContent = percent.toFixed(1);
+        document.getElementById(`grade${grade}_bar`).style.width = `${percent}%`;
+        document.getElementById(`grade${grade}_score`).textContent = count > 0 ? avgScore.toFixed(1) : '-';
+        document.getElementById(`grade${grade}_util`).textContent = count > 0 ? avgUtil.toFixed(1) + '%' : '-';
+        document.getElementById(`grade${grade}_eff`).textContent = count > 0 ? avgEff.toFixed(1) + '%' : '-';
+
+        // Count for summary
+        if (grade === 'S' || grade === 'A') {
+            highPerformers += count;
+        }
+        if (grade === 'D') {
+            atRisk += count;
+        }
+    });
+
+    // Calculate overall average
+    totalScore = workers.reduce((sum, w) => sum + w.score, 0);
+    const overallAvg = total > 0 ? totalScore / total : 0;
+
+    // Update summary
+    document.getElementById('gradeSummary_total').textContent = total;
+    document.getElementById('gradeSummary_avg').textContent = overallAvg.toFixed(1);
+    document.getElementById('gradeSummary_high').textContent = highPerformers;
+    document.getElementById('gradeSummary_highPct').textContent = total > 0 ? (highPerformers / total * 100).toFixed(1) : '0.0';
+    document.getElementById('gradeSummary_risk').textContent = atRisk;
+    document.getElementById('gradeSummary_riskPct').textContent = total > 0 ? (atRisk / total * 100).toFixed(1) : '0.0';
+
+    console.log('📊 Grade Distribution updated:', {
+        S: gradeGroups.S.length,
+        A: gradeGroups.A.length,
+        B: gradeGroups.B.length,
+        C: gradeGroups.C.length,
+        D: gradeGroups.D.length,
+        total: total,
+        avgScore: overallAvg.toFixed(1)
+    });
 }
 
 // Apply Filters (called by Apply button)

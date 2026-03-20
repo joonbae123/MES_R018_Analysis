@@ -1709,6 +1709,165 @@
                 </div>
             </div>
 
+            <!-- Grade Distribution Section -->
+            <div class="card relative z-[1] mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold">
+                        <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
+                        Performance Grade Distribution
+                    </h3>
+                    <div class="text-xs text-gray-500">
+                        Based on current filters
+                    </div>
+                </div>
+
+                <!-- Grade Bars -->
+                <div class="space-y-4 mb-6">
+                    <!-- S Grade -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 text-center">
+                            <div class="text-2xl font-bold text-gray-800">S</div>
+                            <div class="text-xs text-gray-500">≥80</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="w-20 text-sm font-semibold text-gray-700">
+                                    <span id="gradeS_count">0</span> (<span id="gradeS_percent">0.0</span>%)
+                                </div>
+                                <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                                    <div id="gradeS_bar" class="bg-gray-700 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-xs text-gray-600 ml-20">
+                                <span>Avg Score: <strong id="gradeS_score">-</strong></span>
+                                <span>Util: <strong id="gradeS_util">-</strong></span>
+                                <span>Eff: <strong id="gradeS_eff">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- A Grade -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 text-center">
+                            <div class="text-2xl font-bold text-gray-800">A</div>
+                            <div class="text-xs text-gray-500">70-79</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="w-20 text-sm font-semibold text-gray-700">
+                                    <span id="gradeA_count">0</span> (<span id="gradeA_percent">0.0</span>%)
+                                </div>
+                                <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                                    <div id="gradeA_bar" class="bg-gray-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-xs text-gray-600 ml-20">
+                                <span>Avg Score: <strong id="gradeA_score">-</strong></span>
+                                <span>Util: <strong id="gradeA_util">-</strong></span>
+                                <span>Eff: <strong id="gradeA_eff">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B Grade -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 text-center">
+                            <div class="text-2xl font-bold text-gray-800">B</div>
+                            <div class="text-xs text-gray-500">60-69</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="w-20 text-sm font-semibold text-gray-700">
+                                    <span id="gradeB_count">0</span> (<span id="gradeB_percent">0.0</span>%)
+                                </div>
+                                <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                                    <div id="gradeB_bar" class="bg-gray-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-xs text-gray-600 ml-20">
+                                <span>Avg Score: <strong id="gradeB_score">-</strong></span>
+                                <span>Util: <strong id="gradeB_util">-</strong></span>
+                                <span>Eff: <strong id="gradeB_eff">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- C Grade -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 text-center">
+                            <div class="text-2xl font-bold text-gray-800">C</div>
+                            <div class="text-xs text-gray-500">50-59</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="w-20 text-sm font-semibold text-gray-700">
+                                    <span id="gradeC_count">0</span> (<span id="gradeC_percent">0.0</span>%)
+                                </div>
+                                <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                                    <div id="gradeC_bar" class="bg-gray-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-xs text-gray-600 ml-20">
+                                <span>Avg Score: <strong id="gradeC_score">-</strong></span>
+                                <span>Util: <strong id="gradeC_util">-</strong></span>
+                                <span>Eff: <strong id="gradeC_eff">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- D Grade -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 text-center">
+                            <div class="text-2xl font-bold text-gray-800">D</div>
+                            <div class="text-xs text-gray-500">&lt;50</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <div class="w-20 text-sm font-semibold text-gray-700">
+                                    <span id="gradeD_count">0</span> (<span id="gradeD_percent">0.0</span>%)
+                                </div>
+                                <div class="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                                    <div id="gradeD_bar" class="bg-gray-300 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-xs text-gray-600 ml-20">
+                                <span>Avg Score: <strong id="gradeD_score">-</strong></span>
+                                <span>Util: <strong id="gradeD_util">-</strong></span>
+                                <span>Eff: <strong id="gradeD_eff">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <div class="text-xs text-gray-500 mb-1">Total Workers</div>
+                            <div class="text-xl font-bold text-gray-800" id="gradeSummary_total">0</div>
+                        </div>
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <div class="text-xs text-gray-500 mb-1">Overall Average</div>
+                            <div class="text-xl font-bold text-gray-800" id="gradeSummary_avg">0.0</div>
+                        </div>
+                        <div class="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div class="text-xs text-blue-600 mb-1">High Performers (≥80)</div>
+                            <div class="text-xl font-bold text-blue-700">
+                                <span id="gradeSummary_high">0</span>
+                                <span class="text-sm">(<span id="gradeSummary_highPct">0.0</span>%)</span>
+                            </div>
+                        </div>
+                        <div class="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+                            <div class="text-xs text-amber-600 mb-1">At Risk (&lt;50)</div>
+                            <div class="text-xl font-bold text-amber-700">
+                                <span id="gradeSummary_risk">0</span>
+                                <span class="text-sm">(<span id="gradeSummary_riskPct">0.0</span>%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Main Content Area -->
             <div id="scorecardMainContainer">
                 <!-- Worker List View (default) -->
