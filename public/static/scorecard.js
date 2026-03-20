@@ -1167,10 +1167,6 @@ function buildScorecardDailyTable(dailyData) {
     console.log('✅ Table HTML updated, rows:', dailyData.length);
 }
 
-// Initialize Scorecard Tab function (called from app.js)
-window.initScorecardTab = function() {
-    console.log('🎯 initScorecardTab() called from app.js');
-    loadScorecardData();
-};
+// Note: initScorecardTab is already defined at line 26 (no need to redefine)
 
 console.log('✅ Scorecard module loaded with Score-based worker detail modal');
