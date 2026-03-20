@@ -2303,6 +2303,37 @@
                                 </li>
                             </ul>
                         </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                                <i class="fas fa-medal text-amber-600 mr-2"></i>
+                                11. Scorecard Tab (NEW in v4.4.0)
+                            </h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                                <li>
+                                    <strong>Grade Distribution</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Visual breakdown of workers across 5 grade levels (S/A/B/C/D)</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Each grade shows: Count, Percentage, Avg Score, Avg Utilization, Avg Efficiency</p>
+                                    <p class="text-xs text-blue-600 ml-6">• High Performers (≥80%) highlighted in blue</p>
+                                    <p class="text-xs text-blue-600 ml-6">• At Risk (<50%) highlighted in amber</p>
+                                </li>
+                                <li>
+                                    <strong>Worker Performance List</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Sortable table of all workers with Grade, Score, Utilization, Efficiency</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Click column headers to sort</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Filter by Grade (S/A/B/C/D)</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Click "View Details" to open Worker Detail Modal</p>
+                                </li>
+                                <li>
+                                    <strong>Worker Detail Modal</strong>
+                                    <p class="text-sm text-gray-600 ml-6">Comprehensive worker performance analysis</p>
+                                    <p class="text-xs text-blue-600 ml-6">• 5 Cards: Grade (Amber), Score (Blue), Utilization (Emerald), Efficiency (Purple), Statistics</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Performance Insights: Ranking (percentile), Trend (7-day comparison), Work Pattern (main process)</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Daily Performance Records: 9 columns showing date-by-date breakdown</p>
+                                    <p class="text-xs text-blue-600 ml-6">• Charts: Score Trend (line chart), Performance Breakdown (bar chart)</p>
+                                </li>
+                            </ul>
+                        </section>
                     </div>
 
                     <!-- Right Column: Shift Calendar -->
@@ -2387,11 +2418,65 @@
                 </h2>
                 
                 <div class="space-y-6">
+                    <!-- Version 4.4.0 -->
+                    <div class="border-l-4 border-amber-600 pl-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.4.0</h3>
+                            <span class="px-3 py-1 bg-amber-600 text-white text-xs font-semibold rounded-full">Latest</span>
+                            <span class="text-xs text-gray-500">2026-03-20</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-amber-700 mb-2">
+                                    <i class="fas fa-medal mr-2"></i>Scorecard Page Implementation
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>New Scorecard Tab</strong>: Complete worker performance grading system with S/A/B/C/D grades</li>
+                                    <li><strong>Grade Distribution</strong>: Visual breakdown showing count, percentage, and average metrics for each grade</li>
+                                    <li><strong>Worker Performance List</strong>: Sortable table with Grade, Score, Utilization, Efficiency columns</li>
+                                    <li><strong>Grade Filtering</strong>: Filter workers by specific grade levels (S/A/B/C/D)</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-amber-700 mb-2">
+                                    <i class="fas fa-user-chart mr-2"></i>Worker Detail Modal
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>5-Card Layout</strong>: Grade (Amber), Score (Blue), Utilization (Emerald), Efficiency (Purple), Statistics cards</li>
+                                    <li><strong>Performance Insights</strong>: Ranking (percentile position), Trend (7-day comparison), Work Pattern (main process)</li>
+                                    <li><strong>Daily Performance Records</strong>: Date-by-date breakdown table with 9 columns (Date, Shifts, Work#, Shift Time, Work Time, Adjusted S/T, Util%, Eff%, Score)</li>
+                                    <li><strong>Visualizations</strong>: Score Trend line chart (blue) and Performance Breakdown bar chart (blue/purple)</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-amber-700 mb-2">
+                                    <i class="fas fa-chart-bar mr-2"></i>Grade Distribution Design
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Horizontal Bar Charts</strong>: Visual representation of worker count per grade with animated bars</li>
+                                    <li><strong>7 Data Points per Grade</strong>: Count, Percentage, Avg Score, Avg Utilization, Avg Efficiency displayed for S/A/B/C/D</li>
+                                    <li><strong>Grayscale Color Scheme</strong>: S (gray-700) to D (gray-300) for professional appearance</li>
+                                    <li><strong>Summary Statistics</strong>: Total Workers, Overall Average, High Performers (≥80%, blue), At Risk (<50%, amber)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
+                                <p class="text-sm text-amber-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <strong>Scorecard System:</strong> Workers are graded based on combined Score (Utilization × 0.5 + Efficiency × 0.5). Grade thresholds: S ≥80, A ≥70, B ≥60, C ≥50, D <50.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                
                     <!-- Version 4.3.5 -->
                     <div class="border-l-4 border-green-600 pl-4">
                         <div class="flex items-center gap-3 mb-2">
                             <h3 class="text-lg font-bold text-gray-800">Version 4.3.5</h3>
-                            <span class="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full">Latest</span>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Previous</span>
                             <span class="text-xs text-gray-500">2026-03-12</span>
                         </div>
                         
@@ -3416,9 +3501,9 @@
             <div class="mt-4 pt-4 border-t border-gray-100 text-center">
                 <p class="text-xs text-gray-400">
                     <span class="inline-flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.3.5</span>
+                        <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded font-mono">v4.4.0</span>
                         <span>|</span>
-                        <span class="text-gray-500">2026-03-12</span>
+                        <span class="text-gray-500">2026-03-20</span>
                         <span>|</span>
                         <span><i class="fas fa-cloud mr-1"></i>Cloudflare Pages</span>
                         <span>|</span>

@@ -7,8 +7,8 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis-5bz.pages.dev
 - **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
-- **최신 버전**: v4.3.6 (2026-03-18)
-- **최근 수정**: Rework Count 및 Section ID 표시 버그 수정, 프로덕션 데이터베이스 마이그레이션 적용 완료
+- **최신 버전**: v4.4.0 (2026-03-20)
+- **최근 수정**: Scorecard 페이지 추가 - Grade Distribution, Worker Detail Modal, Daily Performance Records
 
 ---
 
@@ -48,7 +48,20 @@ IPR (Individual Performance Report)는 제조 실행 시스템(MES)의 작업자
 
 ## ✨ 핵심 기능
 
-### 🔥 **NEW! Dashboard 페이지 (v4.0.0+)**
+### 🔥 **NEW! Scorecard 페이지 (v4.4.0)**
+- ✅ **Grade Distribution**: S/A/B/C/D 등급별 작업자 분포 및 평균 성과 지표
+  - 각 Grade별 Count, Percentage, Avg Score, Utilization, Efficiency 표시
+  - High Performers (≥80) 및 At Risk (<50) 하이라이트
+  - 7개 데이터 포인트 × 5개 Grade = 35개 정보 제공
+- ✅ **Worker Performance List**: 작업자별 Grade, Score, Utilization, Efficiency 테이블
+  - 정렬 가능, Grade 필터 적용, 상세 보기 버튼
+- ✅ **Worker Detail Modal**: 5개 카드 레이아웃 + 인사이트 + 차트 + 일별 기록
+  - Grade/Score/Utilization/Efficiency/Statistics 카드
+  - Performance Insights: Ranking, Trend, Work Pattern
+  - Daily Performance Records: 날짜별 성과 기록 (9개 컬럼)
+  - Score Trend 및 Performance Breakdown 차트
+
+### 🔥 **Dashboard 페이지 (v4.0.0+)**
 - ✅ **AI Insights & Warnings**: 6가지 자동 경고 (저효율, 저가동, 격차, 공정 편중, 샘플 부족)
 - ✅ **KPI Trend Overview**: Daily/Weekly 토글, 프로세스별 드릴다운 모달
 - ✅ **Process Performance Ranking**: Top 5 / Bottom 5 프로세스 비교
@@ -568,6 +581,30 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 ## 📝 개발 히스토리
+
+### v4.4.0 (2026-03-20) 🎯 **Scorecard 페이지 추가**
+- ✅ **새로운 Scorecard 탭 구현**
+  - Grade Distribution: S/A/B/C/D 등급별 작업자 분포 시각화
+  - Worker Performance List: 전체 작업자 성과 테이블 (정렬, 필터링)
+  - Grade 필터: S/A/B/C/D 등급별 작업자 필터링
+- ✅ **Worker Detail Modal 구현**
+  - 5개 카드 레이아웃: Grade(Amber), Score(Blue), Utilization(Emerald), Efficiency(Purple), Statistics
+  - Performance Insights: Ranking(백분위), Trend(7일 비교), Work Pattern(주요 공정)
+  - Daily Performance Records 테이블: 9개 컬럼(Date, Shifts, Work#, Shift Time, Work Time, Adjusted S/T, Util%, Eff%, Score)
+  - Score Trend 차트: 일별 점수 추이 (파란색 라인)
+  - Performance Breakdown 차트: Utilization vs Efficiency 바차트 (파란색/보라색)
+- ✅ **Grade Distribution 디자인**
+  - 각 Grade별 수평 바 차트 + 7개 데이터 포인트
+  - Grayscale 컬러 스킴 (S=gray-700 ~ D=gray-300)
+  - Summary: Total Workers, Overall Avg, High Performers(파란색), At Risk(앰버색)
+- ✅ **데이터 집계 및 계산**
+  - workerSummary 재사용: shiftCount, totalActualMins, foDesc3
+  - Grade 계산: 종합 점수 기반 (Score = Util × 0.5 + Effi × 0.5)
+  - 일별 집계: 중복 제거, Adjusted S/T 오버랩 조정
+- ✅ **반응형 디자인**
+  - 모바일/데스크톱 대응
+  - 모달 스크롤 지원
+  - 차트 자동 리사이즈
 
 ### v4.3.6 (2026-03-17) 🐛 **Rework Count 및 Section ID 표시 버그 수정**
 - ✅ **데이터베이스 마이그레이션 적용**
@@ -1243,7 +1280,7 @@ Stage 2.5의 규칙 기반 시스템은 Stage 3 ML 모델의 **기준선(Baselin
 ---
 
 **제작자**: JB Park (jbpark@cswind.com)  
-**최종 업데이트**: 2026-03-18 (v4.3.6)  
+**최종 업데이트**: 2026-03-20 (v4.4.0)  
 **라이선스**: MIT
 
 ---
