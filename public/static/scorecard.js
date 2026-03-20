@@ -331,28 +331,26 @@ function loadScorecardData() {
         console.log('First workerSummary entry:', window.AppState.workerSummary[0]);
         
         // Convert Report's workerSummary to Scorecard format
+        // workerSummary has: workerName, shiftCount, utilizationRate, efficiencyRate, validCount, foDesc3, totalMinutes, assignedStandardTime
         ScorecardState.allWorkers = window.AppState.workerSummary
             .filter(worker => worker.workerName && worker.workerName.trim())  // Filter out invalid workers
             .map(worker => {
-                // shifts is already a number in workerSummary
-                const shiftCount = typeof worker.shifts === 'number' ? worker.shifts : 
-                                  (worker.shifts && worker.shifts.size) || 0;
-                
+                // ✅ Use Report's field names directly
                 const utilization = worker.utilizationRate || 0;
                 const efficiency = worker.efficiencyRate || 0;
                 const score = (utilization * 0.5) + (efficiency * 0.5);
                 
                 return {
                     name: worker.workerName,
-                    main_process: worker.mainProcess || 'Unknown',
-                    category: worker.category || '',
+                    main_process: worker.foDesc3 || 'Unknown',
+                    category: worker.foDesc2 || '',
                     work_count: worker.validCount || 0,
-                    shift_count: shiftCount,
+                    shift_count: worker.shiftCount || 0,  // ✅ Use shiftCount directly
                     utilization: utilization,
                     efficiency: efficiency,
                     score: score,
                     grade: getGrade(score),
-                    total_minutes: worker.totalActualMins || 0,
+                    total_minutes: worker.totalMinutes || 0,  // ✅ Use totalMinutes (overlap-removed)
                     assigned_st: worker.assignedStandardTime || 0
                 };
             });
