@@ -313,14 +313,22 @@ function loadScorecardData() {
         console.log('   Current filters:', JSON.parse(JSON.stringify(ScorecardState.filters)));
         
         // Use Report's workerSummary directly (already aggregated correctly)
-        if (!window.AppState.workerSummary || window.AppState.workerSummary.length === 0) {
-            console.error('❌ No workerSummary available');
+        if (!window.AppState || !window.AppState.workerSummary) {
+            console.error('❌ AppState or workerSummary not available');
+            ScorecardState.allWorkers = [];
+            applyScorecardGradeFilter();
+            return;
+        }
+        
+        if (window.AppState.workerSummary.length === 0) {
+            console.error('❌ workerSummary is empty');
             ScorecardState.allWorkers = [];
             applyScorecardGradeFilter();
             return;
         }
         
         console.log(`📦 Total workers in workerSummary: ${window.AppState.workerSummary.length}`);
+        console.log('First workerSummary entry:', window.AppState.workerSummary[0]);
         
         // Convert Report's workerSummary to Scorecard format
         ScorecardState.allWorkers = window.AppState.workerSummary.map(worker => {
@@ -355,6 +363,7 @@ function loadScorecardData() {
         
     } catch (error) {
         console.error('❌ Error loading scorecard data:', error);
+        console.error('Stack:', error.stack);
         document.getElementById('scorecardTableBody').innerHTML = `
             <tr>
                 <td colspan="9" class="px-4 py-8 text-center text-red-500">
@@ -715,6 +724,11 @@ function buildScorecardScoreChart(dailyData) {
     const utilization = dailyData.map(d => d.utilization);
     const efficiency = dailyData.map(d => d.efficiency);
     
+    // Calculate dynamic max for Y axis
+    const allValues = [...scores, ...utilization, ...efficiency];
+    const maxValue = Math.max(...allValues, 100);
+    const yMax = Math.ceil(maxValue / 20) * 20; // Round up to nearest 20
+    
     scorecardScoreChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -732,7 +746,7 @@ function buildScorecardScoreChart(dailyData) {
                 {
                     label: 'Utilization',
                     data: utilization,
-                    borderColor: '#6b7280',
+                    borderColor: '#3b82f6',
                     backgroundColor: 'transparent',
                     tension: 0.3,
                     borderWidth: 1.5,
@@ -741,7 +755,7 @@ function buildScorecardScoreChart(dailyData) {
                 {
                     label: 'Efficiency',
                     data: efficiency,
-                    borderColor: '#9ca3af',
+                    borderColor: '#8b5cf6',
                     backgroundColor: 'transparent',
                     tension: 0.3,
                     borderWidth: 1.5,
@@ -773,7 +787,7 @@ function buildScorecardScoreChart(dailyData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    max: yMax,
                     ticks: {
                         stepSize: 20
                     },
@@ -817,6 +831,11 @@ function buildScorecardComparisonChart(dailyData) {
     const utilization = dailyData.map(d => d.utilization);
     const efficiency = dailyData.map(d => d.efficiency);
     
+    // Calculate dynamic max for Y axis
+    const allValues = [...utilization, ...efficiency];
+    const maxValue = Math.max(...allValues, 100);
+    const yMax = Math.ceil(maxValue / 20) * 20; // Round up to nearest 20
+    
     scorecardComparisonChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -825,15 +844,15 @@ function buildScorecardComparisonChart(dailyData) {
                 {
                     label: 'Utilization',
                     data: utilization,
-                    backgroundColor: 'rgba(107, 114, 128, 0.7)',
-                    borderColor: '#6b7280',
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: '#3b82f6',
                     borderWidth: 1
                 },
                 {
                     label: 'Efficiency',
                     data: efficiency,
-                    backgroundColor: 'rgba(156, 163, 175, 0.7)',
-                    borderColor: '#9ca3af',
+                    backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                    borderColor: '#8b5cf6',
                     borderWidth: 1
                 }
             ]
@@ -862,7 +881,7 @@ function buildScorecardComparisonChart(dailyData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
+                    max: yMax,
                     ticks: {
                         stepSize: 20
                     },
