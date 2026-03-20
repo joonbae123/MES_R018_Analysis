@@ -331,29 +331,31 @@ function loadScorecardData() {
         console.log('First workerSummary entry:', window.AppState.workerSummary[0]);
         
         // Convert Report's workerSummary to Scorecard format
-        ScorecardState.allWorkers = window.AppState.workerSummary.map(worker => {
-            const shiftCount = worker.shifts || 0;
-            const totalShiftTime = shiftCount * 660;
-            
-            const utilization = worker.utilizationRate || 0;
-            const efficiency = worker.efficiencyRate || 0;
-            const score = (utilization * 0.5) + (efficiency * 0.5);
-            
-            return {
-                name: worker.workerName,
-                main_process: worker.mainProcess || 'Unknown',
-                category: worker.category || '',
-                work_count: worker.validCount || 0,
-                shift_count: shiftCount,
-                utilization: utilization,
-                efficiency: efficiency,
-                score: score,
-                grade: getGrade(score),
-                total_minutes: worker.totalActualMins || 0,
-                assigned_st: worker.assignedStandardTime || 0,
-                shifts: worker.shifts  // Keep original for debugging
-            };
-        });
+        ScorecardState.allWorkers = window.AppState.workerSummary
+            .filter(worker => worker.workerName && worker.workerName.trim())  // Filter out invalid workers
+            .map(worker => {
+                // shifts is already a number in workerSummary
+                const shiftCount = typeof worker.shifts === 'number' ? worker.shifts : 
+                                  (worker.shifts && worker.shifts.size) || 0;
+                
+                const utilization = worker.utilizationRate || 0;
+                const efficiency = worker.efficiencyRate || 0;
+                const score = (utilization * 0.5) + (efficiency * 0.5);
+                
+                return {
+                    name: worker.workerName,
+                    main_process: worker.mainProcess || 'Unknown',
+                    category: worker.category || '',
+                    work_count: worker.validCount || 0,
+                    shift_count: shiftCount,
+                    utilization: utilization,
+                    efficiency: efficiency,
+                    score: score,
+                    grade: getGrade(score),
+                    total_minutes: worker.totalActualMins || 0,
+                    assigned_st: worker.assignedStandardTime || 0
+                };
+            });
         
         console.log(`📊 Scorecard: Converted ${ScorecardState.allWorkers.length} workers from workerSummary`);
         console.log('First worker:', ScorecardState.allWorkers[0]);
@@ -375,12 +377,12 @@ function loadScorecardData() {
     }
 }
 
-// Get Grade from Score
+// Get Grade from Score (S≥80, A≥70, B≥60, C≥50, D<50)
 function getGrade(score) {
-    if (score >= 90) return 'S';
-    if (score >= 80) return 'A';
-    if (score >= 70) return 'B';
-    if (score >= 60) return 'C';
+    if (score >= 80) return 'S';
+    if (score >= 70) return 'A';
+    if (score >= 60) return 'B';
+    if (score >= 50) return 'C';
     return 'D';
 }
 
