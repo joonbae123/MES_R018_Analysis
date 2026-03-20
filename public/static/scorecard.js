@@ -1167,15 +1167,10 @@ function buildScorecardDailyTable(dailyData) {
     console.log('✅ Table HTML updated, rows:', dailyData.length);
 }
 
-// Hook into tab switching to reload Scorecard data
-const originalShowTab = window.showTab || function(){};
-window.showTab = function(tabName) {
-    originalShowTab(tabName);
-    
-    if (tabName === 'scorecard') {
-        console.log('🎯 Scorecard tab activated, loading data...');
-        loadScorecardData();
-    }
+// Initialize Scorecard Tab function (called from app.js)
+window.initScorecardTab = function() {
+    console.log('🎯 initScorecardTab() called from app.js');
+    loadScorecardData();
 };
 
 console.log('✅ Scorecard module loaded with Score-based worker detail modal');
