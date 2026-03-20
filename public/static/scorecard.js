@@ -1039,7 +1039,7 @@ function buildScorecardComparisonChart(dailyData) {
 
 // Build daily performance table
 function buildScorecardDailyTable(dailyData) {
-    const tbody = document.getElementById('scorecardModalTableBody');
+    const tbody = document.getElementById('scorecardModalDailyTableBody');
     
     console.log('🔧 buildScorecardDailyTable called:', {
         tbody: !!tbody,
@@ -1048,7 +1048,7 @@ function buildScorecardDailyTable(dailyData) {
     });
     
     if (!tbody) {
-        console.error('❌ scorecardModalTableBody element not found!');
+        console.error('❌ scorecardModalDailyTableBody element not found!');
         return;
     }
     
