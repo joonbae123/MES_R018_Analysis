@@ -687,7 +687,7 @@ document.addEventListener('click', function(e) {
 // ============================================================================
 
 let scorecardScoreChart = null;
-let scorecardComparisonChart = null;
+let scorecardScoreChart = null;
 
 window.showScorecardWorkerDetail = function(workerName) {
     console.log('🎯 Opening Scorecard worker detail for:', workerName);
@@ -765,7 +765,7 @@ window.showScorecardWorkerDetail = function(workerName) {
     
     // Build charts
     buildScorecardScoreChart(dailyData);
-    buildScorecardComparisonChart(dailyData);
+    buildPerformanceMatrix(dailyData);
     
     // Build table
     console.log('📋 Building Daily Performance Records table...');
@@ -786,10 +786,8 @@ window.closeScorecardWorkerModal = function(event) {
         scorecardScoreChart.destroy();
         scorecardScoreChart = null;
     }
-    if (scorecardComparisonChart) {
-        scorecardComparisonChart.destroy();
-        scorecardComparisonChart = null;
-    }
+    // Clear matrix data
+    window.scorecardMatrixData = null;
     
     document.getElementById('scorecardWorkerModal').classList.add('hidden');
 };
@@ -1047,97 +1045,53 @@ function buildScorecardScoreChart(dailyData) {
     });
 }
 
-// Build utilization vs efficiency comparison chart
-function buildScorecardComparisonChart(dailyData) {
-    if (scorecardComparisonChart) {
-        scorecardComparisonChart.destroy();
-        scorecardComparisonChart = null;
-    }
+// Build performance matrix (4-quadrant analysis)
+function buildPerformanceMatrix(dailyData) {
+    if (dailyData.length === 0) return;
     
-    const ctx = document.getElementById('scorecardModalComparisonChart');
-    if (!ctx || dailyData.length === 0) return;
+    // Calculate median values for thresholds
+    const utilizations = dailyData.map(d => d.utilization).sort((a, b) => a - b);
+    const efficiencies = dailyData.map(d => d.efficiency).sort((a, b) => a - b);
     
-    const dates = dailyData.map(d => d.date);
-    const utilization = dailyData.map(d => d.utilization);
-    const efficiency = dailyData.map(d => d.efficiency);
+    const medianUtil = utilizations[Math.floor(utilizations.length / 2)] || 50;
+    const medianEff = efficiencies[Math.floor(efficiencies.length / 2)] || 50;
     
-    // Calculate dynamic max for Y axis
-    const allValues = [...utilization, ...efficiency];
-    const maxValue = Math.max(...allValues, 100);
-    const yMax = Math.ceil(maxValue / 20) * 20; // Round up to nearest 20
+    // Categorize each day into quadrants
+    let q1 = []; // High Util + High Eff (Superstar)
+    let q2 = []; // Low Util + High Eff (Hidden Gem)
+    let q3 = []; // Low Util + Low Eff (Needs Attention)
+    let q4 = []; // High Util + Low Eff (Busy but Inefficient)
     
-    scorecardComparisonChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: dates,
-            datasets: [
-                {
-                    label: 'Utilization',
-                    data: utilization,
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                    borderColor: '#3b82f6',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Efficiency',
-                    data: efficiency,
-                    backgroundColor: 'rgba(139, 92, 246, 0.7)',
-                    borderColor: '#8b5cf6',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: {
-                padding: {
-                    top: 10,
-                    right: 10,
-                    bottom: 10,
-                    left: 10
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: yMax,
-                    ticks: {
-                        stepSize: 20
-                    },
-                    title: {
-                        display: true,
-                        text: 'Rate (%)'
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45
-                    },
-                    grid: {
-                        display: false
-                    }
-                }
-            }
+    dailyData.forEach(day => {
+        const highUtil = day.utilization >= medianUtil;
+        const highEff = day.efficiency >= medianEff;
+        
+        if (highUtil && highEff) {
+            q1.push(day);
+        } else if (!highUtil && highEff) {
+            q2.push(day);
+        } else if (!highUtil && !highEff) {
+            q3.push(day);
+        } else if (highUtil && !highEff) {
+            q4.push(day);
         }
+    });
+    
+    // Update counts
+    document.getElementById('matrixQ1Count').textContent = q1.length;
+    document.getElementById('matrixQ2Count').textContent = q2.length;
+    document.getElementById('matrixQ3Count').textContent = q3.length;
+    document.getElementById('matrixQ4Count').textContent = q4.length;
+    
+    // Store data for potential click handlers
+    window.scorecardMatrixData = { q1, q2, q3, q4, medianUtil, medianEff };
+    
+    console.log('📊 Performance Matrix built:', {
+        'Superstar (Q1)': q1.length,
+        'Hidden Gem (Q2)': q2.length,
+        'Needs Attention (Q3)': q3.length,
+        'Busy but Inefficient (Q4)': q4.length,
+        'Threshold': `Util≥${medianUtil.toFixed(1)}%, Eff≥${medianEff.toFixed(1)}%`
     });
 }
 
