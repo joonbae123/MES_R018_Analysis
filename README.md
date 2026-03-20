@@ -7,8 +7,8 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis-5bz.pages.dev
 - **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
-- **최신 버전**: v4.4.0 (2026-03-20)
-- **최근 수정**: Scorecard 페이지 추가 - Grade Distribution, Worker Detail Modal, Daily Performance Records
+- **최신 버전**: v4.4.1 (2026-03-20)
+- **최근 수정**: Scorecard Performance Matrix를 Quadrant Scatter Chart로 개선
 
 ---
 
@@ -48,7 +48,7 @@ IPR (Individual Performance Report)는 제조 실행 시스템(MES)의 작업자
 
 ## ✨ 핵심 기능
 
-### 🔥 **NEW! Scorecard 페이지 (v4.4.0)**
+### 🔥 **NEW! Scorecard 페이지 (v4.4.0+)**
 - ✅ **Grade Distribution**: S/A/B/C/D 등급별 작업자 분포 및 평균 성과 지표
   - 각 Grade별 Count, Percentage, Avg Score, Utilization, Efficiency 표시
   - High Performers (≥80) 및 At Risk (<50) 하이라이트
@@ -58,8 +58,13 @@ IPR (Individual Performance Report)는 제조 실행 시스템(MES)의 작업자
 - ✅ **Worker Detail Modal**: 5개 카드 레이아웃 + 인사이트 + 차트 + 일별 기록
   - Grade/Score/Utilization/Efficiency/Statistics 카드
   - Performance Insights: Ranking, Trend, Work Pattern
+  - **Daily Score Trend Chart**: 일별 점수 추이 라인 차트 (증가된 높이)
+  - **Performance Matrix (v4.4.1)**: Quadrant Scatter Chart로 작업자 성향 한눈에 파악
+    - X축: Utilization Rate, Y축: Efficiency Rate
+    - 버블 크기: 작업 시간 (클수록 많은 작업)
+    - 4개 사분면: ⭐ SUPERSTAR, 💎 HIDDEN GEM, 🚨 NEEDS ATTENTION, ⚠️ BUSY BUT INEFFICIENT
+    - 중앙선(Median)으로 임계값 표시, 동적 범위 조정 (100% 초과 데이터 처리)
   - Daily Performance Records: 날짜별 성과 기록 (9개 컬럼)
-  - Score Trend 및 Performance Breakdown 차트
 
 ### 🔥 **Dashboard 페이지 (v4.0.0+)**
 - ✅ **AI Insights & Warnings**: 6가지 자동 경고 (저효율, 저가동, 격차, 공정 편중, 샘플 부족)
@@ -581,6 +586,28 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 ## 📝 개발 히스토리
+
+### v4.4.1 (2026-03-20) 📊 **Performance Matrix 개선**
+- ✅ **Quadrant Scatter Chart로 교체**
+  - 기존 4개 카드 그리드 → 인터랙티브 산점도 차트
+  - X축: Utilization Rate (0-100%+), Y축: Efficiency Rate (0-100%+)
+  - 버블 크기: 작업 시간 (시각적으로 작업량 표현)
+  - 중앙선(Median): Utilization/Efficiency 임계값 점선으로 표시
+- ✅ **동적 범위 조정**
+  - 데이터 최대값에 따라 차트 범위 자동 조정
+  - 100% 이상 데이터도 차트 안에 표시
+  - 10 단위로 올림 + 10% 패딩 (예: 최대 127% → 차트 범위 140%)
+- ✅ **호버 툴팁 강화**
+  - 날짜, Utilization %, Efficiency %, 작업 시간(hrs) 표시
+  - 사분면별 색상 코딩: 초록(SUPERSTAR), 파랑(HIDDEN GEM), 빨강(NEEDS ATTENTION), 주황(BUSY BUT INEFFICIENT)
+- ✅ **Daily Score Trend 높이 증가**
+  - 250px → 300px로 차트 높이 증가
+  - Performance Matrix와 동일한 높이로 통일
+  - 불필요한 하단 여백 제거
+- ✅ **버그 수정**
+  - scorecard.js 중복 변수 선언 제거 (SyntaxError 해결)
+  - 캐시 버스팅: 버전 파라미터 업데이트
+  - Chart.js annotation 플러그인 추가
 
 ### v4.4.0 (2026-03-20) 🎯 **Scorecard 페이지 추가**
 - ✅ **새로운 Scorecard 탭 구현**

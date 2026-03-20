@@ -2216,7 +2216,40 @@
                         </section>
 
                         <section>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">8. Worker Detail Modal</h3>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">8. Scorecard Page</h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                <li><strong>Access</strong>: Click "Scorecard" tab after loading data</li>
+                                <li><strong>Grade Distribution Chart</strong>: Pie chart showing worker distribution by grade (Excellent, Normal, Poor, Critical) with percentage and count</li>
+                                <li><strong>Worker Performance List</strong>: Filterable table showing worker name, grade, score, utilization, efficiency, total shifts, work hours</li>
+                                <li><strong>Grade Filter</strong>: Click grade badges (Excellent/Normal/Poor/Critical) to filter workers</li>
+                                <li><strong>Score Calculation</strong>: Grade = (Utilization Rate × 0.5) + (Efficiency Rate × 0.5)</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">9. Worker Detail Modal</h3>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                <li><strong>Click any worker row</strong> in Scorecard Worker List to view detailed information</li>
+                                <li><strong>Performance Summary Cards</strong>: Total Shifts, Average Utilization, Average Efficiency, Total Work Hours, Overall Score</li>
+                                <li><strong>Performance Insights</strong>: AI-generated insights and recommendations based on worker performance patterns</li>
+                                <li><strong>Daily Score Trend Chart</strong>: Line chart showing daily performance scores over time (increased height for better visibility)</li>
+                                <li><strong>Performance Matrix (Quadrant Scatter Chart)</strong>:
+                                    <ul class="ml-6 mt-1 space-y-1 text-sm">
+                                        <li><span class="inline-block w-3 h-3 bg-green-500 rounded mr-1"></span> <strong>SUPERSTAR</strong> (High Util + High Effi): Top performers</li>
+                                        <li><span class="inline-block w-3 h-3 bg-blue-500 rounded mr-1"></span> <strong>HIDDEN GEM</strong> (Low Util + High Effi): Efficient when working</li>
+                                        <li><span class="inline-block w-3 h-3 bg-red-500 rounded mr-1"></span> <strong>NEEDS ATTENTION</strong> (Low Util + Low Effi): Requires support</li>
+                                        <li><span class="inline-block w-3 h-3 bg-orange-500 rounded mr-1"></span> <strong>BUSY BUT INEFFICIENT</strong> (High Util + Low Effi): Work on efficiency</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Dynamic Range</strong>: Chart automatically adjusts to accommodate data above 100% with 10% padding</li>
+                                <li><strong>Bubble Size</strong>: Represents total work hours for that day</li>
+                                <li><strong>Median Lines</strong>: Shows median Utilization and Efficiency rates across all days</li>
+                                <li><strong>Daily Performance Records Table</strong>: Detailed view of date, shift, utilization rate, efficiency rate, work hours, and grade</li>
+                            </ul>
+                        </section>
+
+                        <section>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">10. Worker Detail Modal (Performance Bands)</h3>
                             <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
                                 <li><strong>Click any worker card</strong> in Performance Bands to view detailed information</li>
                                 <li><strong>KPI Summary</strong>: Total Shifts, Shift/Work Time, Performance Rate</li>
@@ -2419,11 +2452,72 @@
                 </h2>
                 
                 <div class="space-y-6">
+                    <!-- Version 4.4.1 -->
+                    <div class="border-l-4 border-blue-600 pl-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">Version 4.4.1</h3>
+                            <span class="px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">Latest</span>
+                            <span class="text-xs text-gray-500">2026-03-20</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-chart-scatter mr-2"></i>Performance Matrix Visualization Enhancement
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Quadrant Scatter Chart</strong>: Replaced numeric Performance Matrix with interactive scatter plot</li>
+                                    <li><strong>4 Performance Quadrants</strong>:
+                                        <ul class="ml-6 mt-1 space-y-1 text-sm">
+                                            <li><span class="text-green-600">🌟 SUPERSTAR</span>: High Utilization + High Efficiency (upper-right)</li>
+                                            <li><span class="text-blue-600">💎 HIDDEN GEM</span>: Low Utilization + High Efficiency (upper-left)</li>
+                                            <li><span class="text-red-600">⚠️ NEEDS ATTENTION</span>: Low Utilization + Low Efficiency (lower-left)</li>
+                                            <li><span class="text-orange-600">⚡ BUSY BUT INEFFICIENT</span>: High Utilization + Low Efficiency (lower-right)</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Dynamic Range</strong>: Chart automatically adjusts to accommodate data above 100% with 10% padding</li>
+                                    <li><strong>Bubble Size</strong>: Represents total work hours for each day</li>
+                                    <li><strong>Median Lines</strong>: Shows median Utilization and Efficiency rates with percentage labels</li>
+                                    <li><strong>Interactive Legend</strong>: Displays count of days in each quadrant</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-chart-line mr-2"></i>Chart Height Optimization
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Daily Score Trend Chart</strong>: Increased height from 250px to 300px (20% increase)</li>
+                                    <li><strong>Improved Layout</strong>: Removed unnecessary bottom padding for better space utilization</li>
+                                    <li><strong>Consistent Design</strong>: Matched Performance Matrix chart height for visual balance</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-bug-slash mr-2"></i>Bug Fixes
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Duplicate Variable Declaration</strong>: Fixed "Identifier 'scorecardScoreChart' has already been declared" error</li>
+                                    <li><strong>Scorecard Tab Initialization</strong>: Fixed tab switching issue causing data not to load</li>
+                                    <li><strong>Cache Busting</strong>: Updated scorecard.js version parameter to force browser reload</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                                <p class="text-sm text-blue-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <strong>Enhancement Focus:</strong> Improved data visualization in Worker Detail Modal with intuitive quadrant analysis and larger, easier-to-read charts.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                
                     <!-- Version 4.4.0 -->
                     <div class="border-l-4 border-amber-600 pl-4">
                         <div class="flex items-center gap-3 mb-2">
                             <h3 class="text-lg font-bold text-gray-800">Version 4.4.0</h3>
-                            <span class="px-3 py-1 bg-amber-600 text-white text-xs font-semibold rounded-full">Latest</span>
+                            <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Previous</span>
                             <span class="text-xs text-gray-500">2026-03-20</span>
                         </div>
                         
