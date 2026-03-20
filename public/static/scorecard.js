@@ -687,7 +687,6 @@ document.addEventListener('click', function(e) {
 // ============================================================================
 
 let scorecardScoreChart = null;
-let scorecardScoreChart = null;
 
 window.showScorecardWorkerDetail = function(workerName) {
     console.log('🎯 Opening Scorecard worker detail for:', workerName);

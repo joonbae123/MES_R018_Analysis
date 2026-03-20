@@ -7959,9 +7959,17 @@ console.log(' Executive Dashboard functions loaded');
     
     // Initialize Scorecard Tab
     if (tabName === 'scorecard') {
+      console.log('🔍 Switching to Scorecard tab');
+      console.log('  typeof initScorecardTab:', typeof initScorecardTab);
+      console.log('  AppState.processedData exists:', !!AppState.processedData);
+      console.log('  AppState.processedData.length:', AppState.processedData?.length);
+      
       setTimeout(() => {
-        if (typeof initScorecardTab === 'function') {
-          initScorecardTab();
+        if (typeof window.initScorecardTab === 'function') {
+          console.log('✅ Calling initScorecardTab()');
+          window.initScorecardTab();
+        } else {
+          console.error('❌ initScorecardTab is not defined');
         }
       }, 100);
     }
