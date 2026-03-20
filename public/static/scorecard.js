@@ -666,6 +666,7 @@ window.showScorecardWorkerDetail = function(workerName) {
     buildScorecardComparisonChart(dailyData);
     
     // Build table
+    console.log('📋 Building Daily Performance Records table...');
     buildScorecardDailyTable(dailyData);
     
     // Show modal
@@ -766,7 +767,7 @@ function buildPerformanceInsights(worker, workerRecords, dailyData) {
         const dayPct = (dayCount / totalRecords * 100).toFixed(0);
         const nightPct = (nightCount / totalRecords * 100).toFixed(0);
         
-        const mainProcess = worker.main_process || 'Unknown';
+        const mainProcess = worker.foDesc3 || worker.main_process || 'Unknown';
         const totalDays = uniqueDates.size;
         
         const patternHTML = `
