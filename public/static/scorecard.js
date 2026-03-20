@@ -309,109 +309,45 @@ window.filterScorecardWorkerList = function(searchTerm) {
 // Load Scorecard Data from AppState with filters applied
 function loadScorecardData() {
     try {
-        // Filter processedData first
-        let filteredData = window.AppState.processedData;
-        
         console.log('🔍 loadScorecardData() called');
         console.log('   Current filters:', JSON.parse(JSON.stringify(ScorecardState.filters)));
-        console.log('📦 Total records before filtering:', filteredData.length);
         
-        // Apply filters (only if filter has value)
-        if (ScorecardState.filters.shift) {
-            filteredData = filteredData.filter(r => r.actualShift === ScorecardState.filters.shift);
-            console.log(`  → After shift filter: ${filteredData.length} records`);
+        // Use Report's workerSummary directly (already aggregated correctly)
+        if (!window.AppState.workerSummary || window.AppState.workerSummary.length === 0) {
+            console.error('❌ No workerSummary available');
+            ScorecardState.allWorkers = [];
+            applyScorecardGradeFilter();
+            return;
         }
         
-        if (ScorecardState.filters.workingDays.length > 0) {
-            filteredData = filteredData.filter(r => ScorecardState.filters.workingDays.includes(r.workingDay));
-            console.log(`  → After working days filter: ${filteredData.length} records`);
-        }
+        console.log(`📦 Total workers in workerSummary: ${window.AppState.workerSummary.length}`);
         
-        if (ScorecardState.filters.workingShift) {
-            filteredData = filteredData.filter(r => r.workingShift === ScorecardState.filters.workingShift);
-            console.log(`  → After working shift filter: ${filteredData.length} records`);
-        }
-        
-        if (ScorecardState.filters.categories.length > 0) {
-            filteredData = filteredData.filter(r => ScorecardState.filters.categories.includes(r.foDesc2));
-            console.log(`  → After categories filter: ${filteredData.length} records`);
-        }
-        
-        if (ScorecardState.filters.processes.length > 0) {
-            filteredData = filteredData.filter(r => ScorecardState.filters.processes.includes(r.foDesc3));
-            console.log(`  → After processes filter: ${filteredData.length} records`);
-        }
-        
-        if (ScorecardState.filters.workers.length > 0) {
-            filteredData = filteredData.filter(r => ScorecardState.filters.workers.includes(r.workerName));
-            console.log(`  → After workers filter: ${filteredData.length} records`);
-        }
-        
-        console.log(`✅ Final filtered data: ${filteredData.length} records (from ${window.AppState.processedData.length})`);
-        
-        // Aggregate filtered data by worker (same logic as Report tab)
-        const workerMap = {};
-        
-        filteredData.forEach(record => {
-            const name = record.workerName;
-            if (!name) return;
+        // Convert Report's workerSummary to Scorecard format
+        ScorecardState.allWorkers = window.AppState.workerSummary.map(worker => {
+            const shiftCount = worker.shifts || 0;
+            const totalShiftTime = shiftCount * 660;
             
-            if (!workerMap[name]) {
-                workerMap[name] = {
-                    name: name,
-                    totalActualTime: 0,
-                    totalAssignedST: 0,
-                    workCount: 0,
-                    shifts: new Set(),
-                    main_process: record.foDesc3,
-                    category: record.foDesc2
-                };
-            }
-            
-            const actualMinutes = record.workerActMins || 0;
-            const st = record['Worker S/T'] || 0;
-            const rate = record['Worker Rate(%)'] || 0;
-            const assigned = (st * rate / 100);
-            const adjustmentRatio = record.overlapAdjustmentRatio || 1;
-            const adjustedAssigned = assigned * adjustmentRatio;
-            
-            workerMap[name].totalActualTime += actualMinutes;
-            workerMap[name].totalAssignedST += adjustedAssigned;
-            workerMap[name].workCount++;
-            
-            const shiftKey = `${record.workingDay}_${record.workingShift}`;
-            workerMap[name].shifts.add(shiftKey);
-        });
-        
-        // Calculate metrics (using shift count * 660 for totalShiftTime)
-        ScorecardState.allWorkers = Object.values(workerMap).map(worker => {
-            const shiftCount = worker.shifts.size;
-            const totalShiftTime = shiftCount * 660; // 660 minutes per shift
-            
-            const utilization = totalShiftTime > 0 
-                ? (worker.totalActualTime / totalShiftTime) * 100 
-                : 0;
-            const efficiency = totalShiftTime > 0 
-                ? (worker.totalAssignedST / totalShiftTime) * 100 
-                : 0;
+            const utilization = worker.utilizationRate || 0;
+            const efficiency = worker.efficiencyRate || 0;
             const score = (utilization * 0.5) + (efficiency * 0.5);
             
             return {
-                name: worker.name,
-                main_process: worker.main_process || 'Unknown',
+                name: worker.workerName,
+                main_process: worker.mainProcess || 'Unknown',
                 category: worker.category || '',
-                work_count: worker.workCount,
+                work_count: worker.validCount || 0,
                 shift_count: shiftCount,
                 utilization: utilization,
                 efficiency: efficiency,
                 score: score,
                 grade: getGrade(score),
-                total_minutes: worker.totalActualTime,
-                assigned_st: worker.totalAssignedST
+                total_minutes: worker.totalActualMins || 0,
+                assigned_st: worker.assignedStandardTime || 0,
+                shifts: worker.shifts  // Keep original for debugging
             };
         });
         
-        console.log(`📊 Scorecard: Aggregated ${ScorecardState.allWorkers.length} workers`);
+        console.log(`📊 Scorecard: Converted ${ScorecardState.allWorkers.length} workers from workerSummary`);
         console.log('First worker:', ScorecardState.allWorkers[0]);
         
         // Apply grade filter and render
