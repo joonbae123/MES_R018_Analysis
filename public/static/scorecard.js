@@ -764,7 +764,15 @@ function aggregateDailyData(records) {
         dailyMap[date].shifts.add(record.actualShift);
         dailyMap[date].workCount++;
         dailyMap[date].totalActualMins += record.workerActMins || 0;
-        dailyMap[date].totalAssignedST += record['Worker S/T'] || 0;
+        
+        // Calculate adjusted assigned S/T (same logic as Report)
+        const st = record['Worker S/T'] || 0;
+        const rate = record['Worker Rate(%)'] || 0;
+        const assigned = (st * rate / 100);
+        const adjustmentRatio = record.overlapAdjustmentRatio || 1;
+        const adjustedAssigned = assigned * adjustmentRatio;
+        
+        dailyMap[date].totalAssignedST += adjustedAssigned;
     });
     
     // Calculate metrics for each day
