@@ -606,7 +606,16 @@ window.showScorecardWorkerDetail = function(workerName) {
     console.log(`📊 Found ${workerRecords.length} raw records for ${workerName}`);
     
     // Update modal header with worker name
-    document.getElementById('scorecardModalWorkerName').textContent = workerName;
+    const headerElement = document.getElementById('scorecardModalWorkerName');
+    if (headerElement) {
+        const iconSpan = headerElement.querySelector('i');
+        const textSpan = headerElement.querySelector('span');
+        if (textSpan) {
+            textSpan.textContent = workerName;
+        } else {
+            headerElement.innerHTML = `<i class="fas fa-award"></i><span>${workerName}</span>`;
+        }
+    }
     
     // Update summary cards
     document.getElementById('scorecardModalGrade').textContent = worker.grade || '-';
@@ -632,6 +641,9 @@ window.showScorecardWorkerDetail = function(workerName) {
     // Aggregate daily data
     const dailyData = aggregateDailyData(workerRecords);
     console.log(`📅 Aggregated ${dailyData.length} daily records`);
+    
+    // Build performance insights
+    buildPerformanceInsights(workerRecords, dailyData);
     
     // Build charts
     buildScorecardScoreChart(dailyData);
@@ -662,6 +674,76 @@ window.closeScorecardWorkerModal = function(event) {
     
     document.getElementById('scorecardWorkerModal').classList.add('hidden');
 };
+
+// Build performance insights
+function buildPerformanceInsights(workerRecords, dailyData) {
+    // 1. Top Processes by time spent
+    const processTimes = {};
+    workerRecords.forEach(record => {
+        const process = record.foDesc3 || 'Unknown';
+        if (!processTimes[process]) {
+            processTimes[process] = 0;
+        }
+        processTimes[process] += record.workerActMins || 0;
+    });
+    
+    const topProcesses = Object.entries(processTimes)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+    
+    const topProcessesHTML = topProcesses.length > 0 
+        ? topProcesses.map(([process, mins], idx) => 
+            `<div class="flex justify-between items-center">
+                <span class="font-medium">${idx + 1}. ${process}</span>
+                <span class="text-blue-600 font-bold">${(mins / 60).toFixed(1)}h</span>
+            </div>`
+        ).join('')
+        : '<div class="text-gray-500">No process data</div>';
+    
+    document.getElementById('scorecardModalTopProcesses').innerHTML = topProcessesHTML;
+    
+    // 2. Best Performance Day
+    if (dailyData.length > 0) {
+        const bestDay = dailyData.reduce((best, day) => 
+            day.score > best.score ? day : best
+        );
+        
+        const bestDayHTML = `
+            <div class="font-medium text-gray-800">${bestDay.date}</div>
+            <div class="text-2xl font-bold text-green-600">${bestDay.score.toFixed(1)} pts</div>
+            <div class="text-xs text-gray-600 mt-1">
+                Util: ${bestDay.utilization.toFixed(1)}% | Eff: ${bestDay.efficiency.toFixed(1)}%
+            </div>
+        `;
+        document.getElementById('scorecardModalBestDay').innerHTML = bestDayHTML;
+    }
+    
+    // 3. Performance Trend
+    if (dailyData.length >= 2) {
+        const recentDays = dailyData.slice(-3);
+        const avgRecent = recentDays.reduce((sum, d) => sum + d.score, 0) / recentDays.length;
+        
+        const earlyDays = dailyData.slice(0, Math.min(3, dailyData.length));
+        const avgEarly = earlyDays.reduce((sum, d) => sum + d.score, 0) / earlyDays.length;
+        
+        const trend = avgRecent - avgEarly;
+        const trendIcon = trend > 0 ? '↑' : trend < 0 ? '↓' : '→';
+        const trendColor = trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-600';
+        
+        const trendHTML = `
+            <div class="flex items-center gap-2">
+                <span class="${trendColor} text-3xl font-bold">${trendIcon}</span>
+                <div>
+                    <div class="font-medium">${trend > 0 ? 'Improving' : trend < 0 ? 'Declining' : 'Stable'}</div>
+                    <div class="text-xs text-gray-600">
+                        ${Math.abs(trend).toFixed(1)} pts ${trend > 0 ? 'increase' : trend < 0 ? 'decrease' : 'change'}
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('scorecardModalTrend').innerHTML = trendHTML;
+    }
+}
 
 // Aggregate daily data
 function aggregateDailyData(records) {
