@@ -1040,6 +1040,17 @@ function buildScorecardComparisonChart(dailyData) {
 function buildScorecardDailyTable(dailyData) {
     const tbody = document.getElementById('scorecardModalTableBody');
     
+    console.log('🔧 buildScorecardDailyTable called:', {
+        tbody: !!tbody,
+        dailyDataLength: dailyData.length,
+        firstDay: dailyData[0]
+    });
+    
+    if (!tbody) {
+        console.error('❌ scorecardModalTableBody element not found!');
+        return;
+    }
+    
     if (dailyData.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -1089,6 +1100,8 @@ function buildScorecardDailyTable(dailyData) {
             </tr>
         `;
     }).join('');
+    
+    console.log('✅ Table HTML updated, rows:', dailyData.length);
 }
 
 console.log('✅ Scorecard module loaded with Score-based worker detail modal');
