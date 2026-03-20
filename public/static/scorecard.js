@@ -1044,9 +1044,24 @@ function buildScorecardScoreChart(dailyData) {
     });
 }
 
-// Build performance matrix (4-quadrant analysis)
+// Chart instance for Performance Matrix
+let scorecardMatrixChart = null;
+
+// Build performance matrix (Quadrant Scatter Chart)
 function buildPerformanceMatrix(dailyData) {
     if (dailyData.length === 0) return;
+    
+    // Destroy existing chart
+    if (scorecardMatrixChart) {
+        scorecardMatrixChart.destroy();
+        scorecardMatrixChart = null;
+    }
+    
+    const ctx = document.getElementById('scorecardMatrixChart');
+    if (!ctx) {
+        console.error('❌ scorecardMatrixChart canvas not found');
+        return;
+    }
     
     // Calculate median values for thresholds
     const utilizations = dailyData.map(d => d.utilization).sort((a, b) => a - b);
@@ -1065,27 +1080,160 @@ function buildPerformanceMatrix(dailyData) {
         const highUtil = day.utilization >= medianUtil;
         const highEff = day.efficiency >= medianEff;
         
+        const point = {
+            x: day.utilization,
+            y: day.efficiency,
+            r: Math.max(3, Math.min(15, day.totalActualMins / 50)), // Bubble size based on work time
+            date: day.date,
+            workTime: day.totalActualMins
+        };
+        
         if (highUtil && highEff) {
-            q1.push(day);
+            q1.push(point);
         } else if (!highUtil && highEff) {
-            q2.push(day);
+            q2.push(point);
         } else if (!highUtil && !highEff) {
-            q3.push(day);
+            q3.push(point);
         } else if (highUtil && !highEff) {
-            q4.push(day);
+            q4.push(point);
         }
     });
     
-    // Update counts
-    document.getElementById('matrixQ1Count').textContent = q1.length;
-    document.getElementById('matrixQ2Count').textContent = q2.length;
-    document.getElementById('matrixQ3Count').textContent = q3.length;
-    document.getElementById('matrixQ4Count').textContent = q4.length;
+    // Create scatter chart
+    scorecardMatrixChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: '⭐ SUPERSTAR',
+                    data: q1,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: '💎 HIDDEN GEM',
+                    data: q2,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: '🚨 NEEDS ATTENTION',
+                    data: q3,
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: '⚠️ BUSY BUT INEFFICIENT',
+                    data: q4,
+                    backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                    borderColor: 'rgba(245, 158, 11, 1)',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 10,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const point = context[0].raw;
+                            return point.date || 'Unknown Date';
+                        },
+                        label: function(context) {
+                            const point = context.raw;
+                            const workHrs = (point.workTime / 60).toFixed(1);
+                            return [
+                                `Utilization: ${point.x.toFixed(1)}%`,
+                                `Efficiency: ${point.y.toFixed(1)}%`,
+                                `Work Time: ${workHrs} hrs`
+                            ];
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        vLine: {
+                            type: 'line',
+                            xMin: medianUtil,
+                            xMax: medianUtil,
+                            borderColor: 'rgba(100, 100, 100, 0.5)',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            label: {
+                                content: `Median Util: ${medianUtil.toFixed(0)}%`,
+                                enabled: true,
+                                position: 'end'
+                            }
+                        },
+                        hLine: {
+                            type: 'line',
+                            yMin: medianEff,
+                            yMax: medianEff,
+                            borderColor: 'rgba(100, 100, 100, 0.5)',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            label: {
+                                content: `Median Eff: ${medianEff.toFixed(0)}%`,
+                                enabled: true,
+                                position: 'start'
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Utilization Rate (%)',
+                        font: { weight: 'bold' }
+                    },
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 25
+                    },
+                    grid: {
+                        color: 'rgba(200, 200, 200, 0.2)'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    title: {
+                        display: true,
+                        text: 'Efficiency Rate (%)',
+                        font: { weight: 'bold' }
+                    },
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 25
+                    },
+                    grid: {
+                        color: 'rgba(200, 200, 200, 0.2)'
+                    }
+                }
+            }
+        }
+    });
     
-    // Store data for potential click handlers
-    window.scorecardMatrixData = { q1, q2, q3, q4, medianUtil, medianEff };
-    
-    console.log('📊 Performance Matrix built:', {
+    console.log('📊 Performance Matrix (Scatter) built:', {
         'Superstar (Q1)': q1.length,
         'Hidden Gem (Q2)': q2.length,
         'Needs Attention (Q3)': q3.length,

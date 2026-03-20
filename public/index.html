@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -4210,42 +4211,12 @@
                             <i class="fas fa-th mr-2 text-gray-600"></i>
                             Performance Matrix
                         </h4>
-                        <div class="grid grid-cols-2 gap-3" style="height: 250px;">
-                            <!-- Q1: High Util + High Eff (Top Right) -->
-                            <div class="bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-400 rounded-xl p-3 flex flex-col items-center justify-center hover:shadow-lg transition-shadow cursor-pointer" id="matrixQ1">
-                                <div class="text-3xl mb-1">🌟</div>
-                                <div class="text-xs font-bold text-green-800 uppercase mb-1">Superstar</div>
-                                <div class="text-2xl font-bold text-green-700" id="matrixQ1Count">0</div>
-                                <div class="text-xs text-green-600">days</div>
-                                <div class="text-xs text-gray-600 mt-1 text-center">High Util + High Eff</div>
-                            </div>
-                            
-                            <!-- Q2: Low Util + High Eff (Top Left) -->
-                            <div class="bg-gradient-to-br from-blue-50 to-cyan-100 border-2 border-blue-400 rounded-xl p-3 flex flex-col items-center justify-center hover:shadow-lg transition-shadow cursor-pointer" id="matrixQ2">
-                                <div class="text-3xl mb-1">💎</div>
-                                <div class="text-xs font-bold text-blue-800 uppercase mb-1">Hidden Gem</div>
-                                <div class="text-2xl font-bold text-blue-700" id="matrixQ2Count">0</div>
-                                <div class="text-xs text-blue-600">days</div>
-                                <div class="text-xs text-gray-600 mt-1 text-center">Low Util + High Eff</div>
-                            </div>
-                            
-                            <!-- Q3: Low Util + Low Eff (Bottom Left) -->
-                            <div class="bg-gradient-to-br from-red-50 to-orange-100 border-2 border-red-400 rounded-xl p-3 flex flex-col items-center justify-center hover:shadow-lg transition-shadow cursor-pointer" id="matrixQ3">
-                                <div class="text-3xl mb-1">🚨</div>
-                                <div class="text-xs font-bold text-red-800 uppercase mb-1">Needs Attention</div>
-                                <div class="text-2xl font-bold text-red-700" id="matrixQ3Count">0</div>
-                                <div class="text-xs text-red-600">days</div>
-                                <div class="text-xs text-gray-600 mt-1 text-center">Low Util + Low Eff</div>
-                            </div>
-                            
-                            <!-- Q4: High Util + Low Eff (Bottom Right) -->
-                            <div class="bg-gradient-to-br from-yellow-50 to-amber-100 border-2 border-yellow-400 rounded-xl p-3 flex flex-col items-center justify-center hover:shadow-lg transition-shadow cursor-pointer" id="matrixQ4">
-                                <div class="text-3xl mb-1">⚠️</div>
-                                <div class="text-xs font-bold text-yellow-800 uppercase mb-1">Busy but Inefficient</div>
-                                <div class="text-2xl font-bold text-yellow-700" id="matrixQ4Count">0</div>
-                                <div class="text-xs text-yellow-600">days</div>
-                                <div class="text-xs text-gray-600 mt-1 text-center">High Util + Low Eff</div>
-                            </div>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="scorecardMatrixChart"></canvas>
+                        </div>
+                        <div class="mt-3 text-xs text-gray-600 text-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Bubble size = work time. Hover for details.
                         </div>
                     </div>
                 </div>
@@ -4367,6 +4338,6 @@
     </div>
 
     <script src="js/app.js?v=1773730634440"></script>
-    <script src="/static/scorecard.js?v=20260320063000"></script>
+    <script src="/static/scorecard.js?v=20260320064500"></script>
 </body>
 </html>
