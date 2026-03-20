@@ -1091,6 +1091,7 @@ function buildScorecardDailyTable(dailyData) {
                 <td class="px-4 py-3 text-sm text-center">${day.workCount}</td>
                 <td class="px-4 py-3 text-sm text-right">${day.shiftTime.toFixed(0)}</td>
                 <td class="px-4 py-3 text-sm text-right">${day.totalActualMins.toFixed(0)}</td>
+                <td class="px-4 py-3 text-sm text-right bg-purple-50">${day.totalAssignedST.toFixed(0)}</td>
                 <td class="px-4 py-3 text-sm text-right">${day.utilization.toFixed(1)}%</td>
                 <td class="px-4 py-3 text-sm text-right">${day.efficiency.toFixed(1)}%</td>
                 <td class="px-4 py-3 text-sm text-right">

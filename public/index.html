@@ -3992,6 +3992,7 @@
                                     <th class="text-center p-2 font-semibold text-gray-700">Work Count</th>
                                     <th class="text-right p-2 font-semibold text-gray-700">Shift Time<br><span class="text-xs font-normal">(min)</span></th>
                                     <th class="text-right p-2 font-semibold text-gray-700">Work Time<br><span class="text-xs font-normal">(min)</span></th>
+                                    <th class="text-right p-2 font-semibold text-gray-700 bg-purple-50">Adjusted S/T<br><span class="text-xs font-normal">(min)</span></th>
                                     <th class="text-right p-2 font-semibold text-gray-700">Utilization<br><span class="text-xs font-normal">(%)</span></th>
                                     <th class="text-right p-2 font-semibold text-gray-700">Efficiency<br><span class="text-xs font-normal">(%)</span></th>
                                     <th class="text-right p-2 font-semibold text-gray-700 bg-blue-50">Score<br><span class="text-xs font-normal">(pts)</span></th>
@@ -4008,9 +4009,12 @@
                         <div class="flex items-start gap-2">
                             <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
                             <div class="text-sm text-gray-700">
-                                <strong>Score Calculation:</strong> Score = (Utilization × 50%) + (Efficiency × 50%)
+                                <strong>Calculation:</strong> 
+                                Utilization = Work Time ÷ Shift Time × 100% | 
+                                Efficiency = Adjusted S/T ÷ Shift Time × 100% | 
+                                Score = (Utilization × 50%) + (Efficiency × 50%)
                                 <br>
-                                <strong>Grade Criteria:</strong> S ≥ 80 | A ≥ 70 | B ≥ 60 | C ≥ 50 | D < 50
+                                <strong>Grade:</strong> S ≥ 80 | A ≥ 70 | B ≥ 60 | C ≥ 50 | D < 50
                             </div>
                         </div>
                     </div>
