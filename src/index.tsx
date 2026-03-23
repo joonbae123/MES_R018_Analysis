@@ -32,33 +32,57 @@ app.post('/api/upload', async (c) => {
     const { env } = c
     const body = await c.req.json()
     
-    const { filename, fileSize, rawData, processedData, processMapping, shiftCalendar } = body
+    const { filename, fileSize, rawData, processedData, processMapping, shiftCalendar, chunkIndex, totalChunks, totalRecords, uploadId: existingUploadId } = body
+    
+    // CHUNK UPLOAD SUPPORT: Check if this is a chunked upload
+    const isChunkedUpload = chunkIndex !== undefined && totalChunks !== undefined
+    const isFirstChunk = chunkIndex === 0
+    const isLastChunk = chunkIndex === totalChunks - 1
     
     console.log('Received upload request:', {
       filename,
       fileSize,
       processedDataCount: processedData?.length,
       processMappingCount: processMapping?.length,
-      shiftCalendarCount: shiftCalendar?.length
+      shiftCalendarCount: shiftCalendar?.length,
+      isChunkedUpload,
+      chunkIndex,
+      totalChunks,
+      totalRecords,
+      existingUploadId
     })
     
-    // 업로드 기록 생성 (진행 상태 포함)
-    const uploadResult = await env.DB.prepare(`
-      INSERT INTO excel_uploads (filename, file_size, total_records, unique_workers, date_range_start, date_range_end, upload_status, progress_current, progress_total)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(
-      filename,
-      fileSize,
-      processedData?.length || 0,
-      new Set(processedData?.map((d: any) => d.workerName)).size || 0,
-      processedData?.[0]?.workingDay || null,
-      processedData?.[processedData.length - 1]?.workingDay || null,
-      'processing',
-      0,
-      processedData?.length || 0
-    ).run()
+    let uploadId: number
     
-    const uploadId = uploadResult.meta.last_row_id as number
+    // 업로드 기록 생성 (첫 번째 청크에서만 생성)
+    if (!existingUploadId) {
+      // Calculate date range from first chunk or entire dataset
+      const dateRangeStart = processedData?.[0]?.workingDay || null
+      const dateRangeEnd = isChunkedUpload 
+        ? null // Will update on last chunk
+        : (processedData?.[processedData.length - 1]?.workingDay || null)
+      
+      const uploadResult = await env.DB.prepare(`
+        INSERT INTO excel_uploads (filename, file_size, total_records, unique_workers, date_range_start, date_range_end, upload_status, progress_current, progress_total)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        filename,
+        fileSize,
+        isChunkedUpload ? totalRecords : (processedData?.length || 0),
+        new Set(processedData?.map((d: any) => d.workerName)).size || 0,
+        dateRangeStart,
+        dateRangeEnd,
+        'processing',
+        0,
+        isChunkedUpload ? totalRecords : (processedData?.length || 0)
+      ).run()
+      
+      uploadId = uploadResult.meta.last_row_id as number
+      console.log(`✅ Created upload record: ID ${uploadId}`)
+    } else {
+      uploadId = existingUploadId
+      console.log(`♻️ Using existing upload ID: ${uploadId}`)
+    }
     
     // 진행 상황 초기화
     uploadProgress.set(uploadId.toString(), {
@@ -172,18 +196,33 @@ app.post('/api/upload', async (c) => {
         }
         
         // 완료 처리 (DB에 저장)
-        await env.DB.prepare(`
-          UPDATE excel_uploads 
-          SET upload_status = 'completed', progress_current = progress_total
-          WHERE id = ?
-        `).bind(uploadId).run()
-        
-        // 메모리 Map도 업데이트 (optional)
-        const progress = uploadProgress.get(uploadId.toString())
-        if (progress) {
-          progress.status = 'completed'
+        // For chunked uploads, only mark as completed on last chunk
+        if (!isChunkedUpload || isLastChunk) {
+          // Update date_range_end if this is the last chunk
+          if (isChunkedUpload && isLastChunk) {
+            const dateRangeEnd = processedData?.[processedData.length - 1]?.workingDay || null
+            await env.DB.prepare(`
+              UPDATE excel_uploads 
+              SET upload_status = 'completed', progress_current = progress_total, date_range_end = ?
+              WHERE id = ?
+            `).bind(dateRangeEnd, uploadId).run()
+          } else {
+            await env.DB.prepare(`
+              UPDATE excel_uploads 
+              SET upload_status = 'completed', progress_current = progress_total
+              WHERE id = ?
+            `).bind(uploadId).run()
+          }
+          
+          // 메모리 Map도 업데이트 (optional)
+          const progress = uploadProgress.get(uploadId.toString())
+          if (progress) {
+            progress.status = 'completed'
+          }
+          console.log(`✅ Background insert completed: ${processedData?.length || 0} records`)
+        } else {
+          console.log(`✅ Chunk ${chunkIndex + 1}/${totalChunks} inserted: ${processedData?.length || 0} records`)
         }
-        console.log(`✅ Background insert completed: ${processedData?.length || 0} records`)
         
       } catch (error: any) {
         console.error('Background upload error:', error)

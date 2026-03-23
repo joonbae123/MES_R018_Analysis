@@ -4042,83 +4042,85 @@ async function saveToDatabase() {
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Starting...';
         saveStatus.classList.add('hidden');
         
-        console.log('📤 Starting background upload to database...');
+        console.log('📤 Starting chunked upload to database...');
         
-        const payload = {
-            filename: AppState.currentFileName || 'Unknown',
-            fileSize: AppState.currentFileSize || 0,
-            rawData: AppState.rawData,
-            processedData: AppState.processedData,
-            processMapping: AppState.processMapping,
-            shiftCalendar: AppState.shiftCalendar
-        };
+        // CHUNK UPLOAD: Split large datasets into chunks to avoid Worker 30s timeout
+        const CHUNK_SIZE = 10000; // 10,000 records per chunk
+        const totalRecords = AppState.processedData.length;
+        const totalChunks = Math.ceil(totalRecords / CHUNK_SIZE);
         
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+        console.log(`📦 Total records: ${totalRecords}, Chunks: ${totalChunks}, Size: ${CHUNK_SIZE}`);
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server error: ${response.status} - ${errorText}`);
+        let uploadId = null;
+        let completedRecords = 0;
+        
+        // Send chunks sequentially
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+            const start = chunkIndex * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, totalRecords);
+            const chunkData = AppState.processedData.slice(start, end);
+            
+            // Update progress message
+            saveBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Uploading ${chunkIndex + 1}/${totalChunks}...`;
+            console.log(`📤 Uploading chunk ${chunkIndex + 1}/${totalChunks}: ${chunkData.length} records`);
+            
+            const payload = {
+                filename: AppState.currentFileName || 'Unknown',
+                fileSize: AppState.currentFileSize || 0,
+                rawData: chunkIndex === 0 ? AppState.rawData : null, // Only send rawData on first chunk
+                processedData: chunkData,
+                processMapping: chunkIndex === 0 ? AppState.processMapping : null, // Only send mapping on first chunk
+                shiftCalendar: chunkIndex === 0 ? AppState.shiftCalendar : null, // Only send calendar on first chunk
+                chunkIndex: chunkIndex,
+                totalChunks: totalChunks,
+                totalRecords: totalRecords,
+                uploadId: uploadId // Pass uploadId from first chunk to subsequent chunks
+            };
+            
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Server error on chunk ${chunkIndex + 1}: ${response.status} - ${errorText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || `Failed to upload chunk ${chunkIndex + 1}`);
+            }
+            
+            // Store uploadId from first chunk
+            if (chunkIndex === 0) {
+                uploadId = result.uploadId;
+                console.log(`✅ Upload ID: ${uploadId}`);
+            }
+            
+            completedRecords += chunkData.length;
+            console.log(`✅ Chunk ${chunkIndex + 1}/${totalChunks} uploaded: ${completedRecords}/${totalRecords} records`);
         }
         
-        const result = await response.json();
+        console.log(`✅ All ${totalChunks} chunks uploaded successfully!`);
         
-        if (result.success) {
-            console.log('✅ Upload started in background!', result);
-            
-            // Re-enable button immediately
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fas fa-database mr-2"></i>Save to Database';
-            
-            // Show success message
-            showSuccessMessage('Upload started! Processing in background...');
-            
-            // Estimate completion time based on record count (200 records per batch, ~0.06s per batch)
-            const totalRecords = result.totalRecords || 0;
-            const estimatedTime = Math.ceil((totalRecords / 200) * 0.06 * 1000) + 3000; // Add 3s buffer
-            
-            console.log(`⏱️ Estimated upload time: ${estimatedTime}ms for ${totalRecords} records`);
-            
-            // Auto-complete after estimated time
-            setTimeout(() => {
-                completeBackgroundUpload(true, 'Upload completed successfully!');
-                loadUploadsList(); // Refresh the list
-            }, estimatedTime);
-            
-            // Also poll for completion as backup (check every 3 seconds)
-            const checkCompletion = setInterval(async () => {
-                try {
-                    const response = await fetch(`/api/upload-progress/${result.uploadId}`);
-                    const progress = await response.json();
-                    
-                    if (progress.success && progress.status === 'completed') {
-                        clearInterval(checkCompletion);
-                        completeBackgroundUpload(true, 'Upload completed successfully!');
-                        loadUploadsList();
-                    } else if (progress.success && progress.status === 'error') {
-                        clearInterval(checkCompletion);
-                        completeBackgroundUpload(false, 'Upload failed: ' + (progress.error || 'Unknown error'));
-                    }
-                } catch (error) {
-                    console.error('Failed to check upload status:', error);
-                }
-            }, 3000); // Check every 3 seconds (not 1 second to save credits)
-            
-            // Clear interval after max time (60 seconds)
-            setTimeout(() => clearInterval(checkCompletion), 60000);
-            
-        } else {
-            throw new Error(result.error || 'Failed to start upload');
-        }
+        // Re-enable button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-database mr-2"></i>Save to Database';
+        
+        // Show success message
+        completeBackgroundUpload(true, `Upload completed! ${totalRecords} records saved.`);
+        
+        // Refresh uploads list
+        loadUploadsList();
         
     } catch (error) {
         console.error('❌ Failed to save to database:', error);
-        alert('Failed to save to database:\n' + error.message);
+        completeBackgroundUpload(false, 'Upload failed: ' + error.message);
         
         // Reset button
         saveBtn.disabled = false;
