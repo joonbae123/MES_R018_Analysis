@@ -2139,8 +2139,8 @@
                                 <li><strong>Shift Filter</strong>: A Shift / B Shift / C Shift</li>
                                 <li><strong>Date Filter</strong>: Select by individual dates, weeks (WK#), or months</li>
                                 <li><strong>Working Shift</strong>: Day / Night</li>
-                                <li><strong>Category</strong>: BT Process, DS, BT Complete, WT, IM, etc.</li>
-                                <li><strong>Process</strong>: Specific processes (Process)</li>
+                                <li><strong>Process Group</strong>: BT Process, DS, BT Complete, WT, IM, etc.</li>
+                                <li><strong>Process</strong>: Specific work processes (e.g., Cut, Bevel, Welding)</li>
                                 <li><strong>Worker</strong>: Individual workers (searchable)</li>
                                 <li><strong>Click "Apply Filter"</strong> to update reports (loading indicator appears during processing)</li>
                                 <li><strong>Reset</strong>: Clear all filters to view full dataset</li>
@@ -2457,10 +2457,45 @@
                         <div class="flex items-center gap-3 mb-2">
                             <h3 class="text-lg font-bold text-gray-800">Version 4.4.1</h3>
                             <span class="px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">Latest</span>
-                            <span class="text-xs text-gray-500">2026-03-20</span>
+                            <span class="text-xs text-gray-500">2026-03-25</span>
                         </div>
                         
                         <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-language mr-2"></i>User-Friendly Terminology Update
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Process Group</strong>: Renamed from "Category (FO Desc 2)" for better clarity</li>
+                                    <li><strong>Process</strong>: Renamed from "Process (FO Desc 3)" to remove MES technical terms</li>
+                                    <li><strong>Applied Throughout</strong>: Filters, tables, Process Mapping, and all documentation</li>
+                                    <li><strong>Goal</strong>: Improved user understanding by removing MES-specific terminology (FO Desc)</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-filter mr-2"></i>Scorecard Filter Functionality Fix
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Issue Fixed</strong>: Scorecard Apply/Reset filter buttons were not working</li>
+                                    <li><strong>Solution</strong>: Synchronized Scorecard filters with Report tab filters</li>
+                                    <li><strong>Result</strong>: Shift, Date, Process Group, Process, and Worker filters now work correctly</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-blue-700 mb-2">
+                                    <i class="fas fa-database mr-2"></i>Large Dataset Upload Support (Chunked Upload)
+                                </h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                                    <li><strong>Issue Fixed</strong>: Only 9,000 of 31,414 records were saved due to Cloudflare Workers 30s timeout</li>
+                                    <li><strong>Solution</strong>: Implemented chunked upload (10,000 records per chunk)</li>
+                                    <li><strong>Result</strong>: Successfully uploads datasets with 30K+ records</li>
+                                    <li><strong>Progress Display</strong>: Shows chunk progress (e.g., "Uploading 1/4, 2/4, 3/4, 4/4")</li>
+                                </ul>
+                            </div>
+                            
                             <div>
                                 <h4 class="font-semibold text-blue-700 mb-2">
                                     <i class="fas fa-chart-scatter mr-2"></i>Performance Matrix Visualization Enhancement
@@ -3417,9 +3452,9 @@
                     <section>
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">6. Process 매핑</h3>
                         <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
-                            <li>Process 매핑 탭에서 FD Desc/FO Desc를 상위 Process으로 매핑합니다.</li>
+                            <li>Process 매핑 탭에서 FD Desc/FO Desc를 Process Group과 Process로 매핑합니다.</li>
                             <li>매핑 데이터는 JSON 내보내기 시 함께 저장됩니다.</li>
-                            <li>순서(Seq)를 지정하여 리포트에서 Process 정렬 순서를 제어할 수 있습니다.</li>
+                            <li>순서(Seq)를 지정하여 리포트에서 Process Group/Process 정렬 순서를 제어할 수 있습니다.</li>
                         </ul>
                     </section>
 
