@@ -4,7 +4,7 @@
 // Version: 4.3.5 - Rework Display, Efficiency Modal Enhancement, Overlap Adjustment
 
 // Category order for sorting
-// Category order for FO Desc 2 (make globally accessible for Scorecard)
+// Process Group order (make globally accessible for Scorecard)
 window.CATEGORY_ORDER = {
     'BT Process': 1,
     'DS': 2,
@@ -18,7 +18,7 @@ window.CATEGORY_ORDER = {
 };
 const CATEGORY_ORDER = window.CATEGORY_ORDER;
 
-// ����� Process Mapping �칙 (FO Desc � FO Desc 2, FO Desc 3)
+// ����� Process Mapping �칙 (FO Desc � Process Group, Process)
 // Excel ��� Mapping ��가 �� � � �칙� 사�
 const DEFAULT_PROCESS_MAPPING = {
   "Fitup Bracket": { foDesc2: "BT Complete", foDesc3: "Fitup Bracket", seq: 1 },
@@ -1277,7 +1277,7 @@ function processData(rawData) {
         }
     });
     const uniqueCategories = Object.keys(categoryCount).sort();
-    console.log(`� Unique categories (FO Desc 2): ${uniqueCategories.length}`, uniqueCategories);
+    console.log(`� Unique categories (Process Group): ${uniqueCategories.length}`, uniqueCategories);
     console.log(` Category counts:`, categoryCount);
     
     // Debug: Show unique processes with their Seq
@@ -1729,7 +1729,7 @@ function updateFilterOptions() {
     const checkedProcesses = Array.from(document.querySelectorAll('.process-checkbox:checked')).map(cb => cb.value);
     const checkedWorkers = Array.from(document.querySelectorAll('.worker-checkbox:checked')).map(cb => cb.value);
     
-    // Category (FO Desc 2) - Use all categories from CATEGORY_ORDER
+    // Category (Process Group) - Use all categories from CATEGORY_ORDER
     const uniqueCategories = Object.keys(CATEGORY_ORDER)
         .filter(c => c !== 'Other') // Exclude 'Other' from filter
         .sort((a, b) => {
@@ -1756,7 +1756,7 @@ function updateFilterOptions() {
     }
     console.log(` Category dropdown updated with ${uniqueCategories.length} options`);
     
-    // Process (FO Desc 3) - Show all processes sorted by FO Desc 2 category order, then by Seq
+    // Process (Process) - Show all processes sorted by Process Group category order, then by Seq
     const processMap = new Map();
     data.forEach(d => {
         if (d.foDesc3 && !processMap.has(d.foDesc3)) {
@@ -2194,13 +2194,13 @@ function getFilteredData() {
         console.log(`After Day/Night filter (${AppState.filters.workingShift}): ${filtered.length} records`);
     }
     
-    // Filter by category (FO Desc 2) - multiple selection
+    // Filter by category (Process Group) - multiple selection
     if (AppState.filters.categories && AppState.filters.categories.length > 0) {
         filtered = filtered.filter(d => AppState.filters.categories.includes(d.foDesc2));
         console.log(`After category filter (${AppState.filters.categories}): ${filtered.length} records`);
     }
     
-    // Filter by process (FO Desc 3) - multiple selection
+    // Filter by process (Process) - multiple selection
     if (AppState.filters.processes && AppState.filters.processes.length > 0) {
         filtered = filtered.filter(d => AppState.filters.processes.includes(d.foDesc3));
         console.log(`After process filter (${AppState.filters.processes}): ${filtered.length} records`);
@@ -3488,7 +3488,7 @@ function updateDataTable(workerAgg) {
             <th class="cursor-pointer hover:bg-gray-100" onclick="sortDataTable('workerName')">
                 Worker <i class="fas fa-sort text-xs ml-1"></i>
             </th>
-            <th>Process (FO Desc 3)</th>
+            <th>Process (Process)</th>
             <th class="cursor-pointer hover:bg-gray-100" onclick="sortDataTable('workingDay')">
                 Work Date <i class="fas fa-sort text-xs ml-1"></i>
             </th>
@@ -3511,7 +3511,7 @@ function updateDataTable(workerAgg) {
             <th class="cursor-pointer hover:bg-gray-100" onclick="sortDataTable('workerName')">
                 Worker <i class="fas fa-sort text-xs ml-1"></i>
             </th>
-            <th>Process (FO Desc 3)</th>
+            <th>Process (Process)</th>
             <th class="cursor-pointer hover:bg-gray-100" onclick="sortDataTable('workingDay')">
                 Work Date <i class="fas fa-sort text-xs ml-1"></i>
             </th>
@@ -3636,7 +3636,7 @@ function addMapping() {
     const seq = parseInt(document.getElementById('newSeq').value) || 999;
     
     if (!fdDesc || !foDesc3) {
-        alert('FD Desc와 FO Desc 3� �� �� ��목���.');
+        alert('FD Desc와 Process� �� �� ��목���.');
         return;
     }
     

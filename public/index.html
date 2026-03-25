@@ -1201,7 +1201,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Category (FO Desc 2)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process Group</label>
                         <div class="relative">
                             <button id="filterCategoryDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleCheckboxDropdown('category')">
                                 <span class="text-gray-500">Select...</span>
@@ -1212,7 +1212,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Process (FO Desc 3)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process</label>
                         <div class="relative">
                             <button id="filterProcessDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleCheckboxDropdown('process')">
                                 <span class="text-gray-500">Select...</span>
@@ -1493,7 +1493,7 @@
                         <thead class="sticky top-0 z-10">
                             <tr>
                                 <th>Worker</th>
-                                <th>Process (FO Desc 3)</th>
+                                <th>Process</th>
                                 <th>Work Date</th>
                                 <th>Shift</th>
                                 <th>Day/Night</th>
@@ -1521,15 +1521,15 @@
                     Process Mapping Management
                 </h2>
                 <p class="text-gray-600 mb-4">
-                    Map Raw data's FD Desc or FO Desc to higher-level Process (FO Desc 2, FO Desc 3).
+                    Map Raw data's FD Desc or FO Desc to Process Groups and Processes.
                 </p>
                 
                 <div class="mb-6">
                     <h3 class="font-semibold mb-3">Add New Mapping</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
                         <input type="text" id="newFDDesc" placeholder="FD Desc / FO Desc" class="p-2 border rounded">
-                        <input type="text" id="newFODesc2" placeholder="FO Desc 2" class="p-2 border rounded">
-                        <input type="text" id="newFODesc3" placeholder="FO Desc 3" class="p-2 border rounded">
+                        <input type="text" id="newFODesc2" placeholder="Process Group" class="p-2 border rounded">
+                        <input type="text" id="newFODesc3" placeholder="Process" class="p-2 border rounded">
                         <input type="number" id="newSeq" placeholder="Sequence (Seq)" class="p-2 border rounded">
                     </div>
                     <button id="addMappingBtn" class="btn btn-primary">
@@ -1546,10 +1546,10 @@
                                     FD Desc / FO Desc <i class="fas fa-sort text-gray-400"></i>
                                 </th>
                                 <th class="cursor-pointer hover:bg-gray-200 transition" onclick="sortMappingTable('foDesc2')">
-                                    FO Desc 2 <i class="fas fa-sort text-gray-400"></i>
+                                    Process Group <i class="fas fa-sort text-gray-400"></i>
                                 </th>
                                 <th class="cursor-pointer hover:bg-gray-200 transition" onclick="sortMappingTable('foDesc3')">
-                                    FO Desc 3 <i class="fas fa-sort text-gray-400"></i>
+                                    Process <i class="fas fa-sort text-gray-400"></i>
                                 </th>
                                 <th class="cursor-pointer hover:bg-gray-200 transition" onclick="sortMappingTable('seq')">
                                     Sequence (Seq) <i class="fas fa-sort text-gray-400"></i>
@@ -1642,7 +1642,7 @@
                         </div>
                     </div>
                     <div class="relative">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Category (FO Desc 2)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process Group</label>
                         <div class="relative">
                             <button id="scorecardFilterCategoryDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('category')">
                                 <span class="text-gray-500">Select...</span>
@@ -1653,7 +1653,7 @@
                         </div>
                     </div>
                     <div class="relative">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Process (FO Desc 3)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Process</label>
                         <div class="relative">
                             <button id="scorecardFilterProcessDisplay" class="w-full text-left px-3 py-2 bg-white border border-gray-300 rounded-md hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="toggleScorecardDropdown('process')">
                                 <span class="text-gray-500">Select...</span>
@@ -2140,7 +2140,7 @@
                                 <li><strong>Date Filter</strong>: Select by individual dates, weeks (WK#), or months</li>
                                 <li><strong>Working Shift</strong>: Day / Night</li>
                                 <li><strong>Category</strong>: BT Process, DS, BT Complete, WT, IM, etc.</li>
-                                <li><strong>Process</strong>: Specific processes (FO Desc 3)</li>
+                                <li><strong>Process</strong>: Specific processes (Process)</li>
                                 <li><strong>Worker</strong>: Individual workers (searchable)</li>
                                 <li><strong>Click "Apply Filter"</strong> to update reports (loading indicator appears during processing)</li>
                                 <li><strong>Reset</strong>: Clear all filters to view full dataset</li>
@@ -3299,7 +3299,7 @@
                                     </li>
                                     <li><strong>Process Sequence Mapping</strong>: Pre-Blasting moved to front (Seq: 0)
                                         <br><span class="text-sm text-gray-600 ml-4">• Fixed: DB mappings merged with default mappings</span>
-                                        <br><span class="text-sm text-gray-600 ml-4">• Chart order: FO Desc 2 category → Seq within category</span>
+                                        <br><span class="text-sm text-gray-600 ml-4">• Chart order: Process Group category → Seq within category</span>
                                     </li>
                                 </ul>
                             </div>
@@ -3368,7 +3368,7 @@
                                     <li><strong>Time Overlap Detection</strong>: Automatic removal of overlapping work intervals</li>
                                     <li><strong>Performance Bands</strong>: Excellent (≥80%), Normal (50-80%), Poor (30-50%), Critical (<30%)</li>
                                     <li><strong>Worker Detail Modal</strong>: Daily trends, hourly distribution, and detailed records</li>
-                                    <li><strong>Process Mapping</strong>: Flexible FD Desc → FO Desc 2/3 mapping with sequence ordering</li>
+                                    <li><strong>Process Mapping</strong>: Flexible FD Desc → Process Group/3 mapping with sequence ordering</li>
                                 </ul>
                             </div>
                         </div>
