@@ -7,8 +7,10 @@
 ### 프로덕션
 - **메인 URL**: https://mes-r018-analysis-5bz.pages.dev
 - **GitHub**: https://github.com/joonbae123/MES_R018_Analysis
-- **최신 버전**: v4.4.1 (2026-03-20)
-- **최근 수정**: Scorecard Performance Matrix를 Quadrant Scatter Chart로 개선
+- **최신 버전**: v4.4.1 (2026-03-25)
+- **최근 수정**: 
+  - Scorecard 필터 기능 수정 (Report 필터와 동기화)
+  - 대용량 데이터 청크 업로드 구현 (31K+ 레코드 지원)
 
 ---
 
@@ -586,6 +588,24 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
 ---
 
 ## 📝 개발 히스토리
+
+### v4.4.1 (2026-03-25) 🔧 **필터 & 대용량 데이터 처리 개선**
+- ✅ **Scorecard 필터 기능 수정**
+  - 문제: Apply/Reset 버튼이 필터를 적용하지 않음
+  - 해결: Scorecard 필터를 Report의 AppState.filters와 동기화
+  - applyScorecardFilters() → AppState.filters 업데이트 → updateReport() 호출
+  - resetScorecardFilters() → 필터 초기화 → updateReport() 호출
+  - 결과: Shift, Date, Category, Process, Worker 필터가 정상 작동
+- ✅ **대용량 데이터 청크 업로드 구현**
+  - 문제: Cloudflare Workers 30초 제한으로 31K+ 레코드 중 9K만 저장
+  - 해결: 10,000개씩 청크로 나눠 순차 업로드
+  - 프론트엔드: saveToDatabase()에 청크 로직 추가
+  - 백엔드: /api/upload에 chunkIndex, totalChunks, uploadId 추적 기능 추가
+  - 테스트: 로컬 DB에 31,414개 전체 저장 확인 (2026-02-28 ~ 2026-03-19)
+  - 결과: 대용량 데이터셋(30K+) 완전 저장 가능
+- ✅ **Git 커밋**
+  - d3d3e44: Scorecard 필터 수정
+  - 38e0ef9: 청크 업로드 구현
 
 ### v4.4.1 (2026-03-20) 📊 **Performance Matrix 개선**
 - ✅ **Quadrant Scatter Chart로 교체**
