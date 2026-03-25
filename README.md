@@ -11,6 +11,7 @@
 - **최근 수정**: 
   - Scorecard 필터 기능 수정 (Report 필터와 동기화)
   - 대용량 데이터 청크 업로드 구현 (31K+ 레코드 지원)
+  - 용어 개선: FO Desc 2/3 → Process Group/Process
 
 ---
 
@@ -603,7 +604,13 @@ npx wrangler pages deploy dist --project-name mes-r018-analysis
   - 백엔드: /api/upload에 chunkIndex, totalChunks, uploadId 추적 기능 추가
   - 테스트: 로컬 DB에 31,414개 전체 저장 확인 (2026-02-28 ~ 2026-03-19)
   - 결과: 대용량 데이터셋(30K+) 완전 저장 가능
+- ✅ **사용자 친화적 용어 개선**
+  - 변경: "Category (FO Desc 2)" → "Process Group"
+  - 변경: "Process (FO Desc 3)" → "Process"
+  - 이유: MES 전문 용어(FO Desc) 제거로 현장 작업자 이해도 향상
+  - 적용: 필터, 테이블, Process Mapping 전체
 - ✅ **Git 커밋**
+  - 6f7f749: 용어 개선 (Process Group/Process)
   - d3d3e44: Scorecard 필터 수정
   - 38e0ef9: 청크 업로드 구현
 
