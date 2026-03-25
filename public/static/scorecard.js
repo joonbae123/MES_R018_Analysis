@@ -497,7 +497,27 @@ window.applyScorecardFilters = function() {
         if (dropdown) dropdown.classList.add('hidden');
     });
     
-    // Reload data with new filters
+    // ✅ FIX: Sync Scorecard filters to Report's AppState.filters
+    if (window.AppState) {
+        window.AppState.filters = {
+            shift: ScorecardState.filters.shift || '',
+            workingDays: ScorecardState.filters.workingDays || [],
+            workingShift: ScorecardState.filters.workingShift || '',
+            categories: ScorecardState.filters.categories || [],
+            processes: ScorecardState.filters.processes || [],
+            workers: ScorecardState.filters.workers || []
+        };
+        
+        console.log('📤 Synced filters to AppState:', window.AppState.filters);
+        
+        // ✅ FIX: Call Report's updateReport() to apply filters and regenerate workerSummary
+        if (typeof window.updateReport === 'function') {
+            window.updateReport();
+            console.log('✅ Report updated with new filters');
+        }
+    }
+    
+    // Reload scorecard with updated workerSummary
     loadScorecardData();
 };
 
@@ -548,6 +568,26 @@ window.resetScorecardFilters = function() {
             }
         }
     });
+    
+    // ✅ FIX: Sync reset to Report's AppState.filters
+    if (window.AppState) {
+        window.AppState.filters = {
+            shift: '',
+            workingDays: [],
+            workingShift: '',
+            categories: [],
+            processes: [],
+            workers: []
+        };
+        
+        console.log('📤 Reset filters synced to AppState');
+        
+        // ✅ FIX: Call Report's updateReport() to reset and regenerate workerSummary
+        if (typeof window.updateReport === 'function') {
+            window.updateReport();
+            console.log('✅ Report reset with cleared filters');
+        }
+    }
     
     // Reload data
     loadScorecardData();
